@@ -12,13 +12,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy backend source code and data
+# Copy backend source code and data (including pre-indexed Chroma DB)
 COPY . .
-
-# Pre-build knowledge base chunks and ingest embeddings during build
-# (Ensures Chroma vector DB is pre-indexed for fast container startup)
-RUN python -m scripts.build_chunks && \
-    python -m scripts.ingest
 
 # Port is provided by environment on PaaS (Render, Railway, Hugging Face), default 8000
 ENV PORT=8000

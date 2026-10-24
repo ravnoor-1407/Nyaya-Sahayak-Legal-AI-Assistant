@@ -1,9 +1,9 @@
 import os
 import re
 import json
+import urllib.request
 
 import chromadb
-from sentence_transformers import SentenceTransformer
 from sklearn.feature_extraction.text import TfidfVectorizer
 from dotenv import load_dotenv
 
@@ -12,9 +12,58 @@ from .llm import generate
 load_dotenv()
 
 EMBED = os.getenv("EMBED_MODEL", "intfloat/multilingual-e5-base")
-model = SentenceTransformer(EMBED)
 col = chromadb.PersistentClient(path="data/chroma").get_collection("laws")
 MAX_DIST = float(os.getenv("MAX_DIST", "0.30"))
+
+_local_model = None
+
+
+def _get_local_model():
+    global _local_model
+    if _local_model is None:
+        from sentence_transformers import SentenceTransformer
+        _local_model = SentenceTransformer(EMBED)
+    return _local_model
+
+
+def _get_query_embedding(query_text: str) -> list[float]:
+    """Generates a normalized 768-dim query embedding.
+    Uses Hugging Face Serverless Inference API if HF_TOKEN is configured to avoid
+    loading the 1.1GB PyTorch model into memory (critical for 512MB RAM environments
+    like Render Free Tier). Falls back to lazy-loaded local SentenceTransformer."""
+    hf_token = os.getenv("HF_TOKEN") or os.getenv("HUGGINGFACE_API_KEY")
+    if hf_token:
+        try:
+            url = f"https://router.huggingface.co/hf-inference/models/{EMBED}"
+            payload = json.dumps({
+                "inputs": ["query: " + query_text],
+                "options": {"wait_for_model": True}
+            }).encode("utf-8")
+            req = urllib.request.Request(
+                url,
+                data=payload,
+                headers={
+                    "Authorization": f"Bearer {hf_token}",
+                    "Content-Type": "application/json"
+                }
+            )
+            with urllib.request.urlopen(req, timeout=20) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+                vec = data[0] if isinstance(data[0], list) else data
+                norm = sum(x * x for x in vec) ** 0.5 or 1.0
+                return [x / norm for x in vec]
+        except Exception as e:
+            print(f"[RAG] HF Inference API unavailable ({e}). Falling back to local model.")
+
+    local = _get_local_model()
+    return local.encode(["query: " + query_text], normalize_embeddings=True).tolist()[0]
+
+
+def __getattr__(name):
+    if name == "model":
+        return _get_local_model()
+    raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
+
 
 # switches used for the ablation table ("0" turns a part off)
 USE_KEYWORD = os.getenv("USE_KEYWORD", "1") == "1"
@@ -177,8 +226,7 @@ def retrieve(question, k=8):
 
     # 1) dense retrieval on the original and the English query
     for qq in queries:
-        emb = model.encode(["query: " + qq],
-                           normalize_embeddings=True).tolist()
+        emb = [_get_query_embedding(qq)]
         r = col.query(query_embeddings=emb, n_results=n)
         for rank, (cid, d) in enumerate(zip(r["ids"][0], r["distances"][0])):
             idx = int(cid[1:])
