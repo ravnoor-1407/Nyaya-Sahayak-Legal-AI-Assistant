@@ -51,7 +51,8 @@ mmh3==5.3.1
 mpmath==1.3.0
 multidict==7.1.0
 narwhals==2.27.1
-numpy==2.5.4
+numpy
+networkx
 oauthlib==4.0.0
 onnxruntime==1.31.0
 opentelemetry-api==1.45.1
