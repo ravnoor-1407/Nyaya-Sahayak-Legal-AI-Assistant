@@ -145,7 +145,7 @@ export default function Assistant() {
         </div>
       )}
 
-      <div ref={scroller} className="flex-1 space-y-4 overflow-y-auto px-4 py-5 flex flex-col justify-center">
+      <div ref={scroller} className="flex-1 overflow-y-auto px-4 py-5 flex flex-col">
         {ready && !user ? (
           <div className="mx-auto my-auto flex max-w-md flex-col items-center justify-center py-6 px-4 text-center">
             <div className="mb-4 grid h-16 w-16 place-items-center rounded-2xl border border-amber-500/30 bg-amber-500/10 text-accent shadow-lg shadow-amber-500/10">
@@ -199,7 +199,7 @@ export default function Assistant() {
             </div>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className={"space-y-4" + (msgs.length === 0 ? " my-auto" : "")}>
             {msgs.length === 0 && (
               <div className="mx-auto max-w-lg">
                 <h2 className="font-display text-center text-2xl font-bold">
