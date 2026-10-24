@@ -1,0 +1,62 @@
+﻿question,expected_act,expected_section,lang,in_scope
+What is the punishment for theft?,"Bharatiya Nyaya Sanhita, 2023",303,en,1
+What is the punishment for robbery?,"Bharatiya Nyaya Sanhita, 2023",309,en,1
+What is dacoity?,"Bharatiya Nyaya Sanhita, 2023",310,en,1
+What is the punishment for murder?,"Bharatiya Nyaya Sanhita, 2023",103,en,1
+What is culpable homicide not amounting to murder?,"Bharatiya Nyaya Sanhita, 2023",105,en,1
+What is the punishment for cheating?,"Bharatiya Nyaya Sanhita, 2023",318,en,1
+What is the punishment for rape?,"Bharatiya Nyaya Sanhita, 2023",64,en,1
+What is the punishment for sexual harassment?,"Bharatiya Nyaya Sanhita, 2023",75,en,1
+What is the punishment for stalking?,"Bharatiya Nyaya Sanhita, 2023",78,en,1
+What is the punishment for defamation?,"Bharatiya Nyaya Sanhita, 2023",356,en,1
+What is the punishment for criminal intimidation?,"Bharatiya Nyaya Sanhita, 2023",351,en,1
+What is the punishment for extortion?,"Bharatiya Nyaya Sanhita, 2023",308,en,1
+What is cruelty by husband or relatives of the husband?,"Bharatiya Nyaya Sanhita, 2023",85,en,1
+What is dowry death?,"Bharatiya Nyaya Sanhita, 2023",80,en,1
+What is the punishment for abetment of suicide?,"Bharatiya Nyaya Sanhita, 2023",108,en,1
+What is criminal breach of trust?,"Bharatiya Nyaya Sanhita, 2023",316,en,1
+What is the punishment for causing grievous hurt?,"Bharatiya Nyaya Sanhita, 2023",117,en,1
+What is the punishment for causing death by negligence?,"Bharatiya Nyaya Sanhita, 2023",106,en,1
+What is criminal trespass?,"Bharatiya Nyaya Sanhita, 2023",329,en,1
+What is mischief under BNS?,"Bharatiya Nyaya Sanhita, 2023",324,en,1
+What does Section 303 of BNS say?,"Bharatiya Nyaya Sanhita, 2023",303,en,1
+What does Article 21 guarantee?,Constitution of India,21,en,1
+What does Article 14 say about equality?,Constitution of India,14,en,1
+What is the right to freedom of speech under the Constitution?,Constitution of India,19,en,1
+Which article protects against arrest and detention?,Constitution of India,22,en,1
+Which article abolishes untouchability?,Constitution of India,17,en,1
+Which article gives the right to constitutional remedies?,Constitution of India,32,en,1
+Which article prohibits child labour in factories?,Constitution of India,24,en,1
+Which article provides free legal aid?,Constitution of India,39A,en,1
+How is an FIR registered for a cognizable offence?,"Bharatiya Nagarik Suraksha Sanhita, 2023",173,en,1
+When can police arrest without a warrant?,"Bharatiya Nagarik Suraksha Sanhita, 2023",35,en,1
+Is an electronic record admissible as evidence?,"Bharatiya Sakshya Adhiniyam, 2023",63,en,1
+What is the punishment for identity theft online?,"Information Technology Act, 2000",66C,en,1
+What is the punishment for cheating by personation using a computer?,"Information Technology Act, 2000",66D,en,1
+What is the punishment for violating privacy by publishing private images?,"Information Technology Act, 2000",66E,en,1
+What is the punishment for publishing obscene material electronically?,"Information Technology Act, 2000",67,en,1
+How do I file a complaint before the District Consumer Commission?,"Consumer Protection Act, 2019",35,en,1
+What is the time limit for filing a consumer complaint?,"Consumer Protection Act, 2019",69,en,1
+चोरी की सज़ा क्या है?,"Bharatiya Nyaya Sanhita, 2023",303,hi,1
+लूट की सज़ा क्या है?,"Bharatiya Nyaya Sanhita, 2023",309,hi,1
+हत्या की सज़ा क्या है?,"Bharatiya Nyaya Sanhita, 2023",103,hi,1
+धोखाधड़ी की सज़ा क्या है?,"Bharatiya Nyaya Sanhita, 2023",318,hi,1
+मानहानि की सज़ा क्या है?,"Bharatiya Nyaya Sanhita, 2023",356,hi,1
+बीएनएस की धारा 303 क्या कहती है?,"Bharatiya Nyaya Sanhita, 2023",303,hi,1
+संविधान का अनुच्छेद 21 क्या कहता है?,Constitution of India,21,hi,1
+एफआईआर कैसे दर्ज की जाती है?,"Bharatiya Nagarik Suraksha Sanhita, 2023",173,hi,1
+ਚੋਰੀ ਦੀ ਸਜ਼ਾ ਕੀ ਹੈ?,"Bharatiya Nyaya Sanhita, 2023",303,pa,1
+ਕਤਲ ਦੀ ਸਜ਼ਾ ਕੀ ਹੈ?,"Bharatiya Nyaya Sanhita, 2023",103,pa,1
+ਧੋਖਾਧੜੀ ਦੀ ਸਜ਼ਾ ਕੀ ਹੈ?,"Bharatiya Nyaya Sanhita, 2023",318,pa,1
+ਪਿੱਛਾ ਕਰਨ ਦੀ ਸਜ਼ਾ ਕੀ ਹੈ?,"Bharatiya Nyaya Sanhita, 2023",78,pa,1
+ਸੰਵਿਧਾਨ ਦਾ ਅਨੁਛੇਦ 14 ਕੀ ਕਹਿੰਦਾ ਹੈ?,Constitution of India,14,pa,1
+ਸੰਵਿਧਾਨ ਦਾ ਅਨੁਛੇਦ 21 ਕੀ ਕਹਿੰਦਾ ਹੈ?,Constitution of India,21,pa,1
+Who won the cricket world cup?,,,en,0
+What is the best pizza recipe?,,,en,0
+What is the weather in Delhi today?,,,en,0
+Write a Python program to reverse a string.,,,en,0
+Which phone should I buy under 20000 rupees?,,,en,0
+भारत ने क्रिकेट विश्व कप कब जीता?,,,hi,0
+सबसे अच्छी बिरयानी कैसे बनाएं?,,,hi,0
+ਸਭ ਤੋਂ ਵਧੀਆ ਪੀਜ਼ਾ ਰੈਸਿਪੀ ਕੀ ਹੈ?,,,pa,0
+ਅੱਜ ਮੌਸਮ ਕਿਵੇਂ ਹੈ?,,,pa,0

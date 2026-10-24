@@ -1,0 +1,13 @@
+[
+ {"name":"Emergency (All-in-one)","number":"112","desc":"Police, fire, ambulance","category":"Emergency"},
+ {"name":"Police","number":"100","desc":"Police assistance","category":"Emergency"},
+ {"name":"Ambulance","number":"108","desc":"Medical emergency (state-run in most states)","category":"Emergency"},
+ {"name":"Women Helpline","number":"181","desc":"Support for women in distress","category":"Women"},
+ {"name":"Women in Distress (Police)","number":"1091","desc":"Police women helpline","category":"Women"},
+ {"name":"Childline","number":"1098","desc":"Children in need of care and protection","category":"Children"},
+ {"name":"Cyber Crime","number":"1930","desc":"Report online financial fraud (also cybercrime.gov.in)","category":"Cyber"},
+ {"name":"NALSA Legal Aid","number":"15100","desc":"Free legal services","category":"Legal Aid"},
+ {"name":"National Consumer Helpline","number":"1915","desc":"Consumer complaints","category":"Consumer"},
+ {"name":"Elder Line","number":"14567","desc":"Senior citizens support","category":"Senior Citizens"},
+ {"name":"Tele-MANAS","number":"14416","desc":"Mental health support","category":"Health"}
+]
