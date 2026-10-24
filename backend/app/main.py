@@ -14,22 +14,14 @@ from .auth import db, router as auth_router, user_from_header
 import os
 from .safety import check_blocked, self_harm, danger_note, scrub  # type: ignore[reportUnknownVariableType]
 
-allowed_origins_env = os.getenv("ALLOWED_ORIGINS", "*").strip()
-if allowed_origins_env == "*":
-    cors_origins = ["*"]
-else:
-    cors_origins = [o.strip() for o in allowed_origins_env.split(",") if o.strip()]
-    for def_origin in ["http://localhost:5173", "http://127.0.0.1:5173"]:
-        if def_origin not in cors_origins:
-            cors_origins.append(def_origin)
-
 app = FastAPI(title="Justice Department Assistant API")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=cors_origins,
-    allow_credentials=True if "*" not in cors_origins else False,
+    allow_origin_regex=r".*",
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 app.include_router(auth_router)
 
@@ -220,7 +212,7 @@ def stats(authorization: str | None = Header(default=None)) -> dict[str, Any]:
         "by_topic": [{"name": k, "value": v}
                      for k, v in Counter(r[1] for r in rows).most_common()],
         "by_lang": [{"name": k, "value": v}
-                    for k, v in Counter(r[2] for r in rows).most_common()],
+                     for k, v in Counter(r[2] for r in rows).most_common()],
         "by_act": [{"name": a, "value": n} for a, n in act_rows],
         "feedback": {"up": fbd.get(1, 0), "down": fbd.get(0, 0)},
         "recent": [{"q": r[0], "topic": r[1], "lang": r[2]}
