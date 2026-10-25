@@ -240,12 +240,13 @@ def _send_email_otp(email: str, code: str) -> dict[str, Any]:
             print(f"[AUTH EMAIL ERROR - SendGrid]: {ex}")
 
     # 4. Standard SMTP (Gmail App Password, Custom SMTP Server, AWS SES)
+    load_dotenv(override=True)
     smtp_host = os.getenv("SMTP_HOST", "").strip()
     if smtp_host:
         try:
             smtp_port = int(os.getenv("SMTP_PORT", "587"))
             smtp_user = os.getenv("SMTP_USER", "").strip()
-            smtp_pw = os.getenv("SMTP_PASSWORD", "").strip()
+            smtp_pw = os.getenv("SMTP_PASSWORD", "").strip().replace(" ", "")
             smtp_from = os.getenv("SMTP_FROM", smtp_user or "noreply@nyayasahayak.gov.in")
             
             msg = EmailMessage()
