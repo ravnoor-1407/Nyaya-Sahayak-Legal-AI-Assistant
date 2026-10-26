@@ -298,7 +298,7 @@ def retrieve(question, k=8):
         push(i)
 
     return [dict(CHUNKS[i],
-                 distance=dense_dist.get(i, max(0.10, 0.28 - min(0.18, scores.get(i, 0) * 0.05))))
+                 distance=dense_dist.get(i, max(0.08, min(MAX_DIST - 0.02, 0.19) - min(0.08, scores.get(i, 0) * 0.02))))
             for i in final[:k]]
 
 
