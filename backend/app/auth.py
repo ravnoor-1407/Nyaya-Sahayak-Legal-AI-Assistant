@@ -154,6 +154,7 @@ def _build_email_html(code: str) -> str:
 # ===================== Real-time Email & SMS Sender Services =====================
 
 def _send_email_otp(email: str, code: str) -> dict[str, Any]:
+    load_dotenv(override=True)
     html_content = _build_email_html(code)
 
     # 1. Resend API (https://resend.com)
@@ -179,6 +180,9 @@ def _send_email_otp(email: str, code: str) -> dict[str, Any]:
                 if resp.status in (200, 201):
                     print(f"[AUTH EMAIL] Successfully delivered OTP via Resend to {email}")
                     return {"sent": True, "provider": "resend"}
+        except urllib.error.HTTPError as ex:
+            err_body = ex.read().decode("utf-8", errors="ignore")
+            print(f"[AUTH EMAIL ERROR - Resend HTTP {ex.code}]: {err_body}")
         except Exception as ex:
             print(f"[AUTH EMAIL ERROR - Resend]: {ex}")
 

@@ -28,6 +28,10 @@ services:
         sync: false
       - key: GROQ_API_KEY
         sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: RESEND_FROM
+        value: "NyayaSahayak <onboarding@resend.dev>"
       - key: SMTP_HOST
         value: smtp.gmail.com
       - key: SMTP_PORT
