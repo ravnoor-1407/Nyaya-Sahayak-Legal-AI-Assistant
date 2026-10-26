@@ -298,7 +298,8 @@ def retrieve(question, k=8):
         push(i)
 
     return [dict(CHUNKS[i],
-                 distance=dense_dist.get(i, max(0.08, min(MAX_DIST - 0.02, 0.19) - min(0.08, scores.get(i, 0) * 0.02))))
+                 distance=dense_dist[i] if i in dense_dist else max(0.05, 0.15 - min(0.10, scores.get(i, 0) * 0.01)),
+                 has_dense=(i in dense_dist))
             for i in final[:k]]
 
 
@@ -328,7 +329,8 @@ ANSWER:"""
 
 def answer(question, lang="en"):
     hits = retrieve(question, k=6)
-    if not hits or min(h["distance"] for h in hits) > MAX_DIST:
+    has_dense = any(h.get("has_dense", False) for h in hits)
+    if not hits or (has_dense and min(h["distance"] for h in hits) > MAX_DIST):
         return NOT_FOUND.get(lang, NOT_FOUND["en"]), [], False
     context = "\n\n".join(
         "[" + label(h) + "] " + h["title"] + "\n" + h["text"][:1200]

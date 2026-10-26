@@ -47,7 +47,7 @@ def root() -> dict[str, str]:
     return {
         "status": "online",
         "service": "NyayaSahayak Legal AI Assistant API",
-        "version": "1.0.0",
+        "version": "1.0.1",
         "docs": "/docs",
     }
 
