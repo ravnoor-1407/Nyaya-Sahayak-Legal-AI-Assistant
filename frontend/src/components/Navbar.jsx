@@ -290,7 +290,7 @@ export default function Navbar() {
         </div>
 
         {menu && (
-          <div className="menu-pop card card-accent card-raised absolute left-0 right-0 top-full mt-2 hidden p-4 lg:block">
+          <div className="menu-pop card card-accent card-raised absolute left-0 right-0 top-full mt-2 hidden p-4 lg:block z-50 shadow-2xl bg-surface">
             <div className="grid grid-cols-3 gap-4">
               {groups.map((g) => (
                 <div key={g.title}>
@@ -307,7 +307,7 @@ export default function Navbar() {
         )}
 
         {acct && user && (
-          <div className="menu-pop card card-accent card-raised absolute right-0 top-full mt-2 w-64 p-3">
+          <div className="menu-pop card card-accent card-raised absolute right-0 top-full mt-2 w-64 p-3 z-50 shadow-2xl bg-surface">
             <div className="border-b px-2 pb-2">
               <div className="font-bold text-accent">
                 {tr("Hello", "नमस्ते", "ਸਤਿ ਸ਼੍ਰੀ ਅਕਾਲ")} {displayName}!
@@ -332,7 +332,7 @@ export default function Navbar() {
         )}
 
         {mobile && (
-          <div className="menu-pop card card-accent card-raised absolute left-0 right-0 top-full mt-2 max-h-[70vh] overflow-y-auto p-3 lg:hidden">
+          <div className="menu-pop card card-accent card-raised absolute left-0 right-0 top-full mt-2 max-h-[70vh] overflow-y-auto p-3 lg:hidden z-50 shadow-2xl bg-surface">
             {user && (
               <div className="mb-2 flex items-center gap-2 border-b pb-2 px-1">
                 <span className="btn-primary grid h-7 w-7 place-items-center rounded-full text-xs font-bold shrink-0">
