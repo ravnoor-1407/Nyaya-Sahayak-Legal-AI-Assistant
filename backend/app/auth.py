@@ -186,7 +186,12 @@ def _send_email_otp(email: str, code: str) -> dict[str, Any]:
     brevo_key = os.getenv("BREVO_API_KEY", "").strip() or os.getenv("SENDINBLUE_API_KEY", "").strip()
     if brevo_key:
         try:
-            sender_email = os.getenv("BREVO_FROM", os.getenv("SMTP_FROM", "verify@nyayasahayak.gov.in"))
+            sender_email = (
+                os.getenv("BREVO_FROM", "").strip()
+                or os.getenv("SMTP_FROM", "").strip()
+                or os.getenv("SMTP_USER", "").strip()
+                or "verify@nyayasahayak.gov.in"
+            )
             payload = {
                 "sender": {"name": "NyayaSahayak", "email": sender_email},
                 "to": [{"email": email}],
