@@ -5,8 +5,9 @@ from pathlib import Path
 from typing import Any, Iterable, cast
 
 import joblib  # type: ignore[reportMissingTypeStubs]
-from fastapi import FastAPI, Header
+from fastapi import FastAPI, Header, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 from . import rag
@@ -24,6 +25,21 @@ app.add_middleware(
     expose_headers=["*"],
 )
 app.include_router(auth_router)
+
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+    origin = request.headers.get("origin", "*")
+    return JSONResponse(
+        status_code=500,
+        content={"detail": str(exc)},
+        headers={
+            "Access-Control-Allow-Origin": origin if origin != "null" else "*",
+            "Access-Control-Allow-Credentials": "true",
+            "Access-Control-Allow-Headers": "*",
+            "Access-Control-Allow-Methods": "*",
+        },
+    )
 
 
 @app.get("/")

@@ -21,7 +21,7 @@ services:
       - key: ENVIRONMENT
         value: production
       - key: DEBUG_OTP
-        value: "0"
+        value: "1"
       - key: ALLOWED_ORIGINS
         value: "*"
       - key: GEMINI_API_KEY

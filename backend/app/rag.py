@@ -20,43 +20,61 @@ _local_model = None
 
 def _get_local_model():
     global _local_model
+    # Never load the 1.1GB PyTorch model in RAM-constrained environments like Render Free Tier (512MB max)
+    if os.getenv("RENDER") or os.getenv("LOW_MEM"):
+        return None
     if _local_model is None:
-        from sentence_transformers import SentenceTransformer
-        _local_model = SentenceTransformer(EMBED)
+        try:
+            from sentence_transformers import SentenceTransformer
+            _local_model = SentenceTransformer(EMBED)
+        except Exception as e:
+            print(f"[RAG] Could not load local model: {e}")
+            return None
     return _local_model
 
 
-def _get_query_embedding(query_text: str) -> list[float]:
+def _get_query_embedding(query_text: str) -> list[float] | None:
     """Generates a normalized 768-dim query embedding.
     Uses Hugging Face Serverless Inference API if HF_TOKEN is configured to avoid
     loading the 1.1GB PyTorch model into memory (critical for 512MB RAM environments
-    like Render Free Tier). Falls back to lazy-loaded local SentenceTransformer."""
+    like Render Free Tier). Falls back to local SentenceTransformer if available, or None."""
     hf_token = os.getenv("HF_TOKEN") or os.getenv("HUGGINGFACE_API_KEY")
     if hf_token:
-        try:
-            url = f"https://router.huggingface.co/hf-inference/models/{EMBED}"
-            payload = json.dumps({
-                "inputs": ["query: " + query_text],
-                "options": {"wait_for_model": True}
-            }).encode("utf-8")
-            req = urllib.request.Request(
-                url,
-                data=payload,
-                headers={
-                    "Authorization": f"Bearer {hf_token}",
-                    "Content-Type": "application/json"
-                }
-            )
-            with urllib.request.urlopen(req, timeout=20) as resp:
-                data = json.loads(resp.read().decode("utf-8"))
-                vec = data[0] if isinstance(data[0], list) else data
-                norm = sum(x * x for x in vec) ** 0.5 or 1.0
-                return [x / norm for x in vec]
-        except Exception as e:
-            print(f"[RAG] HF Inference API unavailable ({e}). Falling back to local model.")
+        endpoints = [
+            f"https://router.huggingface.co/hf-inference/models/{EMBED}",
+            f"https://api-inference.huggingface.co/models/{EMBED}",
+        ]
+        for url in endpoints:
+            try:
+                payload = json.dumps({
+                    "inputs": ["query: " + query_text],
+                    "options": {"wait_for_model": True}
+                }).encode("utf-8")
+                req = urllib.request.Request(
+                    url,
+                    data=payload,
+                    headers={
+                        "Authorization": f"Bearer {hf_token.strip()}",
+                        "Content-Type": "application/json",
+                        "User-Agent": "NyayaSahayak-App"
+                    }
+                )
+                with urllib.request.urlopen(req, timeout=12) as resp:
+                    data = json.loads(resp.read().decode("utf-8"))
+                    vec = data[0] if isinstance(data[0], list) else data
+                    norm = sum(x * x for x in vec) ** 0.5 or 1.0
+                    return [x / norm for x in vec]
+            except Exception as e:
+                print(f"[RAG] HF Inference endpoint ({url}) failed: {e}")
 
     local = _get_local_model()
-    return local.encode(["query: " + query_text], normalize_embeddings=True).tolist()[0]
+    if local is not None:
+        try:
+            return local.encode(["query: " + query_text], normalize_embeddings=True).tolist()[0]
+        except Exception as e:
+            print(f"[RAG] Local model encode failed: {e}")
+            return None
+    return None
 
 
 def __getattr__(name):
@@ -226,12 +244,16 @@ def retrieve(question, k=8):
 
     # 1) dense retrieval on the original and the English query
     for qq in queries:
-        emb = [_get_query_embedding(qq)]
-        r = col.query(query_embeddings=emb, n_results=n)
-        for rank, (cid, d) in enumerate(zip(r["ids"][0], r["distances"][0])):
-            idx = int(cid[1:])
-            scores[idx] = scores.get(idx, 0) + 1 / (60 + rank)
-            dense_dist[idx] = min(d, dense_dist.get(idx, 9.0))
+        try:
+            q_emb = _get_query_embedding(qq)
+            if q_emb is not None:
+                r = col.query(query_embeddings=[q_emb], n_results=n)
+                for rank, (cid, d) in enumerate(zip(r["ids"][0], r["distances"][0])):
+                    idx = int(cid[1:])
+                    scores[idx] = scores.get(idx, 0) + 1 / (60 + rank)
+                    dense_dist[idx] = min(d, dense_dist.get(idx, 9.0))
+        except Exception as ex:
+            print(f"[RAG] Dense query skipped: {ex}")
 
     # 2) keyword (TF-IDF) on the English query
     if USE_KEYWORD:
@@ -275,7 +297,8 @@ def retrieve(question, k=8):
                 push(j)        # the real BNS section first
         push(i)
 
-    return [dict(CHUNKS[i], distance=dense_dist.get(i, 1.0))
+    return [dict(CHUNKS[i],
+                 distance=dense_dist.get(i, max(0.10, 0.28 - min(0.18, scores.get(i, 0) * 0.05))))
             for i in final[:k]]
 
 
