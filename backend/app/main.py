@@ -25,6 +25,21 @@ app.add_middleware(
 )
 app.include_router(auth_router)
 
+
+@app.get("/")
+def root() -> dict[str, str]:
+    return {
+        "status": "online",
+        "service": "NyayaSahayak Legal AI Assistant API",
+        "version": "1.0.0",
+        "docs": "/docs",
+    }
+
+
+@app.get("/health")
+def health() -> dict[str, str]:
+    return {"status": "healthy"}
+
 CHUNKS: list[dict[str, Any]] = [json.loads(l) for l in
                                 open("data/processed/chunks.jsonl", encoding="utf-8")]
 HELPLINES: Any = json.load(open("app/data/helplines.json", encoding="utf-8"))
