@@ -1,12 +1,23 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
-  LogIn, UserPlus, ShieldCheck, LayoutDashboard, LogOut,
-  AlertTriangle, CheckCircle2, Mail, Lock, ArrowRight,
-  Eye, EyeOff, User, Scale, BookOpen,
+  LogIn, UserPlus, LayoutDashboard, LogOut,
+  AlertTriangle, CheckCircle2, Mail, Lock, Sparkles, ArrowRight,
+  Eye, EyeOff, Dices, User,
 } from "lucide-react";
 import { useLang } from "../LangContext";
 import { useAuth } from "../AuthContext";
+
+const SAMPLE_NAMES = [
+  "Priya Sharma",
+  "Rahul Kumar",
+  "Ananya Singh",
+  "Amit Patel",
+  "Simran Kaur",
+  "Vikram Malhotra",
+  "Neha Gupta",
+  "Arjun Rao",
+];
 
 export default function Auth() {
   const { tr } = useLang();
@@ -24,7 +35,6 @@ export default function Auth() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(true);
 
   // State feedback
   const [err, setErr] = useState("");
@@ -33,19 +43,19 @@ export default function Auth() {
 
   const messages = {
     invalid_email: tr(
-      "Please enter a valid email address.",
-      "कृपया एक मान्य ईमेल पता दर्ज करें।",
-      "ਕਿਰਪਾ ਕਰਕੇ ਇੱਕ ਵੈਧ ਈਮੇਲ ਪਤਾ ਦਰਜ ਕਰੋ।"
+      "Please enter a valid email address (e.g. user@example.com).",
+      "कृपया एक मान्य ईमेल पता दर्ज करें (उदा. user@example.com)।",
+      "ਕਿਰਪਾ ਕਰਕੇ ਇੱਕ ਵੈਧ ਈਮੇਲ ਪਤਾ ਦਰਜ ਕਰੋ (ਉਦਾ. user@example.com)।"
     ),
     empty_password: tr(
-      "Please enter your password.",
-      "कृपया अपना पासवर्ड दर्ज करें।",
-      "ਕਿਰਪਾ ਕਰਕੇ ਆਪਣਾ ਪਾਸਵਰਡ ਦਰਜ ਕਰੋ।"
+      "Please enter a password.",
+      "कृपया पासवर्ड दर्ज करें।",
+      "ਕਿਰਪਾ ਕਰਕੇ ਪਾਸਵਰਡ ਦਰਜ ਕਰੋ।"
     ),
     error: tr(
-      "Authentication error. Please try again.",
-      "प्रमाणीकरण त्रुटि। कृपया पुनः प्रयास करें।",
-      "ਪ੍ਰਮਾਣਿਕਤਾ ਗਲਤੀ। ਕਿਰਪਾ ਕਰਕੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।"
+      "Could not reach the server. Please try again.",
+      "सर्वर तक नहीं पहुँच पाए। कृपया दोबारा कोशिश कीजिए।",
+      "ਸਰਵਰ ਤੱਕ ਨਹੀਂ ਪਹੁੰਚ ਸਕੇ। ਕਿਰਪਾ ਕਰਕੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।"
     ),
   };
 
@@ -67,6 +77,16 @@ export default function Auth() {
       const pendingQ = location.state && location.state.q;
       nav(dest, { replace: true, state: pendingQ ? { q: pendingQ } : undefined });
     }, 450);
+  };
+
+  const handleFillRandom = () => {
+    clearMessages();
+    const randomId = Math.floor(100 + Math.random() * 900);
+    const sample = SAMPLE_NAMES[Math.floor(Math.random() * SAMPLE_NAMES.length)];
+    const handle = sample.toLowerCase().replace(/\s+/g, ".");
+    setName(sample);
+    setEmail(`${handle}.${randomId}@example.com`);
+    setPassword("demo1234");
   };
 
   const handleSubmit = async (e) => {
@@ -151,81 +171,85 @@ export default function Auth() {
 
   return (
     <div className="mx-auto grid max-w-4xl gap-6 lg:grid-cols-[0.95fr_1.05fr]">
-      {/* Left Column: Official Portal Information */}
+      {/* Left Column: Demo Information & 1-Click Credentials */}
       <section className="hero-bg card card-accent card-raised p-6 sm:p-8 flex flex-col justify-between">
         <div>
           <span className="tone-badge rise" style={{ "--tone": "var(--c-gold)" }}>
-            <ShieldCheck size={13} />
-            {tr("Citizen Access Portal", "नागरिक सहायता पोर्टल", "ਨਾਗਰਿਕ ਸਹਾਇਤਾ ਪੋਰਟਲ")}
+            <Sparkles size={13} />
+            {tr("Basic Demo Mode", "बेसिक डेमो मोड", "ਬੇਸਿਕ ਡੈਮੋ ਮੋਡ")}
           </span>
 
           <h1 className="rise mt-3 text-3xl font-bold" style={{ animationDelay: "60ms" }}>
             {tr(
-              "Access Citizen Legal Services",
-              "नागरिक कानूनी सेवाओं तक पहुँचें",
-              "ਨਾਗਰਿਕ ਕਾਨੂੰਨੀ ਸੇਵਾਵਾਂ ਤੱਕ ਪਹੁੰਚੋ"
+              "Sign in with any email & password",
+              "किसी भी ईमेल और पासवर्ड से साइन इन करें",
+              "ਕਿਸੇ ਵੀ ਈਮੇਲ ਅਤੇ ਪਾਸਵਰਡ ਨਾਲ ਸਾਈਨ ਇਨ ਕਰੋ"
             )}
           </h1>
 
           <p className="mt-2 text-sm text-muted">
             {tr(
-              "Sign in to consult the AI legal assistant, bookmark statutory references, and access free legal aid tools under Articles 21 & 39A of the Constitution of India.",
-              "एआई कानूनी सहायक से परामर्श करने, कानूनी संदर्भों को सहेजने और भारत के संविधान के अनुच्छेद 21 और 39A के तहत मुफ्त कानूनी सहायता उपकरण प्राप्त करने के लिए साइन इन करें।",
-              "ਏਆਈ ਕਾਨੂੰਨੀ ਸਹਾਇਕ ਨਾਲ ਸਲਾਹ ਕਰਨ, ਕਾਨੂੰਨੀ ਹਵਾਲਿਆਂ ਨੂੰ ਸੁਰੱਖਿਅਤ ਕਰਨ ਅਤੇ ਭਾਰਤ ਦੇ ਸੰਵਿਧਾਨ ਦੇ ਅਨੁਛੇਦ 21 ਅਤੇ 39A ਅਧੀਨ ਮੁਫਤ ਕਾਨੂੰਨੀ ਸਹਾਇਤਾ ਪ੍ਰਾਪਤ ਕਰਨ ਲਈ ਸਾਈਨ ਇਨ ਕਰੋ।"
+              "For this demo, simply enter any random email address and a password. No OTPs, email verifications, or phone confirmations are required.",
+              "इस डेमो के लिए, बस कोई भी यादृच्छिक ईमेल पता और पासवर्ड दर्ज करें। किसी ओटीपी या ईमेल सत्यापन की आवश्यकता नहीं है।",
+              "ਇਸ ਡੈਮੋ ਲਈ, ਬਸ ਕੋਈ ਵੀ ਬੇਤਰਤੀਬ ਈਮੇਲ ਪਤਾ ਅਤੇ ਪਾਸਵਰਡ ਦਰਜ ਕਰੋ। ਕਿਸੇ ਓਟੀਪੀ ਜਾਂ ਈਮੇਲ ਪੁਸ਼ਟੀਕਰਨ ਦੀ ਲੋੜ ਨਹੀਂ ਹੈ।"
             )}
           </p>
 
-          <ul className="rise mt-6 space-y-3.5 text-sm" style={{ animationDelay: "120ms" }}>
+          <ul className="rise mt-5 space-y-3 text-sm" style={{ animationDelay: "120ms" }}>
             {[
               [
                 [
-                  "Verified Statutory Guidance: Direct citations from BNS, BNSS, BSA, and Constitution of India.",
-                  "सत्यापित वैधानिक मार्गदर्शन: बीएनएस, बीएनएसएस, बीएसए और भारत के संविधान से सीधे उद्धरण।",
-                  "ਪ੍ਰਮਾਣਿਤ ਕਾਨੂੰਨੀ ਮਾਰਗਦਰਸ਼ਨ: ਬੀਐਨਐਸ, ਬੀਐਨਐਸਐਸ, ਬੀਐਸਏ ਅਤੇ ਭਾਰਤ ਦੇ ਸੰਵਿਧਾਨ ਤੋਂ ਸਿੱਧੇ ਹਵਾਲੇ।"
+                  "Instant Access: Type any email address and password to sign in immediately.",
+                  "त्वरित पहुँच: तुरंत साइन इन करने के लिए कोई भी ईमेल और पासवर्ड लिखें।",
+                  "ਤੁਰੰਤ ਪਹੁੰਚ: ਤੁਰੰਤ ਸਾਈਨ ਇਨ ਕਰਨ ਲਈ ਕੋਈ ਵੀ ਈਮੇਲ ਅਤੇ ਪਾਸਵਰਡ ਲਿਖੋ।"
                 ],
                 "var(--c-green)",
-                Scale,
               ],
               [
                 [
-                  "Confidential & Private: Your queries and consultation details are protected under legal privacy norms.",
-                  "गोपनीय और सुरक्षित: आपके प्रश्न और परामर्श विवरण कानूनी गोपनीयता नियमों के तहत सुरक्षित हैं।",
-                  "ਗੁਪਤ ਅਤੇ ਸੁਰੱਖਿਅਤ: ਤੁਹਾਡੇ ਸਵਾਲ ਅਤੇ ਸਲਾਹ ਦੇ ਵੇਰਵੇ ਕਾਨੂੰਨੀ ਗੋਪਨੀਯਤਾ ਨਿਯਮਾਂ ਅਧੀਨ ਸੁਰੱਖਿਅਤ ਹਨ।"
+                  "AI Legal Assistant: Access legal consultations, rights guidance, and citations.",
+                  "एआई कानूनी सहायक: कानूनी परामर्श, अधिकार मार्गदर्शन और संदर्भ प्राप्त करें।",
+                  "ਏਆਈ ਕਾਨੂੰਨੀ ਸਹਾਇਕ: ਕਾਨੂੰਨੀ ਸਲਾਹ, ਅਧਿਕਾਰ ਮਾਰਗਦਰਸ਼ਨ ਅਤੇ ਹਵਾਲੇ ਪ੍ਰਾਪਤ ਕਰੋ।"
                 ],
                 "var(--c-blue)",
-                ShieldCheck,
               ],
               [
                 [
-                  "Citizen Rights Portfolio: Access personalized legal aid calculations, saved queries, and rights handbooks.",
-                  "नागरिक अधिकार पोर्टफोलियो: व्यक्तिगत कानूनी सहायता गणना, सहेजे गए प्रश्न और अधिकार पुस्तिकाएँ प्राप्त करें।",
-                  "ਨਾਗਰਿਕ ਅਧਿਕਾਰ ਪੋਰਟਫੋਲੀਓ: ਨਿੱਜੀ ਕਾਨੂੰਨੀ ਸਹਾਇਤਾ ਗਣਨਾ, ਸੁਰੱਖਿਅਤ ਕੀਤੇ ਸਵਾਲ ਅਤੇ ਅਧਿਕਾਰ ਪੁਸਤਕਾਂ ਪ੍ਰਾਪਤ ਕਰੋ।"
+                  "Saved History: Your questions, dashboard bookmarks, and activity are preserved.",
+                  "सहेजा गया इतिहास: आपके प्रश्न, डैशबोर्ड बुकमार्क और गतिविधियाँ सुरक्षित रहेंगी।",
+                  "ਸਾਂਭਿਆ ਇਤਿਹਾਸ: ਤੁਹਾਡੇ ਸਵਾਲ, ਡੈਸ਼ਬੋਰਡ ਬੁੱਕਮਾਰਕ ਅਤੇ ਗਤੀਵਿਧੀਆਂ ਸੁਰੱਖਿਅਤ ਰਹਿਣਗੀਆਂ।"
                 ],
                 "var(--c-gold)",
-                BookOpen,
               ],
-            ].map(([t, tone, Icon], i) => (
+            ].map(([t, tone], i) => (
               <li key={i} className="flex gap-2.5">
-                <Icon size={17} className="mt-0.5 shrink-0" style={{ color: tone }} />
+                <CheckCircle2 size={17} className="mt-0.5 shrink-0" style={{ color: tone }} />
                 <span>{tr(...t)}</span>
               </li>
             ))}
           </ul>
         </div>
 
-        <div className="mt-6 rounded-2xl border border-line bg-surface/70 p-4 text-xs text-muted flex items-start gap-2.5">
-          <ShieldCheck size={16} className="mt-0.5 shrink-0 text-accent" />
-          <p>
-            {tr(
-              "NyayaSahayak is a digital public legal initiative designed to ensure equal justice under law is accessible to every citizen.",
-              "न्याय सहायक एक डिजिटल सार्वजनिक कानूनी पहल है जिसे यह सुनिश्चित करने के लिए डिज़ाइन किया गया है कि कानून के तहत समान न्याय हर नागरिक के लिए सुलभ हो।",
-              "ਨਿਆਏ ਸਹਾਇਕ ਇੱਕ ਡਿਜੀਟਲ ਪਬਲਿਕ ਕਾਨੂੰਨੀ ਪਹਿਲਕਦਮੀ ਹੈ ਜੋ ਇਹ ਯਕੀਨੀ ਬਣਾਉਣ ਲਈ ਤਿਆਰ ਕੀਤੀ ਗਈ ਹੈ ਕਿ ਕਾਨੂੰਨ ਅਧੀਨ ਬਰਾਬਰ ਨਿਆਂ ਹਰੇਕ ਨਾਗਰਿਕ ਤੱਕ ਪਹੁੰਚਯੋਗ ਹੋਵੇ।"
-            )}
-          </p>
+        {/* 1-Click Demo Account Quick Fill Button */}
+        <div className="mt-6 rounded-2xl border border-line bg-surface/70 p-4">
+          <div className="flex items-center justify-between text-xs text-muted mb-2 font-medium">
+            <span>{tr("Need a quick random email?", "तुरंत यादृच्छिक ईमेल चाहिए?", "ਤੁਰੰਤ ਬੇਤਰਤੀਬ ਈਮੇਲ ਚਾਹੀਦੀ ਹੈ?")}</span>
+            <span className="text-[11px] font-bold text-accent uppercase tracking-wider">
+              {tr("1-Click Demo", "1-क्लिक डेमो", "1-ਕਲਿੱਕ ਡੈਮੋ")}
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={handleFillRandom}
+            className="btn btn-ghost w-full flex items-center justify-center gap-2 border border-line hover:border-accent text-sm font-semibold"
+          >
+            <Dices size={16} className="text-accent" />
+            <span>{tr("Fill Random Demo Credentials", "यादृच्छिक डेमो क्रेडेंशियल भरें", "ਬੇਤਰਤੀਬ ਡੈਮੋ ਕ੍ਰੈਡੈਂਸ਼ੀਅਲ ਭਰੋ")}</span>
+          </button>
         </div>
       </section>
 
-      {/* Right Column: Authentic Sign In / Create Account Form */}
+      {/* Right Column: Sign In / Sign Up Form */}
       <section className="card card-accent card-raised p-6 sm:p-8">
         {location.state?.from === "/assistant" && (
           <div className="mb-5 flex items-start gap-2.5 rounded-xl border border-amber-500/40 bg-amber-500/15 p-3.5 text-xs text-amber-900 dark:text-amber-200">
@@ -233,16 +257,16 @@ export default function Auth() {
             <div>
               <div className="font-bold">
                 {tr(
-                  "Sign in to continue to AI Legal Assistant",
-                  "एआई कानूनी सहायक का उपयोग करने के लिए साइन इन करें",
-                  "ਏਆਈ ਕਾਨੂੰਨੀ ਸਹਾਇਕ ਦੀ ਵਰਤੋਂ ਕਰਨ ਲਈ ਸਾਈਨ ਇਨ ਕਰੋ"
+                  "Sign in required to consult AI Assistant",
+                  "एआई सहायक से परामर्श के लिए साइन इन आवश्यक है",
+                  "ਏਆਈ ਸਹਾਇਕ ਨਾਲ ਸਲਾਹ ਕਰਨ ਲਈ ਸਾਈਨ ਇਨ ਲਾਜ਼ਮੀ ਹੈ"
                 )}
               </div>
               <div className="mt-0.5 opacity-90">
                 {tr(
-                  "Please enter your credentials below to access legal consultations and citations.",
-                  "कानूनी परामर्श और संदर्भों तक पहुँचने के लिए कृपया नीचे अपने क्रेडेंशियल दर्ज करें।",
-                  "ਕਾਨੂੰਨੀ ਸਲਾਹ ਅਤੇ ਹਵਾਲਿਆਂ ਤੱਕ ਪਹੁੰਚਣ ਲਈ ਕਿਰਪਾ ਕਰਕੇ ਹੇਠਾਂ ਆਪਣੇ ਵੇਰਵੇ ਦਰਜ ਕਰੋ।"
+                  "Enter any email address and password below to continue to the AI Legal Assistant.",
+                  "एआई कानूनी सहायक का उपयोग जारी रखने के लिए नीचे कोई भी ईमेल और पासवर्ड दर्ज करें।",
+                  "ਏਆਈ ਕਾਨੂੰਨੀ ਸਹਾਇਕ ਦੀ ਵਰਤੋਂ ਜਾਰੀ ਰੱਖਣ ਲਈ ਹੇਠਾਂ ਕੋਈ ਵੀ ਈਮੇਲ ਅਤੇ ਪਾਸਵਰਡ ਦਰਜ ਕਰੋ।"
                 )}
               </div>
               {location.state?.q && (
@@ -254,7 +278,7 @@ export default function Auth() {
           </div>
         )}
 
-        {/* Tab switchers: Sign In vs Create Account */}
+        {/* Tab switchers: Sign In vs Sign Up */}
         <div className="flex rounded-xl bg-surface/80 p-1 border border-line mb-6">
           <button
             type="button"
@@ -291,11 +315,11 @@ export default function Auth() {
 
         {/* The Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Name field (shown for Create Account) */}
+          {/* Name field (shown for Create Account or optional) */}
           {mode === "up" && (
             <div>
               <label className="text-xs font-semibold text-muted block mb-1" htmlFor="auth-name">
-                {tr("Full Name", "पूरा नाम", "ਪੂਰਾ ਨਾਮ")}
+                {tr("Your Full Name", "आपका पूरा नाम", "ਤੁਹਾਡਾ ਪੂਰਾ ਨਾਮ")}
               </label>
               <div className="relative">
                 <User size={16} className="absolute left-3 top-3 text-muted" />
@@ -323,7 +347,7 @@ export default function Auth() {
                 type="email"
                 required
                 className="input pl-10 text-sm"
-                placeholder="name@example.com"
+                placeholder="name@example.com (any random email)"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
@@ -336,15 +360,9 @@ export default function Auth() {
               <label className="text-xs font-semibold text-muted" htmlFor="auth-password">
                 {tr("Password", "पासवर्ड", "ਪਾਸਵਰਡ")}
               </label>
-              {mode === "in" && (
-                <button
-                  type="button"
-                  onClick={() => alert(tr("Password recovery: You can enter your email with any password to sign in directly.", "पासवर्ड रिकवरी: आप सीधे साइन इन करने के लिए किसी भी पासवर्ड के साथ अपना ईमेल दर्ज कर सकते हैं।", "ਪਾਸਵਰਡ ਰਿਕਵਰੀ: ਤੁਸੀਂ ਸਿੱਧਾ ਸਾਈਨ ਇਨ ਕਰਨ ਲਈ ਕਿਸੇ ਵੀ ਪਾਸਵਰਡ ਨਾਲ ਆਪਣਾ ਈਮੇਲ ਦਰਜ ਕਰ ਸਕਦੇ ਹੋ।"))}
-                  className="text-[11px] text-muted hover:text-accent font-medium"
-                >
-                  {tr("Forgot password?", "पासवर्ड भूल गए?", "ਪਾਸਵਰਡ ਭੁੱਲ ਗਏ?")}
-                </button>
-              )}
+              <span className="text-[11px] text-muted">
+                {tr("Any password works", "कोई भी पासवर्ड चलेगा", "ਕੋਈ ਵੀ ਪਾਸਵਰਡ ਕੰਮ ਕਰੇਗਾ")}
+              </span>
             </div>
             <div className="relative">
               <Lock size={16} className="absolute left-3 top-3 text-muted" />
@@ -353,7 +371,7 @@ export default function Auth() {
                 type={showPassword ? "text" : "password"}
                 required
                 className="input pl-10 pr-10 text-sm"
-                placeholder="••••••••"
+                placeholder={tr("Enter password", "पासवर्ड दर्ज करें", "ਪਾਸਵਰਡ ਦਰਜ ਕਰੋ")}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
@@ -368,22 +386,6 @@ export default function Auth() {
             </div>
           </div>
 
-          {/* Remember Me Option */}
-          {mode === "in" && (
-            <div className="flex items-center gap-2 pt-1 text-xs text-muted">
-              <input
-                id="auth-remember"
-                type="checkbox"
-                checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
-                className="rounded border-line text-accent focus:ring-accent"
-              />
-              <label htmlFor="auth-remember" className="cursor-pointer">
-                {tr("Keep me signed in on this device", "मुझे इस डिवाइस पर साइन इन रखें", "ਮੈਨੂੰ ਇਸ ਡਿਵਾਈਸ 'ਤੇ ਸਾਈਨ ਇਨ ਰੱਖੋ")}
-              </label>
-            </div>
-          )}
-
           {/* Submit button */}
           <button
             type="submit"
@@ -395,7 +397,7 @@ export default function Auth() {
               {busy
                 ? tr("Signing in…", "साइन इन हो रहा है…", "ਸਾਈਨ ਇਨ ਹੋ ਰਿਹਾ ਹੈ…")
                 : mode === "up"
-                ? tr("Create Account", "खाता बनाएँ", "ਖਾਤਾ ਬਣਾਓ")
+                ? tr("Create Account & Sign In", "खाता बनाएँ और साइन इन करें", "ਖਾਤਾ ਬਣਾਓ ਅਤੇ ਸਾਈਨ ਇਨ ਕਰੋ")
                 : tr("Sign In", "साइन इन करें", "ਸਾਈਨ ਇਨ ਕਰੋ")}
             </span>
           </button>
@@ -405,7 +407,7 @@ export default function Auth() {
         <div className="mt-5 text-center text-xs text-muted">
           {mode === "in" ? (
             <p>
-              {tr("Don't have an account?", "खाता नहीं है?", "ਖਾਤਾ ਨਹੀਂ ਹੈ?")}{" "}
+              {tr("Don't have an account?", "खाता नहीं है?", "ਖਾਤਾ नहीं है?")}{" "}
               <button
                 type="button"
                 onClick={() => {
@@ -414,12 +416,12 @@ export default function Auth() {
                 }}
                 className="font-bold text-accent hover:underline ml-1"
               >
-                {tr("Create an account", "खाता बनाएँ", "ਖਾਤਾ ਬਣਾਓ")}
+                {tr("Create one now", "अभी बनाएँ", "ਹੁਣੇ ਬਣਾਓ")}
               </button>
             </p>
           ) : (
             <p>
-              {tr("Already registered?", "पहले से पंजीकृत हैं?", "ਪਹਿਲਾਂ ਤੋਂ ਰਜਿਸਟਰਡ ਹੋ?")}{" "}
+              {tr("Already have credentials?", "पहले से क्रेडेंशियल हैं?", "ਪਹਿਲਾਂ ਤੋਂ ਕ੍ਰੈਡੈਂਸ਼ੀਅਲ ਹਨ?")}{" "}
               <button
                 type="button"
                 onClick={() => {
@@ -428,7 +430,7 @@ export default function Auth() {
                 }}
                 className="font-bold text-accent hover:underline ml-1"
               >
-                {tr("Sign in to your account", "अपने खाते में साइन इन करें", "ਆਪਣੇ ਖਾਤੇ ਵਿੱਚ ਸਾਈਨ ਇਨ ਕਰੋ")}
+                {tr("Sign in here", "यहाँ साइन इन करें", "ਇੱਥੇ ਸਾਈਨ ਇਨ ਕਰੋ")}
               </button>
             </p>
           )}
@@ -453,15 +455,6 @@ export default function Auth() {
             <span>{success}</span>
           </p>
         )}
-
-        {/* Privacy Note */}
-        <div className="mt-6 border-t border-line/60 pt-3 text-center text-[11px] text-muted">
-          {tr(
-            "Protected by Articles 21 & 39A compliance. Your legal inquiries remain anonymous.",
-            "अनुच्छेद 21 और 39A अनुपालन द्वारा सुरक्षित। आपकी कानूनी पूछताछ गोपनीय रहती है।",
-            "ਅਨੁਛੇਦ 21 ਅਤੇ 39A ਅਨੁਕੂਲਤਾ ਦੁਆਰਾ ਸੁਰੱਖਿਅਤ। ਤੁਹਾਡੀ ਕਾਨੂੰਨੀ ਪੁੱਛਗਿੱਛ ਗੁਪਤ ਰਹਿੰਦੀ ਹੈ।"
-          )}
-        </div>
       </section>
     </div>
   );
