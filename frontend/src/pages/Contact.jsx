@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { Send, Phone, Mail, AlertTriangle } from "lucide-react";
 import { useLang } from "../LangContext";
 
@@ -21,7 +21,7 @@ const LINES = [
 ];
 
 export default function Contact() {
-  const { tr, lang } = useLang();
+  const { tr } = useLang();
   const [name, setName] = useState("");
   const [topic, setTopic] = useState(0);
   const [msg, setMsg] = useState("");
