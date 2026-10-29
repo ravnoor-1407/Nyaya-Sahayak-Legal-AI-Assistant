@@ -103,3 +103,11 @@ export const apiLogin = (email, password, name) =>
 export const apiMe = () => getJSON("/api/auth/me");
 export const apiLogout = () =>
   fetch(API_BASE + "/api/auth/logout", { method: "POST", headers: headers() }).catch(() => {});
+
+// Real-time Email Verification & Google Auth
+export const apiSendEmailOtp = (email, name) =>
+  post("/api/auth/email-otp/send", { email, name });
+export const apiVerifyEmailOtp = (email, code, name) =>
+  post("/api/auth/email-otp/verify", { email, code, name });
+export const apiGoogleAuth = (credential, email, name) =>
+  post("/api/auth/google", { credential, email, name });
