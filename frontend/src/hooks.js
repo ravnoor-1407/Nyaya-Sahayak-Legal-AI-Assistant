@@ -7,8 +7,13 @@ export function useBackendStatus() {
     let alive = true;
     const ping = async () => {
       try {
-        const r = await fetch("/api/helplines");
-        if (alive) setStatus(r.ok ? "online" : "offline");
+        const apiBase =
+          import.meta.env && import.meta.env.VITE_API_URL
+            ? import.meta.env.VITE_API_URL.replace(/\/$/, "")
+            : "";
+        const r = await fetch(apiBase + "/api/helplines");
+        const isJson = r.headers.get("content-type")?.includes("application/json");
+        if (alive) setStatus(r.ok && isJson ? "online" : "offline");
       } catch (e) {
         if (alive) setStatus("offline");
       }
