@@ -42,8 +42,8 @@ export function AuthProvider({ children }) {
     };
   }, []);
 
-  const login = async (email, password) => {
-    const d = await apiLogin(email.trim(), password);
+  const login = async (email, password, name) => {
+    const d = await apiLogin(email.trim(), password, name ? name.trim() : undefined);
     setToken(d.token);
     setUser(d.user);
     setReady(true);
@@ -51,7 +51,7 @@ export function AuthProvider({ children }) {
   };
 
   const register = async (name, email, password) => {
-    const d = await apiRegister(name.trim(), email.trim(), password);
+    const d = await apiRegister(name ? name.trim() : undefined, email.trim(), password);
     setToken(d.token);
     setUser(d.user);
     setReady(true);
