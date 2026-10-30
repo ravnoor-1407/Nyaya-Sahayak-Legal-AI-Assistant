@@ -165,11 +165,12 @@ export default function Navbar() {
   const firstName = user ? user.name.split(" ")[0] : "";
   const displayName = firstName || (user ? user.name : "");
 
-  const doLogout = async () => {
+  const doLogout = (e) => {
+    if (e && e.preventDefault) e.preventDefault();
     setAcct(false);
     setMobile(false);
-    await logout();
-    nav("/");
+    logout();
+    nav("/", { replace: true });
   };
 
   return (
