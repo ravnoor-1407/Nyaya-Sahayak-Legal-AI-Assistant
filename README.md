@@ -14,7 +14,7 @@
   <img src="https://img.shields.io/badge/Recharts-22B5BF?style=for-the-badge" />
   <img src="https://img.shields.io/badge/Lucide_React-F56565?style=for-the-badge" />
 </p>
-
+ 
 An AI-powered legal information assistant developed as part of the university subject **AI Foundations: CSE276** **CA1 Project (P14)**, thematically aligned with the Smart India Hackathon (SIH) 2024 problem statement **SIH1700**.
 
 **NyayaSahayak** is designed to make Indian legal information more accessible to ordinary citizens through an intelligent, multilingual virtual assistant. Supporting English, Hindi, and Punjabi, the platform helps users explore Indian laws, understand legal provisions, search official Acts, and access essential citizen services.
