@@ -1,9 +1,14 @@
 import json, os
+import json
+import os
+
 import chromadb
 from sentence_transformers import SentenceTransformer
 from dotenv import load_dotenv
+
 load_dotenv()
 
+# Embedding model and ChromaDB client
 model = SentenceTransformer(os.getenv("EMBED_MODEL", "intfloat/multilingual-e5-base"))
 client = chromadb.PersistentClient(path="data/chroma")
 try:
@@ -12,6 +17,7 @@ except Exception:
     pass
 col = client.create_collection("laws", metadata={"hnsw:space": "cosine"})
 
+# Ingest preprocessed chunks into ChromaDB
 chunks = [json.loads(l) for l in open("data/processed/chunks.jsonl", encoding="utf-8")]
 B = 64
 for i in range(0, len(chunks), B):

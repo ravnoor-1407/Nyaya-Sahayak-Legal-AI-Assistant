@@ -7,28 +7,37 @@ import pandas as pd
 
 from app import rag
 
+# Hit Accuracy Test (Hit@K): measures how often the expected (act, section) is in the top K retrieved chunks for in-scope questions.
+# Mean Reciprocal Rank (MRR): measures the ranking quality of retrieved results.
+# Measures retrieval quality for in-scope legal questions and refusal behavior
+# for out-of-scope questions.
 K = 5
 SWITCHES = ("USE_KEYWORD", "USE_SECTION", "USE_TITLE",
             "USE_MAPPING", "USE_TRANSLATE")
 
+# Load processed chunks and build a set of valid (act, section) pairs.
 chunks = [json.loads(l) for l in
           open("data/processed/chunks.jsonl", encoding="utf-8")]
 have = {(c["act"], c["section"]) for c in chunks}
 
+# Load evaluation dataset and split questions into in-scope and out-of-scope sets.
 df = pd.read_csv("data/eval.csv", dtype=str, encoding="utf-8-sig").fillna("")
 ins = df[df.in_scope == "1"]
 out = df[df.in_scope == "0"]
 
+# Only evaluate questions whose expected (act, section) exists in the processed data.
 has_data = ins.apply(
     lambda r: (r.expected_act, r.expected_section) in have, axis=1)
 skipped = ins[~has_data]
 ins = ins[has_data]
 
+# Accumulators for hit rate, MRR, and language-specific performance.
 hit = {1: 0, 3: 0, 5: 0}
 rr = 0.0
 by_lang = defaultdict(lambda: [0, 0])
 fails = []
 
+# Retrieval accuracy test for in-scope questions.
 for _, r in ins.iterrows():
     hits = rag.retrieve(r.question, k=K)
     rank = None
@@ -52,6 +61,7 @@ n = len(ins)
 if n == 0:
     raise SystemExit("No in-scope questions found in data/eval.csv")
 
+# Refusal test for out-of-scope questions.
 refused = 0
 wrongly_answered = []
 for q in out.question:
@@ -61,6 +71,7 @@ for q in out.question:
     else:
         wrongly_answered.append((q, round(best, 3)))
 
+# Print evaluation summary.
 print("\n========== RESULTS ==========")
 print("In-scope questions evaluated:", n)
 print("Skipped (expected section missing from data):", len(skipped))
@@ -79,6 +90,7 @@ print("\n========== FAILURES (not in top 3) ==========")
 for q, act, sec, rank, got in fails:
     print("- %s\n    expected %s %s | rank %s | got %s" % (q, act, sec, rank, got))
 
+# Save a machine-readable summary when all evaluation switches are enabled.
 full_system = all(os.getenv(s, "1") == "1" for s in SWITCHES)
 if full_system:
     result = {

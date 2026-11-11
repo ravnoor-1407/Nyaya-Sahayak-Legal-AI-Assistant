@@ -17,10 +17,8 @@ MAX_DIST = float(os.getenv("MAX_DIST", "0.30"))
 
 _local_model = None
 
-
 def _get_local_model():
     global _local_model
-    # Never load the 1.1GB PyTorch model in RAM-constrained environments like Render Free Tier (512MB max)
     if os.getenv("RENDER") or os.getenv("LOW_MEM"):
         return None
     if _local_model is None:
@@ -34,7 +32,8 @@ def _get_local_model():
 
 
 def _get_query_embedding(query_text: str) -> list[float] | None:
-    """Generates a normalized 768-dim query embedding.
+    """Generate a normalized query embedding, preferring hosted inference.
+
     Uses Hugging Face Serverless Inference API if HF_TOKEN is configured to avoid
     loading the 1.1GB PyTorch model into memory (critical for 512MB RAM environments
     like Render Free Tier). Falls back to local SentenceTransformer if available, or None."""
@@ -83,7 +82,7 @@ def __getattr__(name):
     raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
 
 
-# switches used for the ablation table ("0" turns a part off)
+# Switches used for the ablation table ("0" turns a part off)
 USE_KEYWORD = os.getenv("USE_KEYWORD", "1") == "1"
 USE_SECTION = os.getenv("USE_SECTION", "1") == "1"
 USE_TITLE = os.getenv("USE_TITLE", "1") == "1"
@@ -92,7 +91,7 @@ USE_TRANSLATE = os.getenv("USE_TRANSLATE", "1") == "1"
 
 BNS_ACT = "Bharatiya Nyaya Sanhita, 2023"
 
-# chunk order must match ingest.py (ids are c0, c1, ...)
+# Chunk order must match ingest.py (ids are c0, c1, ...)
 CHUNKS = [json.loads(l) for l in
           open("data/processed/chunks.jsonl", encoding="utf-8")]
 INDEX = {}
@@ -110,7 +109,7 @@ SEC_RE = re.compile(
     re.I)
 ARTICLE_WORDS = {"article", "अनुच्छेद", "ਅਨੁਛੇਦ"}
 
-# which Act a query is talking about (first match wins; default is BNS)
+# Which Act a query is talking about (first match wins; default is BNS)
 ACT_HINTS = [
     ("IPC to BNS", r"\bipc\b|indian penal code|आईपीसी"),
     ("Bharatiya Nagarik", r"\bbnss\b|nagarik suraksha|बीएनएसएस"),
@@ -141,7 +140,7 @@ NOT_FOUND = {
           "15100 ਨਾਲ ਸੰਪਰਕ ਕਰੋ।",
 }
 
-# ---------- title matching ----------
+# Title matching
 STOP = set("""a an the of for in on to by with without and or is are be do
 does did what which who how when where why can i my me we you your it its
 this that under any about tell explain say says define meaning
@@ -236,33 +235,41 @@ def expand_mapping(c):
 
 
 def retrieve(question, k=8):
+    """Run hybrid retrieval and return the highest-ranked legal chunks.
+
+    Reciprocal-rank fusion combines dense semantic results with TF-IDF keyword
+    results. Exact section references and title matches add focused signals;
+    IPC mapping chunks can then expand to their corresponding BNS chunks.
+    """
     n = 20
     q_en = to_english(question)
     queries = [question] if q_en == question else [question, q_en]
     scores = {}
     dense_dist = {}
 
-    # 1) dense retrieval on the original and the English query
+    # Semantic retrieval supports both the original-language and translated query.
+    # Reciprocal-rank contributions keep scores comparable across retrieval methods.
     for qq in queries:
         try:
             q_emb = _get_query_embedding(qq)
             if q_emb is not None:
                 r = col.query(query_embeddings=[q_emb], n_results=n)
-                for rank, (cid, d) in enumerate(zip(r["ids"][0], r["distances"][0])):
+                for rank, (cid, d) in enumerate(
+                        zip(r["ids"][0], r["distances"][0])):
                     idx = int(cid[1:])
                     scores[idx] = scores.get(idx, 0) + 1 / (60 + rank)
                     dense_dist[idx] = min(d, dense_dist.get(idx, 9.0))
         except Exception as ex:
             print(f"[RAG] Dense query skipped: {ex}")
 
-    # 2) keyword (TF-IDF) on the English query
+    # Lexical retrieval complements semantic matches with exact term overlap.
     if USE_KEYWORD:
         sims = (MATRIX @ TFIDF.transform([q_en]).T).toarray().ravel()
         for rank, idx in enumerate(sims.argsort()[::-1][:n]):
             if sims[idx] > 0:
                 scores[idx] = scores.get(idx, 0) + 1 / (60 + rank)
 
-    # 3) explicit "Section 303" / "Article 21", limited to the Act asked about
+    # Give explicit section/article references a strong boost, scoped to the Act.
     if USE_SECTION:
         prefix = act_hint(queries)
         for text in queries:
@@ -279,11 +286,12 @@ def retrieve(question, k=8):
                     if ok:
                         scores[idx] = scores.get(idx, 0) + 1.0
 
-    # 4) title match: a section titled "Theft" should win for "theft"
+    # Boost chunks whose legal title directly matches the query's subject.
     if USE_TITLE:
         for idx, s in title_scores(q_en).items():
             scores[idx] = scores.get(idx, 0) + s
 
+    # Keep a small candidate pool so mapping expansion can add the real BNS text.
     pool = sorted(scores, key=scores.get, reverse=True)[:k + 6]
     final = []
 
@@ -328,6 +336,7 @@ ANSWER:"""
 
 
 def answer(question, lang="en"):
+    """Retrieve supporting chunks, generate a grounded answer, and expose sources."""
     hits = retrieve(question, k=6)
     has_dense = any(h.get("has_dense", False) for h in hits)
     if not hits or (has_dense and min(h["distance"] for h in hits) > MAX_DIST):

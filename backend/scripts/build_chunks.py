@@ -5,43 +5,82 @@ from pathlib import Path
 import pandas as pd
 import pdfplumber
 
+# Preprocessing Logic
 RAW = Path("data/raw")
 OUT = Path("data/processed")
 OUT.mkdir(parents=True, exist_ok=True)
 INDIA_CODE = "https://www.indiacode.nic.in"
 
-# Leave *_col as None to auto-detect. Set exact names if detection is wrong.
+# Source Definitions and Metadata
 SOURCES = [
-       dict(kind="csv", file="bns.csv",
-         act="Bharatiya Nyaya Sanhita, 2023", unit="Section",
-         category="criminal", year=2023, url=INDIA_CODE,
-         sec_col="Section", title_col="Section _name",
-         text_col="Description"),
-       dict(kind="pdf", file="constitution.pdf",
-         act="Constitution of India", unit="Article",
-         category="constitutional", year=1950,
-         url="https://legislative.gov.in"),
-    dict(kind="pdf", file="bnss.pdf",
-         act="Bharatiya Nagarik Suraksha Sanhita, 2023", unit="Section",
-         category="criminal", year=2023, url=INDIA_CODE),
-    dict(kind="pdf", file="bsa.pdf",
-         act="Bharatiya Sakshya Adhiniyam, 2023", unit="Section",
-         category="evidence", year=2023, url=INDIA_CODE),
-    dict(kind="pdf", file="it_act.pdf",
-         act="Information Technology Act, 2000", unit="Section",
-         category="cyber", year=2000, url=INDIA_CODE),
-    dict(kind="pdf", file="consumer_act.pdf",
-         act="Consumer Protection Act, 2019", unit="Section",
-         category="consumer", year=2019, url=INDIA_CODE),
+    dict(
+        kind="csv",
+        file="bns.csv",
+        act="Bharatiya Nyaya Sanhita, 2023",
+        unit="Section",
+        category="criminal",
+        year=2023,
+        url=INDIA_CODE,
+        sec_col="Section",
+        title_col="Section _name",
+        text_col="Description",
+    ),
+    dict(
+        kind="pdf",
+        file="constitution.pdf",
+        act="Constitution of India",
+        unit="Article",
+        category="constitutional",
+        year=1950,
+        url="https://legislative.gov.in",
+    ),
+    dict(
+        kind="pdf",
+        file="bnss.pdf",
+        act="Bharatiya Nagarik Suraksha Sanhita, 2023",
+        unit="Section",
+        category="criminal",
+        year=2023,
+        url=INDIA_CODE,
+    ),
+    dict(
+        kind="pdf",
+        file="bsa.pdf",
+        act="Bharatiya Sakshya Adhiniyam, 2023",
+        unit="Section",
+        category="evidence",
+        year=2023,
+        url=INDIA_CODE,
+    ),
+    dict(
+        kind="pdf",
+        file="it_act.pdf",
+        act="Information Technology Act, 2000",
+        unit="Section",
+        category="cyber",
+        year=2000,
+        url=INDIA_CODE,
+    ),
+    dict(
+        kind="pdf",
+        file="consumer_act.pdf",
+        act="Consumer Protection Act, 2019",
+        unit="Section",
+        category="consumer",
+        year=2019,
+        url=INDIA_CODE,
+    ),
 ]
 
 MAPPING = dict(file="ipc_bns_map.csv", ipc_col="IPC_Section",
                title_col="IPC_Title", bns_col="BNS_Section")
 
+# Text and Section Parsing Rules
+# Here, regex pattern that detects legal section numbers and section titles in the raw text.
 MAX_CHARS = 1500
 SEC = re.compile(r"^\s*(\d{1,3}[A-Z]{0,2})\.\s+([A-Z][^\n]{2,140})", re.M)
 
-
+# Chunking and Cleaning Functions
 def split_long(text, n=MAX_CHARS):
     if len(text) <= n:
         return [text]
@@ -65,7 +104,6 @@ def clean_section(v):
     v = re.sub(r"(?i)^(section|sec\.?)\s*", "", v)
     return v.strip(" .")
 
-
 def pick(df, given, keywords, avoid=()):
     if given and given in df.columns:
         return given
@@ -76,7 +114,7 @@ def pick(df, given, keywords, avoid=()):
                 return c
     return None
 
-
+# CSV Extraction
 def csv_chunks(s):
     path = RAW / s["file"]
     df = pd.read_csv(path, dtype=str, encoding_errors="ignore").fillna("")
@@ -105,7 +143,7 @@ def csv_chunks(s):
                         source_url=s["url"]))
     return out
 
-
+# PDF Extraction
 def pdf_chunks(s):
     p = RAW / s["file"]
     if not p.exists():
@@ -132,7 +170,7 @@ def pdf_chunks(s):
                             source_url=s["url"]))
     return out
 
-
+# IPC to BNS Mapping Functions
 def mapping_chunks(m):
     p = RAW / m["file"]
     if not p.exists():
@@ -157,6 +195,7 @@ def mapping_chunks(m):
                         source_url=INDIA_CODE))
     return out
 
+# Title Enrichment Functions
 def enrich_titles(chunks):
     """Give BNS sections a heading using the IPC titles from the mapping."""
     titles = {}
