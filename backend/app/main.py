@@ -15,6 +15,28 @@ from .auth import db, router as auth_router, user_from_header
 import os
 from .safety import check_blocked, self_harm, danger_note, scrub  # type: ignore[reportUnknownVariableType]
 
+APP_DIR = Path(__file__).resolve().parent
+ROOT_DIR = APP_DIR.parent
+DATA_DIR = ROOT_DIR / "data"
+HELPLINES_PATH = APP_DIR / "data" / "helplines.json"
+
+
+def _load_json(path: Path) -> Any:
+    with path.open("r", encoding="utf-8") as handle:
+        return json.load(handle)
+
+
+def _load_jsonl(path: Path) -> list[dict[str, Any]]:
+    with path.open("r", encoding="utf-8") as handle:
+        return [json.loads(line) for line in handle if line.strip()]
+
+
+# Resolve project files from the backend root so the API works from any working directory.
+CHUNKS: list[dict[str, Any]] = _load_jsonl(DATA_DIR / "processed" / "chunks.jsonl")
+HELPLINES: Any = _load_json(HELPLINES_PATH)
+EVAL_PATH = DATA_DIR / "eval_results.json"
+CLF: Any = joblib.load(DATA_DIR / "topic_clf.joblib") if (DATA_DIR / "topic_clf.joblib").exists() else None
+
 app = FastAPI(title="Justice Department Assistant API")
 app.add_middleware(
     CORSMiddleware,
