@@ -105,26 +105,37 @@ def _log(user: dict[str, Any] | None, q: str, topic: str, lang: str,
                       (now, a, user["id"]))
 
 
+def detect_query_lang(text: str, fallback: str = "en") -> str:
+    """Auto-detect language from question script (Devanagari -> hi, Gurmukhi -> pa).
+    If no Indic script is detected, falls back to the requested UI language."""
+    hi_count = sum(1 for ch in text if "\u0900" <= ch <= "\u097f")
+    pa_count = sum(1 for ch in text if "\u0a00" <= ch <= "\u0a7f")
+    if hi_count > 0 or pa_count > 0:
+        return "hi" if hi_count >= pa_count else "pa"
+    return fallback
+
+
 @app.post("/api/chat")
 def chat(body: ChatIn, authorization: str | None = Header(default=None)) -> dict[str, Any]:
     user: Any = user_from_header(authorization)
     q = body.question.strip()[:1000]
-    lang = body.lang if body.lang in ("en", "hi", "pa") else "en"
+    requested_lang = body.lang if body.lang in ("en", "hi", "pa") else "en"
+    lang = detect_query_lang(q, fallback=requested_lang)
     if not q:
         return {"answer": "Please type a question.", "sources": [],
-                "answered": False}
+                "answered": False, "lang": lang}
 
     blocked = check_blocked(q, lang)
     if blocked:
         _log(user, q, "blocked", lang, False)
         return {"answer": blocked, "sources": [], "answered": False,
-                "topic": "blocked"}
+                "topic": "blocked", "lang": lang}
 
     support = self_harm(q, lang)
     if support:
         _log(user, q, "support", lang, False)
         return {"answer": support, "sources": [], "answered": False,
-                "topic": "support"}
+                "topic": "support", "lang": lang}
 
     topic: str = cast(str, CLF.predict([q])[0]) if CLF else "general"
     try:
@@ -133,7 +144,7 @@ def chat(body: ChatIn, authorization: str | None = Header(default=None)) -> dict
         )
     except Exception as e:
         return {"answer": "The AI service is busy. Please try again.",
-                "sources": [], "answered": False, "error": str(e)[:300]}
+                "sources": [], "answered": False, "error": str(e)[:300], "lang": lang}
 
     note = danger_note(q, lang)
     if note:
@@ -147,7 +158,7 @@ def chat(body: ChatIn, authorization: str | None = Header(default=None)) -> dict
                 acts.append(a)
     _log(user, q, topic, lang, ok, acts)
     return {"answer": text, "sources": sources, "answered": ok,
-            "topic": topic}
+            "topic": topic, "lang": lang}
 
 
 @app.get("/api/search")
