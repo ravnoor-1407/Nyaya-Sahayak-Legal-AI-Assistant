@@ -1,6 +1,7 @@
 import json
 import re
 from pathlib import Path
+from typing import Any
 
 import pandas as pd
 import pdfplumber
@@ -11,7 +12,7 @@ OUT.mkdir(parents=True, exist_ok=True)
 INDIA_CODE = "https://www.indiacode.nic.in"
 
 # Source Definitions and Metadata
-SOURCES = [
+SOURCES: list[dict[str, Any]] = [
     dict(
         kind="csv",
         file="bns.csv",
@@ -71,8 +72,12 @@ SOURCES = [
     ),
 ]
 
-MAPPING = dict(file="ipc_bns_map.csv", ipc_col="IPC_Section",
-               title_col="IPC_Title", bns_col="BNS_Section")
+MAPPING: dict[str, str] = dict(
+    file="ipc_bns_map.csv",
+    ipc_col="IPC_Section",
+    title_col="IPC_Title",
+    bns_col="BNS_Section",
+)
 
 # Text and Section Parsing Rules
 # Here, regex pattern that detects legal section numbers and section titles in the raw text.
@@ -80,10 +85,11 @@ MAX_CHARS = 1500
 SEC = re.compile(r"^\s*(\d{1,3}[A-Z]{0,2})\.\s+([A-Z][^\n]{2,140})", re.M)
 
 # Chunking and Cleaning Functions
-def split_long(text, n=MAX_CHARS):
+def split_long(text: str, n: int = MAX_CHARS) -> list[str]:
     if len(text) <= n:
         return [text]
-    parts, cur = [], ""
+    parts: list[str] = []
+    cur = ""
     for line in text.split("\n"):
         if len(cur) + len(line) > n and cur:
             parts.append(cur.strip())
@@ -94,57 +100,80 @@ def split_long(text, n=MAX_CHARS):
     return parts
 
 
-def clean_text(t):
+def clean_text(t: object) -> str:
     return str(t).replace("\r\n", "\n").replace("\r", "\n").strip()
 
 
-def clean_section(v):
+def clean_section(v: object) -> str:
     v = str(v).strip()
     v = re.sub(r"(?i)^(section|sec\.?)\s*", "", v)
     return v.strip(" .")
 
-def pick(df, given, keywords, avoid=()):
+
+def pick(
+    df: pd.DataFrame,
+    given: str | None,
+    keywords: list[str],
+    avoid: tuple[str, ...] = (),
+) -> str | None:
     if given and given in df.columns:
         return given
     for kw in keywords:
         for c in df.columns:
-            lc = c.lower()
+            lc = str(c).lower()
             if kw in lc and not any(a in lc for a in avoid):
-                return c
+                return str(c)
     return None
 
+
 # CSV Extraction
-def csv_chunks(s):
-    path = RAW / s["file"]
+def csv_chunks(s: dict[str, Any]) -> list[dict[str, Any]]:
+    path = RAW / str(s["file"])
     df = pd.read_csv(path, dtype=str, encoding_errors="ignore").fillna("")
     print("CSV columns found:", list(df.columns))
-    sec_c = pick(df, s.get("sec_col"),
-                 ["section", "sec", "number", "no"],
-                 avoid=("name", "title", "desc"))
-    title_c = pick(df, s.get("title_col"),
-                   ["title", "name", "heading", "offence", "offense"])
-    text_c = pick(df, s.get("text_col"),
-                  ["description", "text", "content", "provision",
-                   "punishment", "details"])
+    sec_c = pick(
+        df,
+        str(s.get("sec_col")) if s.get("sec_col") is not None else None,
+        ["section", "sec", "number", "no"],
+        avoid=("name", "title", "desc"),
+    )
+    title_c = pick(
+        df,
+        str(s.get("title_col")) if s.get("title_col") is not None else None,
+        ["title", "name", "heading", "offence", "offense"],
+    )
+    text_c = pick(
+        df,
+        str(s.get("text_col")) if s.get("text_col") is not None else None,
+        ["description", "text", "content", "provision", "punishment", "details"],
+    )
     print("Using -> section:", sec_c, "| title:", title_c, "| text:", text_c)
     if not sec_c or not text_c:
         raise SystemExit("Could not detect columns. Set them in SOURCES.")
-    out = []
+    out: list[dict[str, Any]] = []
     for _, r in df.iterrows():
         text = clean_text(r[text_c])
         if len(text) < 20:
             continue
         title = clean_text(r[title_c]) if title_c else ""
-        out.append(dict(act=s["act"], unit=s["unit"],
-                        section=clean_section(r[sec_c]),
-                        title=title, text=text,
-                        category=s["category"], year=s["year"],
-                        source_url=s["url"]))
+        out.append(
+            dict(
+                act=s["act"],
+                unit=s["unit"],
+                section=clean_section(r[sec_c]),
+                title=title,
+                text=text,
+                category=s["category"],
+                year=s["year"],
+                source_url=s["url"],
+            )
+        )
     return out
 
+
 # PDF Extraction
-def pdf_chunks(s):
-    p = RAW / s["file"]
+def pdf_chunks(s: dict[str, Any]) -> list[dict[str, Any]]:
+    p = RAW / str(s["file"])
     if not p.exists():
         print("SKIPPED (file not found):", s["file"])
         return []
@@ -152,10 +181,11 @@ def pdf_chunks(s):
         text = "\n".join((pg.extract_text() or "") for pg in pdf.pages)
     text = re.sub(r"\n{2,}", "\n", text)
     ms = list(SEC.finditer(text))
-    out, seen = [], set()
+    out: list[dict[str, Any]] = []
+    seen: set[str] = set()
     for i, m in enumerate(ms):
         end = ms[i + 1].start() if i + 1 < len(ms) else len(text)
-        body = text[m.start():end].strip()
+        body = text[m.start() : end].strip()
         if len(body) < 80 or body.count("....") > 3:
             continue
         if m.group(1) in seen:
@@ -163,14 +193,23 @@ def pdf_chunks(s):
         seen.add(m.group(1))
         title = m.group(2).strip(" .—-")[:100]
         for part in split_long(body):
-            out.append(dict(act=s["act"], unit=s["unit"],
-                            section=m.group(1), title=title, text=part,
-                            category=s["category"], year=s["year"],
-                            source_url=s["url"]))
+            out.append(
+                dict(
+                    act=s["act"],
+                    unit=s["unit"],
+                    section=m.group(1),
+                    title=title,
+                    text=part,
+                    category=s["category"],
+                    year=s["year"],
+                    source_url=s["url"],
+                )
+            )
     return out
 
+
 # IPC to BNS Mapping Functions
-def mapping_chunks(m):
+def mapping_chunks(m: dict[str, str]) -> list[dict[str, Any]]:
     p = RAW / m["file"]
     if not p.exists():
         print("IPC mapping file not found, skipping.")
@@ -181,48 +220,60 @@ def mapping_chunks(m):
         print("Mapping columns differ. Found:", list(df.columns))
         print("Update MAPPING in build_chunks.py. Skipping mapping.")
         return []
-    out = []
+    out: list[dict[str, Any]] = []
     for _, r in df.iterrows():
-        ipc = r[m["ipc_col"]]
-        ttl = r[m["title_col"]]
-        bns = r[m["bns_col"]]
-        txt = ("IPC Section " + ipc + " (" + ttl + ") now corresponds to "
-               "Bharatiya Nyaya Sanhita (BNS) Section " + bns + ".")
-        out.append(dict(act="IPC to BNS Mapping", unit="IPC Section",
-                        section=clean_section(ipc), title=ttl, text=txt,
-                        category="criminal", year=2023,
-                        source_url=INDIA_CODE))
+        ipc = str(r[m["ipc_col"]])
+        ttl = str(r[m["title_col"]])
+        bns = str(r[m["bns_col"]])
+        txt = (
+            "IPC Section " + ipc + " (" + ttl + ") now corresponds to "
+            "Bharatiya Nyaya Sanhita (BNS) Section " + bns + "."
+        )
+        out.append(
+            dict(
+                act="IPC to BNS Mapping",
+                unit="IPC Section",
+                section=clean_section(ipc),
+                title=ttl,
+                text=txt,
+                category="criminal",
+                year=2023,
+                source_url=INDIA_CODE,
+            )
+        )
     return out
 
+
 # Title Enrichment Functions
-def enrich_titles(chunks):
+def enrich_titles(chunks: list[dict[str, Any]]) -> None:
     """Give BNS sections a heading using the IPC titles from the mapping."""
-    titles = {}
+    titles: dict[str, list[str]] = {}
     for c in chunks:
         if c["act"] != "IPC to BNS Mapping":
             continue
-        m = re.search(r"\(BNS\) Section (.+?)\.?$", c["text"])
+        m = re.search(r"\(BNS\) Section (.+?)\.?$", str(c["text"]))
         if not m:
             continue
         rest = re.sub(r"\([^)]*\)", "", m.group(1))
         for num in re.findall(r"\b\d{1,3}[A-Z]{0,2}\b", rest):
             lst = titles.setdefault(num, [])
-            t = c["title"].strip()
+            t = str(c["title"]).strip()
             if t and t not in lst and len(lst) < 3:
                 lst.append(t)
     added = 0
     for c in chunks:
-        if c["act"].startswith("Bharatiya Nyaya") and not c["title"].strip():
-            t = titles.get(c["section"])
+        if str(c["act"]).startswith("Bharatiya Nyaya") and not str(c["title"]).strip():
+            t = titles.get(str(c["section"]))
             if t:
                 c["title"] = "; ".join(t)
                 added += 1
     print("Titles added to BNS sections from IPC mapping:", added)
 
+
 if __name__ == "__main__":
-    chunks = []
+    chunks: list[dict[str, Any]] = []
     for s in SOURCES:
-        if s["kind"] == "csv" and not (RAW / s["file"]).exists():
+        if s["kind"] == "csv" and not (RAW / str(s["file"])) .exists():
             print("SKIPPED (file not found):", s["file"])
             continue
         c = csv_chunks(s) if s["kind"] == "csv" else pdf_chunks(s)
