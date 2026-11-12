@@ -78,13 +78,6 @@ def root() -> dict[str, str]:
 def health() -> dict[str, str]:
     return {"status": "healthy"}
 
-CHUNKS: list[dict[str, Any]] = [json.loads(l) for l in
-                                open("data/processed/chunks.jsonl", encoding="utf-8")]
-HELPLINES: Any = json.load(open("app/data/helplines.json", encoding="utf-8"))
-EVAL_PATH = Path("data/eval_results.json")
-CLF: Any = (joblib.load("data/topic_clf.joblib")
-            if Path("data/topic_clf.joblib").exists() else None)
-
 
 class ChatIn(BaseModel):
     question: str

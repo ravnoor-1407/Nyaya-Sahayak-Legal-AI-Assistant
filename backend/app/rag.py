@@ -2,6 +2,7 @@ import os
 import re
 import json
 import urllib.request
+from pathlib import Path
 
 import chromadb
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -11,8 +12,12 @@ from .llm import generate
 
 load_dotenv()
 
+_BASE_DIR = Path(__file__).resolve().parent.parent
+_DATA_DIR = _BASE_DIR / "data"
+
 EMBED = os.getenv("EMBED_MODEL", "intfloat/multilingual-e5-base")
-col = chromadb.PersistentClient(path="data/chroma").get_collection("laws")
+CHROMA_PATH = os.getenv("CHROMA_PATH", str(_DATA_DIR / "chroma"))
+col = chromadb.PersistentClient(path=CHROMA_PATH).get_collection("laws")
 MAX_DIST = float(os.getenv("MAX_DIST", "0.30"))
 
 _local_model = None
@@ -93,7 +98,7 @@ BNS_ACT = "Bharatiya Nyaya Sanhita, 2023"
 
 # Chunk order must match ingest.py (ids are c0, c1, ...)
 CHUNKS = [json.loads(l) for l in
-          open("data/processed/chunks.jsonl", encoding="utf-8")]
+          open(_DATA_DIR / "processed" / "chunks.jsonl", encoding="utf-8")]
 INDEX = {}
 for i, c in enumerate(CHUNKS):
     INDEX.setdefault((c["act"], c["section"]), []).append(i)
@@ -189,7 +194,7 @@ def title_scores(q_en):
 
 
 # ---------- query translation (hi / pa -> English) with disk cache ----------
-CACHE_PATH = "data/translation_cache.json"
+CACHE_PATH = str(_DATA_DIR / "translation_cache.json")
 try:
     _TR = json.load(open(CACHE_PATH, encoding="utf-8"))
 except Exception:
@@ -315,6 +320,7 @@ def label(h):
     return h["act"] + " " + h["unit"] + " " + h["section"]
 
 
+# Prompt template for the LLM to answer questions about Indian law, using retrieved chunks as context.
 PROMPT = """You are a legal INFORMATION assistant for Indian citizens (not a lawyer).
 Rules:
 1. Answer ONLY from the CONTEXT below. If it is not enough, say you could not find it.
