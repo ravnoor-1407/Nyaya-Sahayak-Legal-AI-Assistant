@@ -156,7 +156,7 @@ function Preview() {
             <AnswerBlock
               text={state.data.answer}
               sources={state.data.sources || []}
-              lang={lang}
+              lang={state.data.lang || lang}
               compact
               feedback={false}
             />

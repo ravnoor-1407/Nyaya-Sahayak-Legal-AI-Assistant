@@ -9,6 +9,19 @@ import AnswerBlock from "../components/AnswerBlock";
 
 const VOICE = { en: "en-IN", hi: "hi-IN", pa: "pa-IN" };
 
+function detectScript(text) {
+  if (!text) return null;
+  let hi = 0;
+  let pa = 0;
+  for (const ch of text) {
+    const code = ch.charCodeAt(0);
+    if (code >= 0x0900 && code <= 0x097f) hi++;
+    else if (code >= 0x0a00 && code <= 0x0a7f) pa++;
+  }
+  if (hi > 0 || pa > 0) return hi >= pa ? "hi" : "pa";
+  return null;
+}
+
 export default function Assistant() {
   const { lang, tr } = useLang();
   const { user, ready } = useAuth();
@@ -32,21 +45,23 @@ export default function Assistant() {
       navigate("/auth", { state: { from: "/assistant", q: question } });
       return;
     }
+    const effectiveLang = detectScript(question) || lang;
     setMsgs((m) => [...m, { role: "user", text: question }]);
     setInput("");
     setBusy(true);
     try {
-      const d = await chat(question, lang);
+      const d = await chat(question, effectiveLang);
+      const answerLang = d.lang || effectiveLang;
       setMsgs((m) => [
         ...m,
-        { role: "assistant", text: d.answer || "...", sources: d.sources || [], lang },
+        { role: "assistant", text: d.answer || "...", sources: d.sources || [], lang: answerLang },
       ]);
     } catch (e) {
       setMsgs((m) => [
         ...m,
         {
           role: "assistant",
-          lang,
+          lang: effectiveLang,
           sources: [],
           text: tr(
             "Could not reach the server. Start the backend and try again.",
