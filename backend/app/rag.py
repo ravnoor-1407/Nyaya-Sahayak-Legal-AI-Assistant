@@ -9,10 +9,10 @@ import chromadb
 from sklearn.feature_extraction.text import TfidfVectorizer
 from dotenv import load_dotenv
 
-from .llm import generate as _generate
+from . import llm as _llm
 
 generate: Callable[[str], str] = cast(
-    Callable[[str], str], cast(Any, _generate))
+    Callable[[str], str], cast(Any, _llm).generate)
 
 load_dotenv()
 
