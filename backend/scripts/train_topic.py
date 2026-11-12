@@ -6,8 +6,10 @@ from sklearn.pipeline import make_pipeline
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report
 
-# Extract features and labels from the preprocessed chunks
+# Data Loading all legal chunks from data/processed/chunks.jsonl
 rows = [json.loads(line) for line in open("data/processed/chunks.jsonl", encoding="utf-8")]
+
+# Feature extraction and label preparation for topic classification
 X = [f"{r['title']} {r['text']}" for r in rows]
 y = [r["category"] for r in rows]
 Xtr, Xte, ytr, yte = train_test_split(
@@ -18,7 +20,7 @@ Xtr, Xte, ytr, yte = train_test_split(
     stratify=y,
 )
 
-# Train Scikit-learn classifier with TF-IDF features and logistic regression
+# Train Scikit-learn pipeline with TF-IDF features and logistic regression
 clf = make_pipeline(
     TfidfVectorizer(ngram_range=(1, 2), min_df=2, sublinear_tf=True),
     LogisticRegression(max_iter=1000, class_weight="balanced"),
