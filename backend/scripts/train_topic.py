@@ -23,7 +23,7 @@ Xtr, Xte, ytr, yte = cast(
     train_test_split(X, y, test_size=0.2, random_state=42, stratify=y),
 )
 
-# TF-IDF Vectorizer (unigrams + bigrams) + Balanced Logistic Regression
+# TF-IDF Vectorizer + Balanced Logistic Regression
 clf: Any = Pipeline(
     [
         ("tfidf", TfidfVectorizer(ngram_range=(1, 2), min_df=2, sublinear_tf=True)),
