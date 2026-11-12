@@ -1,4 +1,3 @@
-import json, os
 import json
 import os
 
@@ -24,7 +23,7 @@ for i in range(0, len(chunks), B):
     batch = chunks[i:i + B]
     docs = [c["text"] for c in batch]
     emb = model.encode(["passage: " + f"{c['act']} {c['unit']} {c['section']} {c['title']}. {c['text']}"
-                        for c in batch], normalize_embeddings=True).tolist()
+                        for c in batch], normalize_embeddings=True).tolist()  # pyright: ignore[reportUnknownMemberType]
     col.add(ids=[f"c{i+j}" for j in range(len(batch))], documents=docs, embeddings=emb,
             metadatas=[{k: v for k, v in c.items() if k != "text"} for c in batch])
     print(f"{min(i+B, len(chunks))}/{len(chunks)}")

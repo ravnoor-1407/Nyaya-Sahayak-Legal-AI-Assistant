@@ -26,6 +26,7 @@ MAX_DIST = float(os.getenv("MAX_DIST", "0.30"))
 
 _local_model: Any = None
 
+# Cache the local sentence-transformer model so we don't reload it on every query.
 def _get_local_model() -> Any:
     global _local_model
     if os.getenv("RENDER") or os.getenv("LOW_MEM"):
@@ -46,6 +47,7 @@ def _get_query_embedding(query_text: str) -> list[float] | None:
     Uses Hugging Face Serverless Inference API if HF_TOKEN is configured to avoid
     loading the 1.1GB PyTorch model into memory (critical for 512MB RAM environments
     like Render Free Tier). Falls back to local SentenceTransformer if available, or None."""
+    # Prefer a hosted embedding API when credentials are available to save memory.
     hf_token = os.getenv("HF_TOKEN") or os.getenv("HUGGINGFACE_API_KEY")
     if hf_token:
         endpoints = [
@@ -75,6 +77,7 @@ def _get_query_embedding(query_text: str) -> list[float] | None:
             except Exception as e:
                 print(f"[RAG] HF Inference endpoint ({url}) failed: {e}")
 
+    # Fallback to local model when hosted inference is not available or the model is cached.
     local = _get_local_model()
     if local is not None:
         try:
@@ -132,6 +135,7 @@ ACT_HINTS = [
 
 
 def act_hint(texts: list[str]) -> str:
+    # Match common act names/keywords so section-level boosts stay scoped to the correct statute.
     for prefix, pat in ACT_HINTS:
         if any(re.search(pat, t, re.I) for t in texts):
             return prefix
@@ -178,6 +182,7 @@ TITLE_TOKS = [tokens(c["title"]) for c in CHUNKS]
 
 
 def title_scores(q_en: str) -> dict[int, float]:
+    # Query-to-title overlap helps surface exact legal headings when users ask about a section name.
     content = tokens(q_en)
     out: dict[int, float] = {}
     if not content:
@@ -213,6 +218,7 @@ def _non_ascii(text: str) -> bool:
 
 
 def to_english(text: str) -> str:
+    # Translate Hindi/Punjabi legal questions to English before keyword matching.
     if not USE_TRANSLATE or not _non_ascii(text):
         return text
     if text in _TR:
@@ -236,6 +242,7 @@ def to_english(text: str) -> str:
 
 # ---------- IPC -> BNS mapping expansion ----------
 def expand_mapping(c: Chunk) -> list[int]:
+    # Legacy IPC mapping chunks reference their corresponding BNS sections by number.
     m = re.search(r"\(BNS\) Section (.+?)\.?$", c["text"])
     if not m:
         return []
@@ -253,6 +260,7 @@ def retrieve(question: str, k: int = 8) -> list[Chunk]:
     results. Exact section references and title matches add focused signals;
     IPC mapping chunks can then expand to their corresponding BNS chunks.
     """
+    # Hybrid retrieval balances semantic similarity with exact legal-text cues.
     n = 20
     q_en = to_english(question)
     queries: list[str] = [question] if q_en == question else [question, q_en]
@@ -319,6 +327,7 @@ def retrieve(question: str, k: int = 8) -> list[Chunk]:
         if i not in final:
             final.append(i)
 
+    # If a mapping entry matches, add the corresponding BNS section before the IPC reference.
     for i in pool:
         if USE_MAPPING and CHUNKS[i]["act"] == "IPC to BNS Mapping":
             for j in expand_mapping(CHUNKS[i]):
