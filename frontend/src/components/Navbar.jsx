@@ -153,7 +153,7 @@ export default function Navbar() {
       ? tr("Online", "ऑनलाइन", "ਆਨਲਾਈਨ")
       : status === "offline"
       ? tr("Offline", "ऑफ़लाइन", "ਔਫਲਾਈਨ")
-      : tr("Connecting…", "कनेक्ट हो रहा है…", "ਕਨੈਕਟ ਹੋ ਰਿਹਾ ਹੈ…");
+      : tr("Connecting", "कनेक्टिंग", "ਕਨੈਕਟਿੰਗ");
   const statusTip =
     status === "offline"
       ? tr("The backend server is not running", "बैकएंड सर्वर चालू नहीं है", "ਬੈਕਐਂਡ ਸਰਵਰ ਚਾਲੂ ਨਹੀਂ ਹੈ")
@@ -175,10 +175,10 @@ export default function Navbar() {
 
   return (
     <header className="sticky top-3 z-40 px-3">
-      <div ref={wrap} className="relative mx-auto max-w-6xl">
+      <div ref={wrap} className="relative mx-auto max-w-7xl">
         <div
           className={
-            "nav-pill flex items-center gap-2 sm:gap-3 rounded-full px-3 py-2 sm:px-4" +
+            "nav-pill flex items-center gap-2 sm:gap-2.5 lg:gap-3 rounded-full px-3 py-2 sm:px-4 xl:px-5" +
             (scrolled ? " scrolled" : "")
           }
         >
@@ -194,16 +194,16 @@ export default function Navbar() {
           </Link>
 
           <nav className="ml-1 hidden items-center gap-1 lg:flex shrink-0" aria-label="Main">
-            <NavLink to="/" end className="nav-link">
+            <NavLink to="/" end className="nav-link whitespace-nowrap">
               {tr("Home", "मुख्य पृष्ठ", "ਮੁੱਖ ਪੰਨਾ")}
             </NavLink>
-            <NavLink to="/assistant" className="btn btn-primary btn-sm pulse-glow">
+            <NavLink to="/assistant" className="btn btn-primary btn-sm pulse-glow shrink-0 whitespace-nowrap">
               <Sparkles size={14} />
               {tr("AI Legal Assistant", "एआई कानूनी सहायक", "ਏਆਈ ਕਾਨੂੰਨੀ ਸਹਾਇਕ")}
             </NavLink>
             <button
               type="button"
-              className="nav-link inline-flex items-center gap-1"
+              className="nav-link inline-flex items-center gap-1 shrink-0 whitespace-nowrap"
               aria-expanded={menu}
               aria-haspopup="true"
               onClick={() => {
@@ -214,28 +214,28 @@ export default function Navbar() {
               {tr("Citizen Hub and Acts", "नागरिक केंद्र और कानून", "ਨਾਗਰਿਕ ਕੇਂਦਰ ਅਤੇ ਕਾਨੂੰਨ")}
               <ChevronDown size={14} className={menu ? "rotate-180" : ""} />
             </button>
-            <NavLink to="/dashboard" className="nav-link">
+            <NavLink to="/dashboard" className="nav-link shrink-0 whitespace-nowrap">
               {tr("Dashboard", "डैशबोर्ड", "ਡੈਸ਼ਬੋਰਡ")}
             </NavLink>
           </nav>
 
           <div className="ml-auto flex items-center gap-1.5 sm:gap-2 shrink-0">
             <span
-              className="hidden items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs text-muted md:inline-flex"
+              className="hidden items-center gap-1.5 rounded-full border border-line/60 px-2.5 py-1 text-xs text-muted md:inline-flex shrink-0 whitespace-nowrap"
               title={statusTip}
             >
-              <span className={"h-2 w-2 rounded-full " + dotClass} style={{ background: dot }} />
-              <span className="hidden xl:inline">{statusText}</span>
+              <span className={"h-2 w-2 rounded-full shrink-0 " + dotClass} style={{ background: dot }} />
+              <span className="hidden xl:inline font-medium">{statusText}</span>
             </span>
             <button
               type="button"
-              className="icon-btn theme-btn"
+              className="icon-btn theme-btn shrink-0"
               onClick={toggle}
               aria-label={tr("Switch theme", "थीम बदलें", "ਥੀਮ ਬਦਲੋ")}
             >
               {theme === "dark" ? <Sun size={17} /> : <Moon size={17} />}
             </button>
-            <div role="group" aria-label="Language" className="flex rounded-full border p-0.5">
+            <div role="group" aria-label="Language" className="flex rounded-full border p-0.5 shrink-0">
               {LANGS.map(([code, label]) => (
                 <button
                   key={code}
@@ -243,7 +243,7 @@ export default function Navbar() {
                   onClick={() => setLang(code)}
                   aria-pressed={lang === code}
                   className={
-                    "rounded-full px-2.5 py-1 text-xs font-semibold " +
+                    "rounded-full px-2 sm:px-2.5 py-1 text-xs font-semibold whitespace-nowrap " +
                     (lang === code ? "chip-active" : "text-muted")
                   }
                 >
@@ -253,7 +253,7 @@ export default function Navbar() {
             </div>
 
             {ready && !user && (
-              <Link to="/auth" className="btn btn-primary btn-sm hidden sm:inline-flex">
+              <Link to="/auth" className="btn btn-primary btn-sm hidden sm:inline-flex shrink-0 whitespace-nowrap">
                 <LogIn size={14} />
                 {tr("Sign in", "साइन इन", "ਸਾਈਨ ਇਨ")}
               </Link>
