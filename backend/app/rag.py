@@ -3,12 +3,16 @@ import re
 import json
 import urllib.request
 from pathlib import Path
+from typing import Any, Callable, cast
 
 import chromadb
 from sklearn.feature_extraction.text import TfidfVectorizer
 from dotenv import load_dotenv
 
-from .llm import generate
+from .llm import generate as _generate
+
+generate: Callable[[str], str] = cast(
+    Callable[[str], str], cast(Any, _generate))
 
 load_dotenv()
 
@@ -20,9 +24,9 @@ CHROMA_PATH = os.getenv("CHROMA_PATH", str(_DATA_DIR / "chroma"))
 col = chromadb.PersistentClient(path=CHROMA_PATH).get_collection("laws")
 MAX_DIST = float(os.getenv("MAX_DIST", "0.30"))
 
-_local_model = None
+_local_model: Any = None
 
-def _get_local_model():
+def _get_local_model() -> Any:
     global _local_model
     if os.getenv("RENDER") or os.getenv("LOW_MEM"):
         return None
@@ -81,7 +85,7 @@ def _get_query_embedding(query_text: str) -> list[float] | None:
     return None
 
 
-def __getattr__(name):
+def __getattr__(name: str) -> Any:
     if name == "model":
         return _get_local_model()
     raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
@@ -97,15 +101,17 @@ USE_TRANSLATE = os.getenv("USE_TRANSLATE", "1") == "1"
 BNS_ACT = "Bharatiya Nyaya Sanhita, 2023"
 
 # Chunk order must match ingest.py (ids are c0, c1, ...)
-CHUNKS = [json.loads(l) for l in
-          open(_DATA_DIR / "processed" / "chunks.jsonl", encoding="utf-8")]
-INDEX = {}
+Chunk = dict[str, Any]
+
+CHUNKS: list[Chunk] = [json.loads(l) for l in
+                       open(_DATA_DIR / "processed" / "chunks.jsonl", encoding="utf-8")]
+INDEX: dict[tuple[str, str], list[int]] = {}
 for i, c in enumerate(CHUNKS):
     INDEX.setdefault((c["act"], c["section"]), []).append(i)
 
 TFIDF = TfidfVectorizer(ngram_range=(1, 2), stop_words="english",
                         sublinear_tf=True)
-MATRIX = TFIDF.fit_transform(
+MATRIX: Any = cast(Any, TFIDF).fit_transform(
     [c["act"] + " " + c["unit"] + " " + c["section"] + " "
      + c["title"] + " " + c["text"] for c in CHUNKS])
 
@@ -125,7 +131,7 @@ ACT_HINTS = [
 ]
 
 
-def act_hint(texts):
+def act_hint(texts: list[str]) -> str:
     for prefix, pat in ACT_HINTS:
         if any(re.search(pat, t, re.I) for t in texts):
             return prefix
@@ -154,14 +160,14 @@ section sections article articles india indian constitution
 bns bnss bsa ipc code""".split())
 
 
-def _stem(w):
+def _stem(w: str) -> str:
     if len(w) > 3 and w.endswith("s") and not w.endswith("ss"):
         return w[:-1]
     return w
 
 
-def tokens(text):
-    out = set()
+def tokens(text: str) -> set[str]:
+    out: set[str] = set()
     for w in re.findall(r"[a-z]+", text.lower()):
         if w not in STOP and len(w) > 1:
             out.add(_stem(w))
@@ -171,9 +177,9 @@ def tokens(text):
 TITLE_TOKS = [tokens(c["title"]) for c in CHUNKS]
 
 
-def title_scores(q_en):
+def title_scores(q_en: str) -> dict[int, float]:
     content = tokens(q_en)
-    out = {}
+    out: dict[int, float] = {}
     if not content:
         return out
     for idx, tt in enumerate(TITLE_TOKS):
@@ -195,17 +201,18 @@ def title_scores(q_en):
 
 # ---------- query translation (hi / pa -> English) with disk cache ----------
 CACHE_PATH = str(_DATA_DIR / "translation_cache.json")
+_TR: dict[str, str] = {}
 try:
-    _TR = json.load(open(CACHE_PATH, encoding="utf-8"))
+    _TR.update(cast(dict[str, str], json.load(open(CACHE_PATH, encoding="utf-8"))))
 except Exception:
-    _TR = {}
+    pass
 
 
-def _non_ascii(text):
+def _non_ascii(text: str) -> bool:
     return any(ord(ch) > 127 for ch in text)
 
 
-def to_english(text):
+def to_english(text: str) -> str:
     if not USE_TRANSLATE or not _non_ascii(text):
         return text
     if text in _TR:
@@ -228,18 +235,18 @@ def to_english(text):
 
 
 # ---------- IPC -> BNS mapping expansion ----------
-def expand_mapping(c):
+def expand_mapping(c: Chunk) -> list[int]:
     m = re.search(r"\(BNS\) Section (.+?)\.?$", c["text"])
     if not m:
         return []
     rest = re.sub(r"\([^)]*\)", "", m.group(1))
-    out = []
+    out: list[int] = []
     for num in re.findall(r"\b\d{1,3}[A-Z]{0,2}\b", rest)[:2]:
         out += INDEX.get((BNS_ACT, num), [])[:1]
     return out
 
 
-def retrieve(question, k=8):
+def retrieve(question: str, k: int = 8) -> list[Chunk]:
     """Run hybrid retrieval and return the highest-ranked legal chunks.
 
     Reciprocal-rank fusion combines dense semantic results with TF-IDF keyword
@@ -248,9 +255,9 @@ def retrieve(question, k=8):
     """
     n = 20
     q_en = to_english(question)
-    queries = [question] if q_en == question else [question, q_en]
-    scores = {}
-    dense_dist = {}
+    queries: list[str] = [question] if q_en == question else [question, q_en]
+    scores: dict[int, float] = {}
+    dense_dist: dict[int, float] = {}
 
     # Semantic retrieval supports both the original-language and translated query.
     # Reciprocal-rank contributions keep scores comparable across retrieval methods.
@@ -258,7 +265,7 @@ def retrieve(question, k=8):
         try:
             q_emb = _get_query_embedding(qq)
             if q_emb is not None:
-                r = col.query(query_embeddings=[q_emb], n_results=n)
+                r: Any = col.query(query_embeddings=[q_emb], n_results=n)
                 for rank, (cid, d) in enumerate(
                         zip(r["ids"][0], r["distances"][0])):
                     idx = int(cid[1:])
@@ -269,8 +276,15 @@ def retrieve(question, k=8):
 
     # Lexical retrieval complements semantic matches with exact term overlap.
     if USE_KEYWORD:
-        sims = (MATRIX @ TFIDF.transform([q_en]).T).toarray().ravel()
-        for rank, idx in enumerate(sims.argsort()[::-1][:n]):
+        vectorizer: Any = TFIDF
+        matrix: Any = MATRIX
+        query_matrix: Any = vectorizer.transform([q_en])
+        score_matrix: Any = matrix @ query_matrix.T
+        sims: list[float] = cast(
+            list[float], score_matrix.toarray().ravel().tolist())
+        ranked_indices = sorted(
+            range(len(sims)), key=lambda idx: sims[idx], reverse=True)[:n]
+        for rank, idx in enumerate(ranked_indices):
             if sims[idx] > 0:
                 scores[idx] = scores.get(idx, 0) + 1 / (60 + rank)
 
@@ -297,10 +311,11 @@ def retrieve(question, k=8):
             scores[idx] = scores.get(idx, 0) + s
 
     # Keep a small candidate pool so mapping expansion can add the real BNS text.
-    pool = sorted(scores, key=scores.get, reverse=True)[:k + 6]
-    final = []
+    pool: list[int] = sorted(
+        scores, key=lambda idx: scores[idx], reverse=True)[:k + 6]
+    final: list[int] = []
 
-    def push(i):
+    def push(i: int) -> None:
         if i not in final:
             final.append(i)
 
@@ -316,7 +331,7 @@ def retrieve(question, k=8):
             for i in final[:k]]
 
 
-def label(h):
+def label(h: Chunk) -> str:
     return h["act"] + " " + h["unit"] + " " + h["section"]
 
 
@@ -341,8 +356,14 @@ QUESTION: {question}
 ANSWER:"""
 
 
-def answer(question, lang="en"):
+def answer(question: str, lang: str = "en") -> tuple[str, list[dict[str, Any]], bool]:
     """Retrieve supporting chunks, generate a grounded answer, and expose sources."""
+    # Auto-detect language if question is written in Indic script and lang is default/en
+    hi_count = sum(1 for ch in question if "\u0900" <= ch <= "\u097f")
+    pa_count = sum(1 for ch in question if "\u0a00" <= ch <= "\u0a7f")
+    if (hi_count > 0 or pa_count > 0) and lang == "en":
+        lang = "hi" if hi_count >= pa_count else "pa"
+
     hits = retrieve(question, k=6)
     has_dense = any(h.get("has_dense", False) for h in hits)
     if not hits or (has_dense and min(h["distance"] for h in hits) > MAX_DIST):
@@ -353,7 +374,7 @@ def answer(question, lang="en"):
     prompt = PROMPT.format(language=LANGS.get(lang, "English"),
                            context=context, question=question)
     text = generate(prompt)
-    sources = [{"label": label(h), "act": h["act"], "section": h["section"],
+    sources: list[dict[str, Any]] = [{"label": label(h), "act": h["act"], "section": h["section"],
                 "unit": h["unit"], "title": h["title"],
                 "snippet": h["text"][:500], "url": h.get("source_url", ""),
                 "distance": round(h["distance"], 3)} for h in hits]
