@@ -5,7 +5,6 @@ from pathlib import Path
 import pandas as pd
 import pdfplumber
 
-# Preprocessing Logic
 RAW = Path("data/raw")
 OUT = Path("data/processed")
 OUT.mkdir(parents=True, exist_ok=True)
