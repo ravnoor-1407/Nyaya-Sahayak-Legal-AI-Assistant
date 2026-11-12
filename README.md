@@ -244,6 +244,9 @@ NyayaSahayak/
 │   │   ├── train_topic
 │   │   └── evaluate
 │   │
+│   ├── notebooks/
+│   │   └── model_training.ipynb
+│   │
 │   ├── requirements.txt
 │   └── .env.example
 │
@@ -316,6 +319,8 @@ python -m scripts.build_chunks
 python -m scripts.ingest
 python -m scripts.train_topic
 ```
+
+*(Optional) You can also open `notebooks/model_training.ipynb` in VS Code to see visual confusion matrix and interactive query testing.*
 
 **Step 7: Start the FastAPI backend server**
 
