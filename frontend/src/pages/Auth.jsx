@@ -278,9 +278,9 @@ export default function Auth() {
       setEmailTimer(45);
       setSuccess(
         tr(
-          "Verification code sent to your email! Please check your inbox.",
-          "सत्यापन कोड आपके ईमेल पर भेजा गया! कृपया अपना इनबॉक्स जाँचें।",
-          "ਪੁਸ਼ਟੀਕਰਨ ਕੋਡ ਤੁਹਾਡੇ ਈਮੇਲ 'ਤੇ ਭੇਜਿਆ ਗਿਆ! ਕਿਰਪਾ ਕਰਕੇ ਆਪਣਾ ਇਨਬਾਕਸ ਚੈੱਕ ਕਰੋ।"
+          "Verification code sent! Please check your Inbox and Spam / Junk folder.",
+          "सत्यापन कोड भेजा गया! कृपया अपना इनबॉक्स और स्पैम / जंक फ़ोल्डर जाँचें।",
+          "ਪੁਸ਼ਟੀਕਰਨ ਕੋਡ ਭੇਜਿਆ ਗਿਆ! ਕਿਰਪਾ ਕਰਕੇ ਆਪਣਾ ਇਨਬਾਕਸ ਅਤੇ ਸਪੈਮ / ਜੰਕ ਫੋਲਡਰ ਚੈੱਕ ਕਰੋ।"
         )
       );
     } catch (ex) {
@@ -517,6 +517,10 @@ export default function Auth() {
                   </button>
                 </div>
                 <div className="font-mono text-sm text-ink font-bold truncate mt-0.5">{emailOtp}</div>
+                <p className="text-[11px] text-muted mt-1.5 flex items-center gap-1">
+                  <span>📬</span>
+                  <span>{tr("If not visible in primary inbox, please check your Spam or Junk folder.", "यदि प्राथमिक इनबॉक्स में नहीं दिखे, तो कृपया अपना स्पैम या जंक फ़ोल्डर जाँचें।", "ਜੇਕਰ ਪ੍ਰਾਇਮਰੀ ਇਨਬਾਕਸ ਵਿੱਚ ਨਾ ਦਿਸੇ, ਤਾਂ ਕਿਰਪਾ ਕਰਕੇ ਸਪੈਮ ਜਾਂ ਜੰਕ ਫੋਲਡਰ ਚੈੱਕ ਕਰੋ।")}</span>
+                </p>
               </div>
 
               <div>
