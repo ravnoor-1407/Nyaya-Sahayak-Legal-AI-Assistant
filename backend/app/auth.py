@@ -17,11 +17,15 @@ from dotenv import load_dotenv
 from fastapi import APIRouter, Header, HTTPException
 from pydantic import BaseModel
 
-load_dotenv()
-
 from pathlib import Path
 
 _BASE_DIR = Path(__file__).resolve().parent.parent
+_ENV_FILE = _BASE_DIR / ".env"
+if _ENV_FILE.exists():
+    load_dotenv(_ENV_FILE)
+else:
+    load_dotenv()
+
 DB_PATH = os.getenv("DB_PATH", str(_BASE_DIR / "data" / "app.db"))
 SESSION_SECONDS = 30 * 24 * 3600
 OTP_EXPIRY_SECONDS = 10 * 60  # 10 minutes
@@ -168,7 +172,10 @@ def _extract_pure_email(raw_val: str, fallback: str = "shineravnoor.2007@gmail.c
 
 
 def _send_email_otp(email: str, code: str) -> dict[str, Any]:
-    load_dotenv(override=True)
+    if _ENV_FILE.exists():
+        load_dotenv(_ENV_FILE, override=True)
+    else:
+        load_dotenv(override=True)
     html_content = _build_email_html(code)
 
     # 1. Brevo (Sendinblue) API - Primary Provider (300 free emails/day to any recipient: https://brevo.com)
