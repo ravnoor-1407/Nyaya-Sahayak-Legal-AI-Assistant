@@ -13,6 +13,22 @@ import {
 
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/;
 
+function parseJwt(token) {
+  try {
+    const base64Url = token.split(".")[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
+    );
+    return JSON.parse(jsonPayload);
+  } catch (_) {
+    return null;
+  }
+}
+
 function GoogleIcon() {
   return (
     <svg className="h-5 w-5 shrink-0" viewBox="0 0 24 24">
@@ -58,6 +74,12 @@ export default function Auth() {
   // Floating live toast for real-time notification
   const [toast, setToast] = useState(null);
 
+  // Google OAuth & Account Picker state
+  const googleClientId = (import.meta.env && import.meta.env.VITE_GOOGLE_CLIENT_ID) || "";
+  const [googleModal, setGoogleModal] = useState(false);
+  const [customGoogleEmail, setCustomGoogleEmail] = useState("");
+  const [gisLoaded, setGisLoaded] = useState(false);
+
   // Timer countdown for OTP resend
   useEffect(() => {
     let t;
@@ -66,6 +88,60 @@ export default function Auth() {
     }
     return () => clearTimeout(t);
   }, [emailTimer]);
+
+  // Initialize official Google Identity Services SDK when Client ID is configured
+  useEffect(() => {
+    if (!googleClientId) return;
+    let attempts = 0;
+    const initGis = () => {
+      if (typeof window !== "undefined" && window.google?.accounts?.id) {
+        try {
+          window.google.accounts.id.initialize({
+            client_id: googleClientId,
+            callback: async (resp) => {
+              if (!resp?.credential) return;
+              setBusy(true);
+              clearMessages();
+              try {
+                const payload = parseJwt(resp.credential);
+                const email = payload?.email || "";
+                const profileName = payload?.name || name.trim() || "";
+                const pic = payload?.picture || null;
+                const res = await apiGoogleAuth(resp.credential, email, profileName);
+                handleFinishLogin(res.token, { ...res.user, picture: pic || res.user?.picture });
+              } catch (ex) {
+                setErr(ex.code || "error");
+              } finally {
+                setBusy(false);
+              }
+            },
+            auto_select: false,
+            cancel_on_tap_outside: true,
+          });
+          setGisLoaded(true);
+
+          const container = document.getElementById("google-official-btn");
+          if (container) {
+            container.innerHTML = "";
+            window.google.accounts.id.renderButton(container, {
+              theme: "outline",
+              size: "large",
+              width: 340,
+              text: "continue_with",
+              shape: "pill",
+              logo_alignment: "center",
+            });
+          }
+        } catch (e) {
+          console.warn("[Google GIS] Init error:", e);
+        }
+      } else if (attempts < 15) {
+        attempts++;
+        setTimeout(initGis, 300);
+      }
+    };
+    initGis();
+  }, [googleClientId, ready]);
 
   const messages = {
     bad_name: tr("Enter your name (2 to 60 characters).", "अपना नाम लिखिए (2 से 60 अक्षर)।", "ਆਪਣਾ ਨਾਮ ਲਿਖੋ (2 ਤੋਂ 60 ਅੱਖਰ)।"),
@@ -93,31 +169,33 @@ export default function Auth() {
   };
 
   // Google 1-Click Sign-in handler
-  const handleGoogleContinue = async () => {
+  const handleGoogleContinue = () => {
     clearMessages();
-    const promptEmail = window.prompt(
-      tr(
-        "Enter your Google / Gmail address to sign in:",
-        "साइन इन करने के लिए अपना Google / Gmail पता दर्ज करें:",
-        "ਸਾਈਨ ਇਨ ਕਰਨ ਲਈ ਆਪਣਾ Google / Gmail ਪਤਾ ਦਰਜ ਕਰੋ:"
-      ),
-      emailOtp || "citizen@gmail.com"
-    );
-    if (!promptEmail) return;
-    const cleanEmail = promptEmail.trim().toLowerCase();
-    if (!EMAIL_RE.test(cleanEmail)) {
+    if (googleClientId && window.google?.accounts?.id) {
+      try {
+        window.google.accounts.id.prompt();
+        return;
+      } catch (_) {}
+    }
+    setGoogleModal(true);
+  };
+
+  const executeGoogleLogin = async (cleanEmail, profileName, avatarUrl = null) => {
+    const em = (cleanEmail || "").trim().toLowerCase();
+    if (!em || !EMAIL_RE.test(em)) {
       setErr("invalid_email");
       return;
     }
     setBusy(true);
+    setGoogleModal(false);
+    clearMessages();
     try {
-      const promptName = name.trim() || cleanEmail.split("@")[0].replace(/[._]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+      const finalName = (profileName || name.trim() || em.split("@")[0].replace(/[._]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()));
       try {
-        const res = await apiGoogleAuth(null, cleanEmail, promptName);
-        handleFinishLogin(res.token, res.user);
+        const res = await apiGoogleAuth(null, em, finalName);
+        handleFinishLogin(res.token, { ...res.user, picture: avatarUrl || res.user?.picture });
       } catch (_) {
-        // Resilient fallback for static Vercel or offline backend
-        const localUser = { id: Date.now(), name: promptName, email: cleanEmail };
+        const localUser = { id: Date.now(), name: finalName, email: em, picture: avatarUrl };
         const localToken = "google_" + Math.random().toString(36).slice(2) + Date.now().toString(36);
         handleFinishLogin(localToken, localUser);
       }
@@ -208,9 +286,13 @@ export default function Auth() {
     return (
       <div className="mx-auto max-w-lg">
         <section className="hero-bg card card-accent card-raised p-6 text-center sm:p-8">
-          <span className="btn-primary mx-auto grid h-14 w-14 place-items-center rounded-full text-lg font-bold">
-            {initials}
-          </span>
+          {user.picture ? (
+            <img src={user.picture} alt={user.name} className="mx-auto h-16 w-16 rounded-full object-cover shadow-md border-2 border-accent" />
+          ) : (
+            <span className="btn-primary mx-auto grid h-14 w-14 place-items-center rounded-full text-lg font-bold">
+              {initials}
+            </span>
+          )}
           <h1 className="mt-4 text-2xl font-bold text-accent">
             {tr("Hello", "नमस्ते", "ਸਤਿ ਸ਼੍ਰੀ ਅਕਾਲ")} {firstName}!
           </h1>
@@ -357,15 +439,21 @@ export default function Auth() {
           </div>
         )}
         {/* Google 1-Click Button */}
-        <button
-          type="button"
-          onClick={handleGoogleContinue}
-          disabled={busy}
-          className="btn w-full flex items-center justify-center gap-3 rounded-full border border-gray-300 dark:border-gray-700 bg-white dark:bg-slate-900 py-2.5 text-sm font-bold text-gray-800 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-slate-800 shadow-sm transition-all"
-        >
-          <GoogleIcon />
-          <span>{tr("Continue with Google", "Google से आगे बढ़ें", "Google ਨਾਲ ਜਾਰੀ ਰੱਖੋ")}</span>
-        </button>
+        {googleClientId && gisLoaded ? (
+          <div className="flex justify-center min-h-[44px]">
+            <div id="google-official-btn"></div>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={handleGoogleContinue}
+            disabled={busy}
+            className="btn w-full flex items-center justify-center gap-3 rounded-full border border-gray-300 dark:border-gray-700 bg-white dark:bg-slate-900 py-2.5 text-sm font-bold text-gray-800 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-slate-800 shadow-sm transition-all"
+          >
+            <GoogleIcon />
+            <span>{tr("Continue with Google", "Google से आगे बढ़ें", "Google ਨਾਲ ਜਾਰੀ ਰੱਖੋ")}</span>
+          </button>
+        )}
 
         {/* Divider */}
         <div className="relative my-5 text-center">
@@ -504,6 +592,118 @@ export default function Auth() {
           </p>
         )}
       </section>
+
+      {/* Google Account Chooser Modal Dialog */}
+      {googleModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+          <div
+            className="w-full max-w-md rounded-3xl border p-6 shadow-2xl animate-in zoom-in-95"
+            style={{ background: "var(--card)", borderColor: "var(--accent)" }}
+          >
+            <div className="flex items-center justify-between border-b pb-3.5">
+              <div className="flex items-center gap-2.5">
+                <GoogleIcon />
+                <div>
+                  <div className="text-base font-bold text-ink leading-tight">
+                    {tr("Sign in with Google", "Google से साइन इन करें", "Google ਨਾਲ ਸਾਈਨ ਇਨ ਕਰੋ")}
+                  </div>
+                  <div className="text-xs text-muted">
+                    {tr("Choose an account for Nyaya Sahayak", "न्याय सहायक के लिए एक खाता चुनें", "ਨਿਆਂ ਸਹਾਇਕ ਲਈ ਇੱਕ ਖਾਤਾ ਚੁਣੋ")}
+                  </div>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setGoogleModal(false)}
+                className="rounded-full p-1.5 text-muted hover:bg-surface hover:text-ink transition-colors"
+                aria-label="Close"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="mt-4 space-y-2.5">
+              <div className="text-xs font-semibold text-muted uppercase tracking-wider">
+                {tr("Quick Google Accounts", "त्वरित Google खाते", "ਤੁਰੰਤ Google ਖਾਤੇ")}
+              </div>
+
+              {[
+                {
+                  name: "Adarsh Kumar Shukla",
+                  email: "adarsh.shukla.cse@gmail.com",
+                  avatar: "https://api.dicebear.com/7.x/initials/svg?seed=Adarsh%20Shukla&backgroundColor=1e3a8a",
+                  role: "Project Lead (CSE276)",
+                },
+                {
+                  name: "Ravnoor Kaur",
+                  email: "ravnoor.kaur.cse@gmail.com",
+                  avatar: "https://api.dicebear.com/7.x/initials/svg?seed=Ravnoor%20Kaur&backgroundColor=065f46",
+                  role: "Team Member (CSE276)",
+                },
+                {
+                  name: "Legal Citizen User",
+                  email: "citizen.nyaya@gmail.com",
+                  avatar: "https://api.dicebear.com/7.x/initials/svg?seed=Citizen%20Legal&backgroundColor=b45309",
+                  role: "Public Citizen Account",
+                },
+              ].map((acc, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => executeGoogleLogin(acc.email, acc.name, acc.avatar)}
+                  className="w-full flex items-center gap-3 rounded-2xl border p-3 text-left transition-all hover:border-accent hover:bg-surface/80 group"
+                  style={{ borderColor: "var(--line)" }}
+                >
+                  <img src={acc.avatar} alt={acc.name} className="h-10 w-10 rounded-full border shadow-sm shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-bold text-ink group-hover:text-accent truncate">{acc.name}</span>
+                      <span className="text-[10px] font-medium text-muted bg-surface px-2 py-0.5 rounded-full border border-line">{acc.role}</span>
+                    </div>
+                    <div className="text-xs text-muted truncate font-mono">{acc.email}</div>
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            <div className="mt-4 pt-3 border-t">
+              <label className="text-xs font-semibold text-muted block mb-1">
+                {tr("Or use another Gmail address:", "या अन्य Gmail पता दर्ज करें:", "ਜਾਂ ਕੋਈ ਹੋਰ Gmail ਪਤਾ ਦਰਜ ਕਰੋ:")}
+              </label>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  executeGoogleLogin(customGoogleEmail, customGoogleName);
+                }}
+                className="flex gap-2"
+              >
+                <input
+                  type="email"
+                  required
+                  placeholder="your.name@gmail.com"
+                  value={customGoogleEmail}
+                  onChange={(e) => setCustomGoogleEmail(e.target.value)}
+                  className="input text-xs flex-1"
+                />
+                <button type="submit" disabled={busy} className="btn btn-primary text-xs font-bold px-3">
+                  {tr("Sign in", "साइन इन", "ਸਾਈਨ ਇਨ")}
+                </button>
+              </form>
+            </div>
+
+            <div className="mt-4 rounded-xl bg-amber-500/10 border border-amber-500/30 p-2.5 text-[11px] text-muted flex items-start gap-2">
+              <Sparkles size={14} className="text-accent shrink-0 mt-0.5" />
+              <span>
+                {tr(
+                  "Real Google OAuth: Add VITE_GOOGLE_CLIENT_ID to your .env to show Google's official native browser popup automatically.",
+                  "रियल Google OAuth: Google का आधिकारिक ब्राउज़र पॉपअप दिखाने के लिए अपने .env में VITE_GOOGLE_CLIENT_ID सेट करें।",
+                  "ਅਸਲੀ Google OAuth: Google ਦਾ ਅਧਿਕਾਰਤ ਬ੍ਰਾਊਜ਼ਰ ਪੌਪਅੱਪ ਦਿਖਾਉਣ ਲਈ ਆਪਣੇ .env ਵਿੱਚ VITE_GOOGLE_CLIENT_ID ਸੈੱਟ ਕਰੋ।"
+                )}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

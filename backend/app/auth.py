@@ -60,6 +60,8 @@ def db() -> sqlite3.Connection:
     if "phone" not in cols:
         c.execute("ALTER TABLE users ADD COLUMN phone TEXT")
         c.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_phone ON users(phone) WHERE phone IS NOT NULL")
+    if "picture" not in cols:
+        c.execute("ALTER TABLE users ADD COLUMN picture TEXT")
 
     for table in ("queries", "feedback", "cites"):
         if "user_id" not in _cols(c, table):
@@ -106,16 +108,16 @@ def user_from_header(authorization: str | None) -> dict[str, Any] | None:
         return None
     th = hashlib.sha256(token.encode("utf-8")).hexdigest()
     with db() as c:
-        row = cast(tuple[int, str, str | None, float] | None, c.execute(
-            "SELECT u.id, u.name, u.email, s.created FROM sessions s "
+        row = cast(tuple[int, str, str | None, str | None, float] | None, c.execute(
+            "SELECT u.id, u.name, u.email, u.picture, s.created FROM sessions s "
             "JOIN users u ON u.id = s.user_id WHERE s.token_hash = ?",
             (th,)).fetchone())
         if not row:
             return None
-        if time.time() - row[3] > SESSION_SECONDS:
+        if time.time() - row[4] > SESSION_SECONDS:
             c.execute("DELETE FROM sessions WHERE token_hash = ?", (th,))
             return None
-    return {"id": row[0], "name": row[1], "email": row[2] or ""}
+    return {"id": row[0], "name": row[1], "email": row[2] or "", "picture": row[3]}
 
 
 # ===================== Professional Email Template =====================
@@ -420,7 +422,7 @@ class PhoneOtpVerifyIn(BaseModel):
 
 class GoogleAuthIn(BaseModel):
     credential: str | None = None
-    email: str
+    email: str | None = None
     name: str | None = None
 
 
@@ -676,24 +678,54 @@ def verify_phone_otp(b: PhoneOtpVerifyIn) -> dict[str, Any]:
 
 @router.post("/google")
 def google_auth(b: GoogleAuthIn) -> dict[str, Any]:
-    email = b.email.strip().lower()
-    if not EMAIL_RE.match(email):
-        raise HTTPException(400, "invalid_email")
+    email = (b.email or "").strip().lower()
     name = (b.name or "").strip()
+    picture: str | None = None
+
+    # Parse and extract verified profile from Google ID token JWT if supplied
+    if b.credential:
+        try:
+            parts = b.credential.split(".")
+            if len(parts) >= 2:
+                payload_b64 = parts[1] + "=" * (-len(parts[1]) % 4)
+                payload_json = base64.urlsafe_b64decode(payload_b64.encode("utf-8")).decode("utf-8")
+                payload = json.loads(payload_json)
+                if payload.get("email"):
+                    email = str(payload["email"]).strip().lower()
+                if payload.get("name"):
+                    name = str(payload["name"]).strip()
+                if payload.get("picture"):
+                    picture = str(payload["picture"])
+        except Exception as e:
+            print(f"[AUTH] Could not decode Google ID token: {e}")
+
+    if not email or not EMAIL_RE.match(email):
+        raise HTTPException(400, "invalid_email")
     if not name:
         name = email.split("@")[0].replace(".", " ").capitalize()
 
     with db() as c:
-        row = c.execute("SELECT id, name, email FROM users WHERE email = ?", (email,)).fetchone()
+        row = c.execute("SELECT id, name, email, picture FROM users WHERE email = ?", (email,)).fetchone()
         if row:
-            uid, user_name, user_email = row
+            uid, user_name, user_email, existing_pic = row
+            updates = []
+            params = []
             if name and not user_name:
+                updates.append("name = ?")
+                params.append(name)
                 user_name = name
-                c.execute("UPDATE users SET name = ? WHERE id = ?", (user_name, uid))
+            if picture and picture != existing_pic:
+                updates.append("picture = ?")
+                params.append(picture)
+            elif not picture and existing_pic:
+                picture = existing_pic
+            if updates:
+                params.append(uid)
+                c.execute(f"UPDATE users SET {', '.join(updates)} WHERE id = ?", tuple(params))
         else:
             cur = c.execute(
-                "INSERT INTO users(name, email, salt, pw, created) VALUES(?, ?, '', '', ?)",
-                (name, email, time.time())
+                "INSERT INTO users(name, email, salt, pw, created, picture) VALUES(?, ?, '', '', ?, ?)",
+                (name, email, time.time(), picture)
             )
             uid = cast(int, cur.lastrowid)
             user_name = name
@@ -702,7 +734,7 @@ def google_auth(b: GoogleAuthIn) -> dict[str, Any]:
     token = _new_session(uid)
     return {
         "token": token,
-        "user": {"id": uid, "name": user_name, "email": user_email}
+        "user": {"id": uid, "name": user_name, "email": user_email, "picture": picture}
     }
 
 

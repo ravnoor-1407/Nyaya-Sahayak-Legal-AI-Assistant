@@ -271,9 +271,13 @@ export default function Navbar() {
                   setMenu(false);
                 }}
               >
-                <span className="btn-primary grid h-7 w-7 place-items-center rounded-full text-xs font-bold shrink-0 shadow-sm">
-                  {initials}
-                </span>
+                {user.picture ? (
+                  <img src={user.picture} alt={user.name} className="h-7 w-7 rounded-full object-cover shrink-0 shadow-sm border border-accent/40" />
+                ) : (
+                  <span className="btn-primary grid h-7 w-7 place-items-center rounded-full text-xs font-bold shrink-0 shadow-sm">
+                    {initials}
+                  </span>
+                )}
                 <ChevronDown size={12} className={"mr-1 text-muted transition-transform " + (acct ? "rotate-180" : "")} />
               </button>
             )}
@@ -309,12 +313,21 @@ export default function Navbar() {
 
         {acct && user && (
           <div className="menu-pop card card-accent card-raised absolute right-0 top-full mt-2 w-64 p-3 z-50 shadow-2xl bg-surface">
-            <div className="border-b px-2 pb-2">
-              <div className="font-bold text-accent">
-                {tr("Hello", "नमस्ते", "ਸਤਿ ਸ਼੍ਰੀ ਅਕਾਲ")} {displayName}!
+            <div className="border-b px-2 pb-2.5 flex items-center gap-2.5">
+              {user.picture ? (
+                <img src={user.picture} alt={user.name} className="h-9 w-9 rounded-full object-cover shrink-0 shadow-sm border border-accent/40" />
+              ) : (
+                <span className="btn-primary grid h-9 w-9 place-items-center rounded-full text-xs font-bold shrink-0 shadow-sm">
+                  {initials}
+                </span>
+              )}
+              <div className="min-w-0 flex-1">
+                <div className="font-bold text-accent truncate text-xs">
+                  {tr("Hello", "नमस्ते", "ਸਤਿ ਸ਼੍ਰੀ ਅਕਾਲ")} {displayName}!
+                </div>
+                <div className="text-sm font-semibold truncate leading-tight">{user.name}</div>
+                <div className="truncate font-mono text-[11px] text-muted">{user.email}</div>
               </div>
-              <div className="text-sm font-semibold">{user.name}</div>
-              <div className="truncate font-mono text-xs text-muted">{user.email}</div>
             </div>
             <NavLink to="/dashboard" className="menu-link mt-1 text-sm font-semibold" style={{ alignItems: "center" }}>
               <LayoutDashboard size={16} className="text-accent" />
