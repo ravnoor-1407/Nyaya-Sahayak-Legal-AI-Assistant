@@ -35,7 +35,7 @@ services:
       - key: BREVO_API_KEY
         sync: false
       - key: BREVO_FROM
-        sync: false
+        value: "shineravnoor.2007@gmail.com"
       - key: GOOGLE_CLIENT_ID
         value: "275499951357-so6lgqp7qk1sskfeshni6o9fe2fce22f.apps.googleusercontent.com"
       - key: SMTP_HOST

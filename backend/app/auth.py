@@ -158,11 +158,60 @@ def _build_email_html(code: str) -> str:
 
 # ===================== Real-time Email & SMS Sender Services =====================
 
+def _extract_pure_email(raw_val: str, fallback: str = "shineravnoor.2007@gmail.com") -> str:
+    if not raw_val:
+        return fallback
+    m = re.search(r"[\w\.\+\-]+@[\w\.-]+\.[a-zA-Z]{2,}", raw_val)
+    if m:
+        return m.group(0).strip()
+    return raw_val.strip() or fallback
+
+
 def _send_email_otp(email: str, code: str) -> dict[str, Any]:
     load_dotenv(override=True)
     html_content = _build_email_html(code)
 
-    # 1. Resend API (https://resend.com)
+    # 1. Brevo (Sendinblue) API - Primary Provider (300 free emails/day to any recipient: https://brevo.com)
+    brevo_key = (
+        os.getenv("BREVO_API_KEY", "").strip()
+        or os.getenv("SENDINBLUE_API_KEY", "").strip()
+    )
+    if brevo_key:
+        try:
+            raw_sender = (
+                os.getenv("BREVO_FROM", "").strip()
+                or os.getenv("SMTP_FROM", "").strip()
+                or os.getenv("SMTP_USER", "").strip()
+                or "shineravnoor.2007@gmail.com"
+            )
+            sender_email = _extract_pure_email(raw_sender, fallback="shineravnoor.2007@gmail.com")
+            payload = {
+                "sender": {"name": "NyayaSahayak", "email": sender_email},
+                "to": [{"email": email}],
+                "subject": f"Your NyayaSahayak Verification Code: {code}",
+                "htmlContent": html_content,
+                "textContent": f"Your NyayaSahayak verification code is: {code}\n\nValid for 10 minutes."
+            }
+            req = urllib.request.Request(
+                "https://api.brevo.com/v3/smtp/email",
+                data=json.dumps(payload).encode("utf-8"),
+                headers={
+                    "api-key": brevo_key,
+                    "Content-Type": "application/json",
+                    "User-Agent": "NyayaSahayak-App"
+                }
+            )
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                if resp.status in (200, 201, 202):
+                    print(f"[AUTH EMAIL] Successfully delivered OTP via Brevo to {email}")
+                    return {"sent": True, "provider": "brevo"}
+        except urllib.error.HTTPError as ex:
+            err_body = ex.read().decode("utf-8", errors="ignore")
+            print(f"[AUTH EMAIL ERROR - Brevo HTTP {ex.code}]: {err_body}")
+        except Exception as ex:
+            print(f"[AUTH EMAIL ERROR - Brevo]: {ex}")
+
+    # 2. Resend API (Secondary fallback: https://resend.com)
     resend_key = os.getenv("RESEND_API_KEY", "").strip()
     if resend_key:
         try:
@@ -190,39 +239,6 @@ def _send_email_otp(email: str, code: str) -> dict[str, Any]:
             print(f"[AUTH EMAIL ERROR - Resend HTTP {ex.code}]: {err_body}")
         except Exception as ex:
             print(f"[AUTH EMAIL ERROR - Resend]: {ex}")
-
-    # 2. Brevo (Sendinblue) API (300 free emails/day: https://brevo.com)
-    brevo_key = os.getenv("BREVO_API_KEY", "").strip() or os.getenv("SENDINBLUE_API_KEY", "").strip()
-    if brevo_key:
-        try:
-            sender_email = (
-                os.getenv("BREVO_FROM", "").strip()
-                or os.getenv("SMTP_FROM", "").strip()
-                or os.getenv("SMTP_USER", "").strip()
-                or "verify@nyayasahayak.gov.in"
-            )
-            payload = {
-                "sender": {"name": "NyayaSahayak", "email": sender_email},
-                "to": [{"email": email}],
-                "subject": f"Your NyayaSahayak Verification Code: {code}",
-                "htmlContent": html_content,
-                "textContent": f"Your NyayaSahayak verification code is: {code}\n\nValid for 10 minutes."
-            }
-            req = urllib.request.Request(
-                "https://api.brevo.com/v3/smtp/email",
-                data=json.dumps(payload).encode("utf-8"),
-                headers={
-                    "api-key": brevo_key,
-                    "Content-Type": "application/json",
-                    "User-Agent": "NyayaSahayak-App"
-                }
-            )
-            with urllib.request.urlopen(req, timeout=10) as resp:
-                if resp.status in (200, 201, 202):
-                    print(f"[AUTH EMAIL] Successfully delivered OTP via Brevo to {email}")
-                    return {"sent": True, "provider": "brevo"}
-        except Exception as ex:
-            print(f"[AUTH EMAIL ERROR - Brevo]: {ex}")
 
     # 3. SendGrid API
     sendgrid_key = os.getenv("SENDGRID_API_KEY", "").strip()
@@ -261,22 +277,22 @@ def _send_email_otp(email: str, code: str) -> dict[str, Any]:
         try:
             smtp_port = int(os.getenv("SMTP_PORT", "587"))
             smtp_pw = os.getenv("SMTP_PASSWORD", "").strip().replace(" ", "")
-            smtp_from = os.getenv("SMTP_FROM", smtp_user or "noreply@nyayasahayak.gov.in")
+            smtp_from = _extract_pure_email(os.getenv("SMTP_FROM", smtp_user or "shineravnoor.2007@gmail.com"))
             
             msg = EmailMessage()
             msg["Subject"] = f"Your NyayaSahayak Verification Code: {code}"
-            msg["From"] = f"NyayaSahayak <{smtp_from}>" if "<" not in smtp_from else smtp_from
+            msg["From"] = f"NyayaSahayak <{smtp_from}>"
             msg["To"] = email
             msg.set_content(f"Your NyayaSahayak verification code is: {code}\n\nThis code is valid for 10 minutes.\nNever share this code.")
             msg.add_alternative(html_content, subtype="html")
 
             if smtp_port == 465:
-                with smtplib.SMTP_SSL(smtp_host, smtp_port, timeout=15) as s:
+                with smtplib.SMTP_SSL(smtp_host, smtp_port, timeout=8) as s:
                     if smtp_user and smtp_pw:
                         s.login(smtp_user, smtp_pw)
                     s.send_message(msg)
             else:
-                with smtplib.SMTP(smtp_host, smtp_port, timeout=15) as s:
+                with smtplib.SMTP(smtp_host, smtp_port, timeout=8) as s:
                     s.ehlo()
                     s.starttls()
                     s.ehlo()
