@@ -177,12 +177,64 @@ export default function Auth() {
   // Google 1-Click Sign-in handler
   const handleGoogleContinue = () => {
     clearMessages();
+
+    // 1. Official Google OAuth 2.0 Popup Flow (Never throttles, always prompts account chooser / password / 2FA)
+    if (googleClientId && window.google?.accounts?.oauth2) {
+      try {
+        const tokenClient = window.google.accounts.oauth2.initTokenClient({
+          client_id: googleClientId,
+          scope: "email profile openid",
+          callback: async (tokenResponse) => {
+            if (tokenResponse?.error) {
+              console.warn("[Google OAuth] Token error:", tokenResponse.error);
+              setGoogleModal(true);
+              return;
+            }
+            if (tokenResponse?.access_token) {
+              setBusy(true);
+              clearMessages();
+              try {
+                const userRes = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+                  headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
+                });
+                const profile = await userRes.json();
+                if (profile?.email) {
+                  const res = await apiGoogleAuth(null, profile.email, profile.name);
+                  handleFinishLogin(res.token, {
+                    ...res.user,
+                    picture: profile.picture || res.user?.picture,
+                  });
+                  return;
+                }
+              } catch (ex) {
+                console.warn("[Google OAuth] Profile fetch failed:", ex);
+                setErr(ex.code || "error");
+              } finally {
+                setBusy(false);
+              }
+            }
+          },
+        });
+        tokenClient.requestAccessToken({ prompt: "select_account" });
+        return;
+      } catch (e) {
+        console.warn("[Google OAuth] Popup init failed, trying GIS prompt:", e);
+      }
+    }
+
+    // 2. Fallback to GIS One-Tap prompt
     if (googleClientId && window.google?.accounts?.id) {
       try {
-        window.google.accounts.id.prompt();
+        window.google.accounts.id.prompt((notification) => {
+          if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+            setGoogleModal(true);
+          }
+        });
         return;
       } catch (_) {}
     }
+
+    // 3. Fallback to instant Account Chooser modal
     setGoogleModal(true);
   };
 
