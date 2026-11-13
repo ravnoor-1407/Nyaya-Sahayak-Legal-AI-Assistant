@@ -32,6 +32,12 @@ services:
         sync: false
       - key: RESEND_FROM
         value: "NyayaSahayak <onboarding@resend.dev>"
+      - key: BREVO_API_KEY
+        sync: false
+      - key: BREVO_FROM
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        value: "275499951357-so6lgqp7qk1sskfeshni6o9fe2fce22f.apps.googleusercontent.com"
       - key: SMTP_HOST
         value: smtp.gmail.com
       - key: SMTP_PORT
