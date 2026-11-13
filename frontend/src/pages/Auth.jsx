@@ -79,6 +79,7 @@ export default function Auth() {
   const [googleModal, setGoogleModal] = useState(false);
   const [customGoogleEmail, setCustomGoogleEmail] = useState("");
   const [gisLoaded, setGisLoaded] = useState(false);
+  const [officialRendered, setOfficialRendered] = useState(false);
 
   // Timer countdown for OTP resend
   useEffect(() => {
@@ -131,6 +132,11 @@ export default function Auth() {
               shape: "pill",
               logo_alignment: "center",
             });
+            setTimeout(() => {
+              if (container.querySelector("iframe") || container.children.length > 0) {
+                setOfficialRendered(true);
+              }
+            }, 600);
           }
         } catch (e) {
           console.warn("[Google GIS] Init error:", e);
@@ -438,12 +444,13 @@ export default function Auth() {
             </div>
           </div>
         )}
-        {/* Google 1-Click Button */}
-        {googleClientId && gisLoaded ? (
-          <div className="flex justify-center min-h-[44px]">
+        {/* Google Sign-In: Official GIS button or fallback branded button (never leaves blank space) */}
+        {googleClientId && gisLoaded && (
+          <div className={`flex justify-center min-h-[44px] ${officialRendered ? "block" : "hidden"}`}>
             <div id="google-official-btn"></div>
           </div>
-        ) : (
+        )}
+        {(!googleClientId || !gisLoaded || !officialRendered) && (
           <button
             type="button"
             onClick={handleGoogleContinue}
