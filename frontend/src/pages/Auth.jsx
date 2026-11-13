@@ -446,13 +446,12 @@ export default function Auth() {
         )}
 
         {/* Divider */}
-        <div className="relative my-5 text-center">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-200 dark:border-gray-700" />
-          </div>
-          <span className="relative bg-card px-3 text-xs uppercase tracking-wider text-muted font-semibold">
+        <div className="flex items-center gap-3 my-5">
+          <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
+          <span className="text-xs uppercase tracking-wider text-muted font-semibold whitespace-nowrap select-none">
             {tr("Or sign in with email code", "या ईमेल कोड से साइन इन करें", "ਜਾਂ ਈਮੇਲ ਕੋਡ ਨਾਲ ਸਾਈਨ ਇਨ ਕਰੋ")}
           </span>
+          <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
         </div>
 
         {/* Optional Name Input for New Users */}
