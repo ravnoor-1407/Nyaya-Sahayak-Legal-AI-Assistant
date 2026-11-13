@@ -375,13 +375,13 @@ def _clean_phone(raw: str) -> str:
 
 def _is_production() -> bool:
     env = os.getenv("ENVIRONMENT", "").lower() or os.getenv("NODE_ENV", "").lower()
-    return env in ("production", "prod")
+    return env in ("production", "prod") or bool(os.getenv("RENDER"))
 
 
 def _allow_debug_otp() -> bool:
     if _is_production():
         return False
-    return os.getenv("DEBUG_OTP", "true").lower() == "true"
+    return os.getenv("DEBUG_OTP", "false").lower() in ("true", "1")
 
 
 # ===================== Request Models =====================
@@ -528,19 +528,19 @@ def send_email_otp(b: EmailOtpSendIn) -> dict[str, Any]:
         )
     res = _send_email_otp(email, code)
 
+    # If external email dispatch failed, do not reveal the OTP in production
+    if not res.get("sent") and not _allow_debug_otp():
+        raise HTTPException(502, "email_delivery_failed")
+
     response_data: dict[str, Any] = {
         "ok": True,
         "message": f"Verification code sent to {email}",
         "sent_to": email,
         "provider": res["provider"]
     }
-    # If external email dispatch didn't succeed (e.g. cloud host blocked SMTP) or debug mode enabled:
-    if not res.get("sent") or _allow_debug_otp():
+    # Only return debug_code when explicitly allowed in local development
+    if _allow_debug_otp():
         response_data["debug_code"] = code
-        if not res.get("sent"):
-            response_data["notice"] = (
-                "Live email dispatch unavailable on current cloud host. Real-time verification code enabled."
-            )
 
     return response_data
 

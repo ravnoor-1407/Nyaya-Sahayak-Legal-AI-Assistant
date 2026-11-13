@@ -71,8 +71,6 @@ export default function Auth() {
   const [emailTimer, setEmailTimer] = useState(0);
   const [localCode, setLocalCode] = useState("");
 
-  // Floating live toast for real-time notification
-  const [toast, setToast] = useState(null);
 
   // Google OAuth & Account Picker state
   const googleClientId = (import.meta.env && import.meta.env.VITE_GOOGLE_CLIENT_ID) || "";
@@ -275,29 +273,18 @@ export default function Auth() {
     }
     setBusy(true);
     try {
-      let codeToUse = "";
-      try {
-        const res = await apiSendEmailOtp(em, name.trim());
-        codeToUse = res.debug_code || "";
-      } catch (_) {
-        // Offline / Vercel fallback code
-        codeToUse = String(Math.floor(100000 + Math.random() * 900000));
-      }
-
-      setLocalCode(codeToUse);
+      await apiSendEmailOtp(em, name.trim());
       setEmailStep("verify");
       setEmailTimer(45);
-      setSuccess(tr("Verification code sent to your email!", "सत्यापन कोड आपके ईमेल पर भेजा गया!", "ਪੁਸ਼ਟੀਕਰਨ ਕੋਡ ਤੁਹਾਡੇ ਈਮੇਲ 'ਤੇ ਭੇਜਿਆ ਗਿਆ!"));
-      if (codeToUse) {
-        setToast({
-          type: "email",
-          title: tr("Verification Email Dispatched", "सत्यापन ईमेल भेजा गया", "ਪੁਸ਼ਟੀਕਰਨ ਈਮੇਲ ਭੇਜੀ ਗਈ"),
-          message: tr(`Sent to ${em}. Real-time verification code:`, `${em} पर भेजा गया। लाइव सत्यापन कोड:`, `${em} 'ਤੇ ਭੇਜਿਆ ਗਿਆ। ਰੀਅਲ-ਟਾਈਮ ਪੁਸ਼ਟੀਕਰਨ ਕੋਡ:`),
-          code: codeToUse,
-        });
-      }
+      setSuccess(
+        tr(
+          "Verification code sent to your email! Please check your inbox.",
+          "सत्यापन कोड आपके ईमेल पर भेजा गया! कृपया अपना इनबॉक्स जाँचें।",
+          "ਪੁਸ਼ਟੀਕਰਨ ਕੋਡ ਤੁਹਾਡੇ ਈਮੇਲ 'ਤੇ ਭੇਜਿਆ ਗਿਆ! ਕਿਰਪਾ ਕਰਕੇ ਆਪਣਾ ਇਨਬਾਕਸ ਚੈੱਕ ਕਰੋ।"
+        )
+      );
     } catch (ex) {
-      setErr(ex.code || "error");
+      setErr(ex.code || "email_delivery_failed");
     } finally {
       setBusy(false);
     }
@@ -314,24 +301,10 @@ export default function Auth() {
     setBusy(true);
     try {
       const em = emailOtp.trim().toLowerCase();
-      try {
-        const res = await apiVerifyEmailOtp(em, cleanCode, name.trim());
-        setToast(null);
-        handleFinishLogin(res.token, res.user);
-      } catch (_) {
-        // Offline / Vercel fallback verification
-        if (localCode && cleanCode !== localCode) {
-          setErr("invalid_code");
-          return;
-        }
-        const promptName = name.trim() || em.split("@")[0].replace(/[._]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-        const localUser = { id: Date.now(), name: promptName, email: em };
-        const localToken = "email_" + Math.random().toString(36).slice(2) + Date.now().toString(36);
-        setToast(null);
-        handleFinishLogin(localToken, localUser);
-      }
+      const res = await apiVerifyEmailOtp(em, cleanCode, name.trim());
+      handleFinishLogin(res.token, res.user);
     } catch (ex) {
-      setErr(ex.code || "error");
+      setErr(ex.code || "invalid_code");
     } finally {
       setBusy(false);
     }
@@ -382,49 +355,7 @@ export default function Auth() {
 
   return (
     <div className="mx-auto grid max-w-4xl gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-      {/* Real-time floating toast */}
-      {toast && (
-        <div
-          role="status"
-          aria-live="polite"
-          className="fixed top-6 right-6 z-50 max-w-sm rounded-2xl border p-4 shadow-2xl backdrop-blur-xl animate-in fade-in slide-in-from-top-4"
-          style={{ background: "var(--card)", borderColor: "var(--accent)" }}
-        >
-          <div className="flex items-start gap-3">
-            <span className="btn-primary grid h-8 w-8 place-items-center rounded-full shrink-0">
-              <Mail size={16} />
-            </span>
-            <div className="flex-1 min-w-0">
-              <div className="text-sm font-bold text-accent">{toast.title}</div>
-              <div className="text-xs text-muted mt-0.5">{toast.message}</div>
-              {toast.code && (
-                <div className="mt-2.5 flex items-center gap-2">
-                  <span className="font-mono text-base font-bold tracking-widest text-accent bg-amber-500/15 px-2.5 py-1 rounded-lg border border-amber-500/40">
-                    {toast.code}
-                  </span>
-                  <button
-                    type="button"
-                    className="text-xs font-bold text-ink underline hover:text-accent"
-                    onClick={() => {
-                      setEmailCode(toast.code);
-                    }}
-                  >
-                    {tr("Auto-fill code", "कोड स्वतः भरें", "ਕੋਡ ਆਪ ਭਰੋ")}
-                  </button>
-                </div>
-              )}
-            </div>
-            <button
-              type="button"
-              onClick={() => setToast(null)}
-              className="text-muted hover:text-ink text-sm font-bold ml-1"
-              aria-label="Close"
-            >
-              ✕
-            </button>
-          </div>
-        </div>
-      )}
+
 
       {/* Left Column: Account Benefits */}
       <section className="hero-bg card card-accent card-raised p-6 sm:p-8">
