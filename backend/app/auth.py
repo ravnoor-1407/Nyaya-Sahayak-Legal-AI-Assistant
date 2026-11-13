@@ -271,12 +271,12 @@ def _send_email_otp(email: str, code: str) -> dict[str, Any]:
             msg.add_alternative(html_content, subtype="html")
 
             if smtp_port == 465:
-                with smtplib.SMTP_SSL(smtp_host, smtp_port, timeout=5) as s:
+                with smtplib.SMTP_SSL(smtp_host, smtp_port, timeout=15) as s:
                     if smtp_user and smtp_pw:
                         s.login(smtp_user, smtp_pw)
                     s.send_message(msg)
             else:
-                with smtplib.SMTP(smtp_host, smtp_port, timeout=5) as s:
+                with smtplib.SMTP(smtp_host, smtp_port, timeout=15) as s:
                     s.ehlo()
                     s.starttls()
                     s.ehlo()
