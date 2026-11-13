@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   ShieldCheck, LayoutDashboard, LogOut,
   AlertTriangle, CheckCircle2, Mail, Sparkles, ArrowRight,
-  RotateCcw, Check, Lock, ChevronDown,
+  RotateCcw, Check, Lock,
 } from "lucide-react";
 import { useLang } from "../LangContext";
 import { useAuth } from "../AuthContext";
@@ -80,7 +80,6 @@ export default function Auth() {
   const [customGoogleEmail, setCustomGoogleEmail] = useState("");
   const [gisLoaded, setGisLoaded] = useState(false);
   const [officialRendered, setOfficialRendered] = useState(false);
-  const [showEmailForm, setShowEmailForm] = useState(false);
 
   // Timer countdown for OTP resend
   useEffect(() => {
@@ -469,148 +468,116 @@ export default function Auth() {
             <div className="w-full border-t border-gray-200 dark:border-gray-700" />
           </div>
           <span className="relative bg-card px-3 text-xs uppercase tracking-wider text-muted font-semibold">
-            {tr("Or continue with email", "या ईमेल से जारी रखें", "ਜਾਂ ਈਮੇਲ ਨਾਲ ਜਾਰੀ ਰੱਖੋ")}
+            {tr("Or sign in with email code", "या ईमेल कोड से साइन इन करें", "ਜਾਂ ਈਮੇਲ ਕੋਡ ਨਾਲ ਸਾਈਨ ਇਨ ਕਰੋ")}
           </span>
         </div>
 
-        {/* Collapsible Email OTP Section */}
-        {!showEmailForm && emailStep === "input" ? (
-          <button
-            type="button"
-            onClick={() => setShowEmailForm(true)}
-            className="w-full flex items-center justify-center gap-2.5 rounded-full border border-gray-300 dark:border-gray-700 bg-surface/60 hover:bg-surface py-2.5 px-4 text-xs sm:text-sm font-semibold text-muted hover:text-ink transition-all shadow-sm group"
-          >
-            <Mail size={16} className="text-accent group-hover:scale-110 transition-transform" />
-            <span>{tr("Sign in with Email Code (OTP)", "ईमेल कोड (OTP) से साइन इन करें", "ਈਮੇਲ ਕੋਡ (OTP) ਨਾਲ ਸਾਈਨ ਇਨ ਕਰੋ")}</span>
-            <ChevronDown size={15} className="text-muted group-hover:translate-y-0.5 transition-transform" />
-          </button>
-        ) : (
-          <div className="rounded-2xl border border-line bg-surface/40 p-4 transition-all animate-fadeIn">
-            <div className="flex items-center justify-between pb-2.5 mb-3 border-b border-line">
-              <span className="text-xs font-bold uppercase tracking-wider text-muted flex items-center gap-1.5">
-                <Mail size={14} className="text-accent" />
-                {tr("Email OTP Verification", "ईमेल OTP सत्यापन", "ਈਮੇਲ OTP ਪੁਸ਼ਟੀਕਰਨ")}
-              </span>
-              {emailStep === "input" && (
-                <button
-                  type="button"
-                  onClick={() => setShowEmailForm(false)}
-                  className="text-xs text-muted hover:text-ink font-semibold hover:underline"
-                >
-                  {tr("Collapse", "छुपाएं", "ਸੰਖੇਪ ਕਰੋ")}
-                </button>
-              )}
-            </div>
+        {/* Optional Name Input for New Users */}
+        <div>
+          <label className="text-xs font-semibold text-muted block" htmlFor="auth-display-name">
+            {tr("Your name (shown on dashboard & greeting)", "आपका नाम (डैशबोर्ड और अभिवादन में दिखेगा)", "ਤੁਹਾਡਾ ਨਾਮ (ਡੈਸ਼ਬੋਰਡ ਅਤੇ ਸੁਆਗਤ ਵਿੱਚ ਦਿਖੇਗਾ)")}
+          </label>
+          <input
+            id="auth-display-name"
+            className="input mt-1 text-sm py-2"
+            placeholder={tr("e.g. Priya Sharma", "उदा. प्रिया शर्मा", "ਉਦਾ. ਪ੍ਰਿਆ ਸ਼ਰਮਾ")}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+        </div>
 
-            {/* Optional Name Input for New Users */}
-            <div>
-              <label className="text-xs font-semibold text-muted block" htmlFor="auth-display-name">
-                {tr("Your name (shown on dashboard & greeting)", "आपका नाम (डैशबोर्ड और अभिवादन में दिखेगा)", "ਤੁਹਾਡਾ ਨਾਮ (ਡੈਸ਼ਬੋਰਡ ਅਤੇ ਸੁਆਗਤ ਵਿੱਚ ਦਿਖੇਗਾ)")}
-              </label>
-              <input
-                id="auth-display-name"
-                className="input mt-1 text-sm py-2"
-                placeholder={tr("e.g. Priya Sharma", "उदा. प्रिया शर्मा", "ਉਦਾ. ਪ੍ਰਿਆ ਸ਼ਰਮਾ")}
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
-            </div>
+        {/* Email Verification Form (Static) */}
+        <div className="mt-4">
+          {emailStep === "input" ? (
+            <form onSubmit={handleSendEmailOtp} className="space-y-4">
+              <div>
+                <label className="text-sm font-semibold" htmlFor="email-otp-input">
+                  {tr("Email Address", "ईमेल पता", "ਈਮੇਲ ਪਤਾ")}
+                </label>
+                <div className="relative mt-1">
+                  <Mail size={16} className="absolute left-3 top-3.5 text-accent" />
+                  <input
+                    id="email-otp-input"
+                    type="email"
+                    required
+                    className="input pl-10"
+                    placeholder="name@example.com (Gmail, Yahoo, iCloud, Outlook…)"
+                    value={emailOtp}
+                    onChange={(e) => setEmailOtp(e.target.value)}
+                  />
+                </div>
+                <p className="mt-1.5 text-xs text-muted">
+                  {tr(
+                    "We will send a 6-digit real-time verification code directly to this inbox (any email provider supported).",
+                    "हम इस इनबॉक्स पर 6-अंकों का लाइव सत्यापन कोड भेजेंगे (सभी ईमेल प्रदाता समर्थित)।",
+                    "ਅਸੀਂ ਇਸ ਇਨਬਾਕਸ ਵਿੱਚ 6-ਅੰਕਾਂ ਦਾ ਰੀਅਲ-ਟਾਈਮ ਪੁਸ਼ਟੀਕਰਨ ਕੋਡ ਭੇਜਾਂਗੇ (ਸਾਰੇ ਈਮੇਲ ਪ੍ਰਦਾਤਾ ਸਮਰਥਿਤ)।"
+                  )}
+                </p>
+              </div>
 
-            {/* Email Verification Form */}
-            <div className="mt-4">
-              {emailStep === "input" ? (
-                <form onSubmit={handleSendEmailOtp} className="space-y-4">
-                  <div>
-                    <label className="text-sm font-semibold" htmlFor="email-otp-input">
-                      {tr("Email Address", "ईमेल पता", "ਈਮੇਲ ਪਤਾ")}
-                    </label>
-                    <div className="relative mt-1">
-                      <Mail size={16} className="absolute left-3 top-3.5 text-accent" />
-                      <input
-                        id="email-otp-input"
-                        type="email"
-                        required
-                        className="input pl-10"
-                        placeholder="name@example.com (Gmail, Yahoo, iCloud, Outlook…)"
-                        value={emailOtp}
-                        onChange={(e) => setEmailOtp(e.target.value)}
-                      />
-                    </div>
-                    <p className="mt-1.5 text-xs text-muted">
-                      {tr(
-                        "We will send a 6-digit real-time verification code directly to this inbox (any email provider supported).",
-                        "हम इस इनबॉक्स पर 6-अंकों का लाइव सत्यापन कोड भेजेंगे (सभी ईमेल प्रदाता समर्थित)।",
-                        "ਅਸੀਂ ਇਸ ਇਨਬਾਕਸ ਵਿੱਚ 6-ਅੰਕਾਂ ਦਾ ਰੀਅਲ-ਟਾਈਮ ਪੁਸ਼ਟੀਕਰਨ ਕੋਡ ਭੇਜਾਂਗੇ (ਸਾਰੇ ਈਮੇਲ ਪ੍ਰਦਾਤਾ ਸਮਰਥਿਤ)।"
-                      )}
-                    </p>
-                  </div>
-
-                  <button type="submit" className="btn btn-primary w-full py-2.5" disabled={busy}>
-                    <Sparkles size={15} />
-                    {busy ? tr("Sending code…", "कोड भेजा जा रहा है…", "ਕੋਡ ਭੇਜਿਆ ਜਾ ਰਿਹਾ ਹੈ…") : tr("Send Verification Code", "सत्यापन कोड भेजें", "ਪੁਸ਼ਟੀਕਰਨ ਕੋਡ ਭੇਜੋ")}
+              <button type="submit" className="btn btn-primary w-full py-2.5" disabled={busy}>
+                <Sparkles size={15} />
+                {busy ? tr("Sending code…", "कोड भेजा जा रहा है…", "ਕੋਡ ਭੇਜਿਆ ਜਾ ਰਿਹਾ ਹੈ…") : tr("Send Verification Code", "सत्यापन कोड भेजें", "ਪੁਸ਼ਟੀਕਰਨ ਕੋਡ ਭੇਜੋ")}
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={handleVerifyEmailOtp} className="space-y-4">
+              <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs">
+                <div className="font-semibold text-accent flex items-center justify-between">
+                  <span>✉️ {tr("Code sent to:", "कोड यहाँ भेजा गया:", "ਕੋਡ ਇੱਥੇ ਭੇਜਿਆ ਗਿਆ:")}</span>
+                  <button
+                    type="button"
+                    className="underline text-ink hover:text-accent font-bold"
+                    onClick={() => setEmailStep("input")}
+                  >
+                    {tr("Change email", "ईमेल बदलें", "ਈਮੇਲ ਬਦਲੋ")}
                   </button>
-                </form>
-              ) : (
-                <form onSubmit={handleVerifyEmailOtp} className="space-y-4">
-                  <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs">
-                    <div className="font-semibold text-accent flex items-center justify-between">
-                      <span>✉️ {tr("Code sent to:", "कोड यहाँ भेजा गया:", "ਕੋਡ ਇੱਥੇ ਭੇਜਿਆ ਗਿਆ:")}</span>
-                      <button
-                        type="button"
-                        className="underline text-ink hover:text-accent font-bold"
-                        onClick={() => setEmailStep("input")}
-                      >
-                        {tr("Change email", "ईमेल बदलें", "ਈਮੇਲ ਬਦਲੋ")}
-                      </button>
-                    </div>
-                    <div className="font-mono text-sm text-ink font-bold truncate mt-0.5">{emailOtp}</div>
-                  </div>
+                </div>
+                <div className="font-mono text-sm text-ink font-bold truncate mt-0.5">{emailOtp}</div>
+              </div>
 
-                  <div>
-                    <label className="text-sm font-semibold" htmlFor="email-code-input">
-                      {tr("Enter 6-digit Verification Code", "6-अंकों का सत्यापन कोड दर्ज करें", "6-ਅੰਕਾਂ ਦਾ ਪੁਸ਼ਟੀਕਰਨ ਕੋਡ ਦਰਜ ਕਰੋ")}
-                    </label>
-                    <input
-                      id="email-code-input"
-                      type="text"
-                      maxLength={6}
-                      required
-                      autoFocus
-                      className="input mt-1 text-center font-mono text-2xl font-bold tracking-[0.4em] text-accent"
-                      placeholder="••••••"
-                      value={emailCode}
-                      onChange={(e) => setEmailCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                    />
-                  </div>
+              <div>
+                <label className="text-sm font-semibold" htmlFor="email-code-input">
+                  {tr("Enter 6-digit Verification Code", "6-अंकों का सत्यापन कोड दर्ज करें", "6-ਅੰਕਾਂ ਦਾ ਪੁਸ਼ਟੀਕਰਨ ਕੋਡ ਦਰਜ ਕਰੋ")}
+                </label>
+                <input
+                  id="email-code-input"
+                  type="text"
+                  maxLength={6}
+                  required
+                  autoFocus
+                  className="input mt-1 text-center font-mono text-2xl font-bold tracking-[0.4em] text-accent"
+                  placeholder="••••••"
+                  value={emailCode}
+                  onChange={(e) => setEmailCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                />
+              </div>
 
-                  <button type="submit" className="btn btn-primary w-full py-2.5" disabled={busy || emailCode.length < 6}>
-                    <Check size={16} />
-                    {busy ? tr("Verifying…", "सत्यापित किया जा रहा है…", "ਪੁਸ਼ਟੀ ਕੀਤੀ ਜਾ ਰਹੀ ਹੈ…") : tr("Verify & Sign In", "सत्यापित करें और साइन इन करें", "ਪੁਸ਼ਟੀ ਕਰੋ ਅਤੇ ਸਾਈਨ ਇਨ ਕਰੋ")}
+              <button type="submit" className="btn btn-primary w-full py-2.5" disabled={busy || emailCode.length < 6}>
+                <Check size={16} />
+                {busy ? tr("Verifying…", "सत्यापित किया जा रहा है…", "ਪੁਸ਼ਟੀ ਕੀਤੀ ਜਾ ਰਹੀ ਹੈ…") : tr("Verify & Sign In", "सत्यापित करें और साइन इन करें", "ਪੁਸ਼ਟੀ ਕਰੋ ਅਤੇ ਸਾਈਨ ਇਨ ਕਰੋ")}
+              </button>
+
+              <div className="text-center text-xs">
+                {emailTimer > 0 ? (
+                  <span className="text-muted">
+                    {tr(`Resend code in ${emailTimer}s`, `${emailTimer}s में पुनः भेजें`, `${emailTimer}s ਵਿੱਚ ਦੁਬਾਰਾ ਭੇਜੋ`)}
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => handleSendEmailOtp()}
+                    disabled={busy}
+                    className="font-bold text-accent hover:underline flex items-center justify-center gap-1 mx-auto"
+                  >
+                    <RotateCcw size={12} />
+                    {tr("Resend code now", "अभी कोड पुनः भेजें", "ਹੁਣੇ ਕੋਡ ਦੁਬਾਰਾ ਭੇਜੋ")}
                   </button>
-
-                  <div className="text-center text-xs">
-                    {emailTimer > 0 ? (
-                      <span className="text-muted">
-                        {tr(`Resend code in ${emailTimer}s`, `${emailTimer}s में पुनः भेजें`, `${emailTimer}s ਵਿੱਚ ਦੁਬਾਰਾ ਭੇਜੋ`)}
-                      </span>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => handleSendEmailOtp()}
-                        disabled={busy}
-                        className="font-bold text-accent hover:underline flex items-center justify-center gap-1 mx-auto"
-                      >
-                        <RotateCcw size={12} />
-                        {tr("Resend code now", "अभी कोड पुनः भेजें", "ਹੁਣੇ ਕੋਡ ਦੁਬਾਰਾ ਭੇਜੋ")}
-                      </button>
-                    )}
-                  </div>
-                </form>
-              )}
-            </div>
-          </div>
-        )}
-
+                )}
+              </div>
+            </form>
+          )}
+        </div>
         {/* Feedback Messages */}
         {err && (
           <p
