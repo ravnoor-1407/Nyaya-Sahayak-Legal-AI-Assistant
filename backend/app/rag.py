@@ -252,7 +252,7 @@ def expand_mapping(c: Chunk) -> list[int]:
         out += INDEX.get((BNS_ACT, num), [])[:1]
     return out
 
-
+# RAG retrieval logic
 def retrieve(question: str, k: int = 8) -> list[Chunk]:
     """Run hybrid retrieval and return the highest-ranked legal chunks.
 
@@ -364,7 +364,7 @@ CONTEXT:
 QUESTION: {question}
 ANSWER:"""
 
-
+# LLM answer generstion flow
 def answer(question: str, lang: str = "en") -> tuple[str, list[dict[str, Any]], bool]:
     """Retrieve supporting chunks, generate a grounded answer, and expose sources."""
     # Auto-detect language if question is written in Indic script and lang is default/en
