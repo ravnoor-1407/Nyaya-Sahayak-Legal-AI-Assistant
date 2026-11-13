@@ -9,11 +9,11 @@ services:
       - key: PYTHON_VERSION
         value: 3.11.9
       - key: PRIMARY
-        value: gemini
+        value: groq
       - key: GEMINI_MODEL
-        value: gemini-2.5-flash
+        value: "gemini-2.5-flash,gemini-flash-latest"
       - key: GROQ_MODEL
-        value: llama-3.3-70b-versatile
+        value: "openai/gpt-oss-120b,qwen/qwen3.8-27b,openai/gpt-oss-20b"
       - key: EMBED_MODEL
         value: intfloat/multilingual-e5-base
       - key: HF_TOKEN

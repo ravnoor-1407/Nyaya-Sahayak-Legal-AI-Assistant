@@ -45,18 +45,27 @@ def _groq(prompt, model):
     return response.choices[0].message.content
 
 
+# Provider default models guaranteed to be available
+DEFAULT_GROQ_MODELS = ["openai/gpt-oss-120b", "qwen/qwen3.8-27b", "openai/gpt-oss-20b"]
+DEFAULT_GEMINI_MODELS = ["gemini-2.5-flash", "gemini-flash-latest", "gemini-2.5-flash-lite"]
+
 # Prompt injection handling: keep user prompts as plain text and let each
 # provider decide how to interpret them. This layer does not execute user code.
-def _models(env_name):
+def _models(env_name, defaults=None):
     raw = os.getenv(env_name, "")
-    return [m.strip() for m in raw.split(",") if m.strip()]
+    parsed = [m.strip() for m in raw.split(",") if m.strip()]
+    if defaults:
+        for d in defaults:
+            if d not in parsed:
+                parsed.append(d)
+    return parsed or (defaults or [])
 
 
 # Provider fallback order: primary provider first, then secondary providers.
 def _attempts():
-    gem = [("gemini", m) for m in _models("GEMINI_MODEL")]
-    grq = [("groq", m) for m in _models("GROQ_MODEL")]
-    if os.getenv("PRIMARY", "gemini") == "gemini":
+    gem = [("gemini", m) for m in _models("GEMINI_MODEL", DEFAULT_GEMINI_MODELS)]
+    grq = [("groq", m) for m in _models("GROQ_MODEL", DEFAULT_GROQ_MODELS)]
+    if os.getenv("PRIMARY", "groq").strip().lower() == "gemini":
         return gem + grq
     return grq + gem
 
