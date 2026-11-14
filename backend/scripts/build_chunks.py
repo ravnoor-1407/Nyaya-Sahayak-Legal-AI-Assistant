@@ -84,7 +84,7 @@ MAPPING: dict[str, str] = dict(
 MAX_CHARS = 1500
 SEC = re.compile(r"^\s*(\d{1,3}[A-Z]{0,2})\.\s+([A-Z][^\n]{2,140})", re.M)
 
-# Chunking and Cleaning Functions
+# Chunking Functions
 def split_long(text: str, n: int = MAX_CHARS) -> list[str]:
     if len(text) <= n:
         return [text]
@@ -99,7 +99,7 @@ def split_long(text: str, n: int = MAX_CHARS) -> list[str]:
         parts.append(cur.strip())
     return parts
 
-
+# Cleaning Functions
 def clean_text(t: object) -> str:
     return str(t).replace("\r\n", "\n").replace("\r", "\n").strip()
 
