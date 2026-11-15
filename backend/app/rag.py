@@ -439,40 +439,51 @@ def audit_grounding(answer_text: str, sources: list[dict[str, Any]]) -> dict[str
             if base:
                 source_sections.add(base)
 
-    bracket_cites = re.findall(r"\[([^\]]+)\]", answer_text)
-    inline_cites = re.findall(
-        r"\b(?:Section|Sec\.?|धारा|ਧਾਰਾ|Article|अनुच्छेद|ਅਨੁਛੇਦ)\s*(\d{1,3}[A-Za-z]?(?:\(\d+\))?)",
-        answer_text, re.I
+    # 1. Extract explicit Section / Article occurrences with their exact section identifiers
+    found_sections: dict[str, str] = {}
+
+    pattern = re.compile(
+        r"(?:Section|Sec\.?|धारा|ਧਾਰਾ|Article|अनुच्छेद|ਅਨੁਛੇਦ)\s*(\d{1,3}[A-Za-z]?(?:\([A-Za-z0-9]+\))*)",
+        re.I
     )
 
-    raw_candidates: set[str] = set()
+    for m in pattern.finditer(answer_text):
+        sec_num = m.group(1).strip().upper()
+        # Avoid matching years like 2023, 1860, 1973
+        if not re.match(r"^(18|19|20)\d{2}$", sec_num):
+            found_sections[sec_num] = f"Section {sec_num}"
+
+    # Also parse inside brackets like [Bharatiya Nyaya Sanhita, 2023 Section 318(4)]
+    bracket_cites = re.findall(r"\[([^\]]+)\]", answer_text)
     for b in bracket_cites:
         cleaned = b.strip()
-        if cleaned and not cleaned.lower().startswith("emergency"):
-            raw_candidates.add(cleaned)
-    for num in inline_cites:
-        raw_candidates.add(f"Section {num.strip()}")
+        if cleaned.lower().startswith("emergency"):
+            continue
+        m = pattern.search(cleaned)
+        if m:
+            sec_num = m.group(1).strip().upper()
+            if not re.match(r"^(18|19|20)\d{2}$", sec_num):
+                found_sections[sec_num] = f"Section {sec_num}"
 
     verified: list[str] = []
     unverified: list[str] = []
 
-    for c in raw_candidates:
-        m = re.search(r"\b(\d{1,3}[A-Za-z]?)", c)
-        num = m.group(1).upper() if m else ""
-        if num and (num in source_sections or any(num in s_sec for s_sec in source_sections)):
-            verified.append(c)
-        elif any(act_word in c.lower() for act_word in ["bns", "ipc", "bnss", "bsa", "constitution"]) and any(num in s_sec for s_sec in source_sections):
-            verified.append(c)
+    for sec_num, display_name in found_sections.items():
+        base = re.sub(r"\(.*?\)", "", sec_num).strip()
+        if sec_num in source_sections or base in source_sections:
+            verified.append(display_name)
+        elif any(sec_num in s_sec or base in s_sec for s_sec in source_sections):
+            verified.append(display_name)
         else:
-            unverified.append(c)
+            unverified.append(display_name)
 
     total = len(verified) + len(unverified)
     score = round(len(verified) / total, 2) if total > 0 else 1.0
 
     return {
         "total_citations": total,
-        "verified_citations": sorted(list(set(verified))),
-        "unverified_citations": sorted(list(set(unverified))),
+        "verified_citations": sorted(verified),
+        "unverified_citations": sorted(unverified),
         "grounding_score": score,
         "is_hallucination_free": len(unverified) == 0
     }
