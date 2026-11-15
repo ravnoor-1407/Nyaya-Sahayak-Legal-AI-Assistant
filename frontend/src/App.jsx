@@ -42,6 +42,10 @@ export default function App() {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/assistant" element={<Assistant />} />
             <Route path="/hub" element={<CitizenHub />} />
+            <Route path="/drafting" element={<CitizenHub defaultTab="drafting" />} />
+            <Route path="/bail-calculator" element={<CitizenHub defaultTab="bail" />} />
+            <Route path="/scanner" element={<CitizenHub defaultTab="scanner" />} />
+            <Route path="/flowcharts" element={<CitizenHub defaultTab="flowcharts" />} />
             <Route path="/acts" element={<Acts />} />
             <Route path="/search" element={<LawSearch />} />
             <Route path="/official" element={<OfficialActs />} />

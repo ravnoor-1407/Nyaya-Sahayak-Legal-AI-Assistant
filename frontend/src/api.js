@@ -93,3 +93,10 @@ export const apiVerifyEmailOtp = (email, code, name) =>
   post("/api/auth/email-otp/verify", { email, code, name });
 export const apiGoogleAuth = (credential, email, name) =>
   post("/api/auth/google", { credential, email, name });
+
+// Legal Drafting Studio and Document Analysis
+export const draftDocument = (doc_type, inputs, lang = "en") =>
+  post("/api/draft", { doc_type, inputs, lang });
+
+export const analyzeDocument = (text, lang = "en") =>
+  post("/api/analyze-doc", { text, lang });

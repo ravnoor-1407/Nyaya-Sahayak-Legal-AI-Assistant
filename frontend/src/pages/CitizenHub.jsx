@@ -1,7 +1,14 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { BookOpen, ChevronDown, CheckCircle2, Sparkles, HeartHandshake } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import {
+  BookOpen, ChevronDown, CheckCircle2, Sparkles, HeartHandshake,
+  FileText, Scale, Search, GitFork
+} from "lucide-react";
 import { useLang } from "../LangContext";
+import FirDraftStudio from "../components/FirDraftStudio";
+import BailCalculator from "../components/BailCalculator";
+import DocAnalyzer from "../components/DocAnalyzer";
+import DecisionTrees from "../components/DecisionTrees";
 
 const BOOKS = [
   {
@@ -98,19 +105,21 @@ const BOOKS = [
     ],
     steps: [
       ["Keep the bill, warranty card, photos and messages as proof.", "बिल, वारंटी कार्ड, फ़ोटो और संदेश सबूत के तौर पर रखिए।", "ਬਿੱਲ, ਵਾਰੰਟੀ ਕਾਰਡ, ਫੋਟੋਆਂ ਅਤੇ ਸੁਨੇਹੇ ਸਬੂਤ ਵਜੋਂ ਰੱਖੋ।"],
-      ["Complain to the seller or company in writing, or call the helpline 1915.", "विक्रेता या कंपनी को लिखित शिकायत कीजिए, या हेल्पलाइन 1915 पर कॉल कीजिए।", "ਵਿਕਰੇਤਾ ਜਾਂ ਕੰਪਨੀ ਨੂੰ ਲਿਖਤੀ ਸ਼ਿਕਾਇਤ ਕਰੋ, ਜਾਂ ਹੈਲਪਲਾਈਨ 1915 'ਤੇ ਕਾਲ ਕਰੋ।"],
-      ["If nothing happens, send a written notice stating exactly what you want.", "कुछ न हो तो लिखित नोटिस भेजिए जिसमें साफ़ लिखा हो कि आप क्या चाहते हैं।", "ਕੁਝ ਨਾ ਹੋਵੇ ਤਾਂ ਲਿਖਤੀ ਨੋਟਿਸ ਭੇਜੋ ਜਿਸ ਵਿੱਚ ਸਾਫ਼ ਲਿਖਿਆ ਹੋਵੇ ਕਿ ਤੁਸੀਂ ਕੀ ਚਾਹੁੰਦੇ ਹੋ।"],
-      ["File with the District Consumer Commission, online through e-Daakhil.", "ई-दाखिल के ज़रिए ज़िला उपभोक्ता आयोग में ऑनलाइन शिकायत दर्ज कीजिए।", "ਈ-ਦਾਖਲ ਰਾਹੀਂ ਜ਼ਿਲ੍ਹਾ ਖਪਤਕਾਰ ਕਮਿਸ਼ਨ ਵਿੱਚ ਆਨਲਾਈਨ ਸ਼ਿਕਾਇਤ ਦਰਜ ਕਰੋ।"],
+      ["Send a written notice to the seller or service provider giving them a chance to fix it.", "विक्रेता या सेवा प्रदाता को लिखित नोटिस देकर सुधार का मौक़ा दीजिए।", "ਵੇਚਣ ਵਾਲੇ ਨੂੰ ਲਿਖਤੀ ਨੋਟਿਸ ਦੇ ਕੇ ਠੀਕ ਕਰਨ ਦਾ ਮੌਕਾ ਦਿਓ।"],
+      ["Still unresolved? File online at edaakhil.nic.in with the District Commission.", "बात न बने? edaakhil.nic.in पर ज़िला आयोग में ऑनलाइन शिकायत दर्ज कीजिए।", "ਮਸਲਾ ਹੱਲ ਨਾ ਹੋਵੇ? edaakhil.nic.in 'ਤੇ ਜ਼ਿਲ੍ਹਾ ਕਮਿਸ਼ਨ ਕੋਲ ਆਨਲਾਈਨ ਸ਼ਿਕਾਇਤ ਦਰਜ ਕਰੋ।"],
     ],
-    ask: ["How do I file a consumer complaint?", "उपभोक्ता शिकायत कैसे दर्ज करूँ?", "ਖਪਤਕਾਰ ਸ਼ਿਕਾਇਤ ਕਿਵੇਂ ਦਰਜ ਕਰਾਂ?"],
+    ask: ["How do I file a case in the Consumer Forum?", "उपभोक्ता फोरम में केस कैसे दर्ज करें?", "ਖਪਤਕਾਰ ਫੋਰਮ ਵਿੱਚ ਕੇਸ ਕਿਵੇਂ ਦਰਜ ਕਰੀਏ?"],
   },
   {
     id: "cyber", tone: "var(--c-blue)",
-    cat: ["Cyber safety", "साइबर सुरक्षा", "ਸਾਈਬਰ ਸੁਰੱਖਿਆ"],
+    cat: ["Cyber crime and financial fraud", "साइबर अपराध और वित्तीय धोखाधड़ी", "ਸਾਈਬਰ ਅਪਰਾਧ ਅਤੇ ਵਿੱਤੀ ਧੋਖਾਧੜੀ"],
     law: "Information Technology Act, 2000 | Bharatiya Nyaya Sanhita, 2023",
-    title: ["What to do after an online fraud", "ऑनलाइन धोखाधड़ी के बाद क्या करें", "ਆਨਲਾਈਨ ਧੋਖਾਧੜੀ ਤੋਂ ਬਾਅਦ ਕੀ ਕਰੀਏ"],
-    desc: ["Speed matters. Report within minutes if you can.", "गति मायने रखती है। हो सके तो कुछ ही मिनटों में शिकायत करें।", "ਗਤੀ ਮਾਇਨੇ ਰੱਖਦੀ ਹੈ। ਹੋ ਸਕੇ ਤਾਂ ਕੁਝ ਮਿੰਟਾਂ ਵਿੱਚ ਸ਼ਿਕਾਇਤ ਕਰੋ।"],
-    rights: [],
+    title: ["Online financial fraud recovery steps", "ऑनलाइन वित्तीय धोखाधड़ी से बचाव के कदम", "ਆਨਲਾਈਨ ਵਿੱਤੀ ਧੋਖਾਧੜੀ ਤੋਂ ਬਚਾਅ"],
+    desc: ["Golden hour reporting to freeze fraudulent bank transfers.", "धोखाधड़ी वाले बैंक ट्रांसफर रोकने के लिए पहले घंटों में रिपोर्टिंग।", "ਧੋਖੇਬਾਜ਼ੀ ਵਾਲੇ ਬੈਂਕ ਤਬਾਦਲੇ ਰੋਕਣ ਲਈ ਪਹਿਲੇ ਘੰਟਿਆਂ ਵਿੱਚ ਰਿਪੋਰਟਿੰਗ।"],
+    rights: [
+      ["Immediate reporting to 1930 alerts the bank nodal officers to freeze recipient accounts.", "1930 पर तुरंत सूचना देने से बैंक नोडल अधिकारी सतर्क होकर लाभार्थी खाता फ़्रीज़ करते हैं।", "1930 'ਤੇ ਤੁਰੰਤ ਸੂਚਨਾ ਦੇਣ ਨਾਲ ਬੈਂਕ ਅਧਿਕਾਰੀ ਖਾਤਾ ਫ੍ਰੀਜ਼ ਕਰਦੇ ਹਨ।"],
+      ["RBI guidelines limit customer liability if unauthorized transactions are reported within 3 days.", "3 दिन में अनधिकृत लेनदेन की सूचना देने पर आरबीआई दिशानिर्देश ग्राहक की देनदारी सीमित करते हैं।", "3 ਦਿਨਾਂ ਵਿੱਚ ਸੂਚਨਾ ਦੇਣ 'ਤੇ ਆਰਬੀਆਈ ਗਾਹਕ ਦੀ ਦੇਣਦਾਰੀ ਸੀਮਤ ਕਰਦਾ ਹੈ।"],
+    ],
     steps: [
       ["Call 1930 at once. The sooner you report, the better the chance of freezing the transfer.", "तुरंत 1930 पर कॉल करें। जितनी जल्दी शिकायत, पैसा रुकने की संभावना उतनी बेहतर।", "ਤੁਰੰਤ 1930 'ਤੇ ਕਾਲ ਕਰੋ। ਜਿੰਨੀ ਜਲਦੀ ਸ਼ਿਕਾਇਤ, ਪੈਸਾ ਰੁਕਣ ਦੀ ਸੰਭਾਵਨਾ ਓਨੀ ਬਿਹਤਰ।"],
       ["Tell your bank to block the card or account and note the complaint number.", "बैंक से कार्ड या खाता ब्लॉक कराइए और शिकायत संख्या लिख लीजिए।", "ਬੈਂਕ ਨੂੰ ਕਾਰਡ ਜਾਂ ਖਾਤਾ ਬਲਾਕ ਕਰਨ ਲਈ ਕਹੋ ਅਤੇ ਸ਼ਿਕਾਇਤ ਨੰਬਰ ਲਿਖ ਲਓ।"],
@@ -120,121 +129,193 @@ const BOOKS = [
   },
 ];
 
-export default function CitizenHub() {
+export default function CitizenHub({ defaultTab = "handbooks" }) {
   const { tr } = useLang();
   const nav = useNavigate();
+  const location = useLocation();
+
+  // Detect active tab from prop or route
+  const getInitialTab = () => {
+    if (location.pathname === "/drafting") return "drafting";
+    if (location.pathname === "/bail-calculator") return "bail";
+    if (location.pathname === "/scanner") return "scanner";
+    if (location.pathname === "/flowcharts") return "flowcharts";
+    return defaultTab || "handbooks";
+  };
+
+  const [activeTab, setActiveTab] = useState(getInitialTab());
   const [open, setOpen] = useState(null);
+
+  useEffect(() => {
+    setActiveTab(getInitialTab());
+  }, [location.pathname, defaultTab]);
+
+  const tabs = [
+    { id: "handbooks", icon: BookOpen, label: tr("Rights Handbooks", "अधिकार मार्गदर्शिकाएँ", "ਅਧਿਕਾਰ ਗਾਈਡਾਂ"), tone: "var(--c-gold)" },
+    { id: "drafting", icon: FileText, label: tr("AI Drafting Studio", "प्रारूपण स्टूडियो", "ਡਰਾਫਟਿੰਗ ਸਟੂਡੀਓ"), tone: "var(--c-rose)" },
+    { id: "bail", icon: Scale, label: tr("Sec 479 Bail Calculator", "जमानत कैलकुलेटर", "ਜ਼ਮਾਨਤ ਕੈਲਕੁਲੇਟਰ"), tone: "var(--c-blue)" },
+    { id: "scanner", icon: Search, label: tr("Doc Risk Scanner", "दस्तावेज़ स्कैनर", "ਦਸਤਾਵੇਜ਼ ਸਕੈਨਰ"), tone: "var(--c-purple)" },
+    { id: "flowcharts", icon: GitFork, label: tr("Decision Trees", "निर्णय वृक्ष", "ਫੈਸਲਾ ਰੁੱਖ"), tone: "#10b981" },
+  ];
 
   return (
     <div className="space-y-6">
+      {/* Top Hero Banner */}
       <section className="hero-bg card card-accent card-raised px-5 py-8 sm:px-10">
         <span className="tone-badge rise" style={{ "--tone": "var(--c-gold)" }}>
-          <BookOpen size={12} />
-          {tr("Citizen legal empowerment handbooks", "नागरिक कानूनी सशक्तिकरण मार्गदर्शिकाएँ", "ਨਾਗਰਿਕ ਕਾਨੂੰਨੀ ਸਸ਼ਕਤੀਕਰਨ ਗਾਈਡਾਂ")}
+          <Sparkles size={12} />
+          {tr("Interactive Citizen Empowerment Tools", "इंटरैक्टिव नागरिक सशक्तिकरण उपकरण", "ਇੰਟਰਐਕਟਿਵ ਨਾਗਰਿਕ ਸੰਦ")}
         </span>
         <h1 className="rise mt-3 text-3xl font-bold sm:text-4xl" style={{ animationDelay: "60ms" }}>
-          {tr("Plain-language citizen rights handbooks", "सरल भाषा में नागरिक अधिकार मार्गदर्शिकाएँ", "ਸੌਖੀ ਭਾਸ਼ਾ ਵਿੱਚ ਨਾਗਰਿਕ ਅਧਿਕਾਰ ਗਾਈਡਾਂ")}
+          {tr("Citizen Legal Action Hub", "नागरिक कानूनी कार्य केंद्र", "ਨਾਗਰਿਕ ਕਾਨੂੰਨੀ ਐਕਸ਼ਨ ਹੱਬ")}
         </h1>
-        <p className="rise mt-2 max-w-2xl text-muted" style={{ animationDelay: "120ms" }}>
+        <p className="rise mt-2 max-w-2xl text-muted text-sm sm:text-base" style={{ animationDelay: "120ms" }}>
           {tr(
-            "Actionable guides for everyday legal situations. Tap a handbook to open it. Opening one closes the previous one.",
-            "रोज़मर्रा की कानूनी स्थितियों के लिए व्यावहारिक मार्गदर्शिकाएँ। खोलने के लिए दबाइए। एक खुलने पर पिछली बंद हो जाती है।",
-            "ਰੋਜ਼ਮਰ੍ਹਾ ਦੇ ਕਾਨੂੰਨੀ ਹਾਲਾਤਾਂ ਲਈ ਵਿਹਾਰਕ ਗਾਈਡ। ਖੋਲ੍ਹਣ ਲਈ ਦਬਾਓ। ਇੱਕ ਖੁੱਲ੍ਹਣ 'ਤੇ ਪਿਛਲੀ ਬੰਦ ਹੋ ਜਾਂਦੀ ਹੈ।"
+            "Draft police complaints, calculate mandatory undertrial bail under Section 479 BNSS, scan legal notices, and navigate procedural rights.",
+            "पुलिस शिकायत तैयार करें, धारा 479 बीएनएसएस के तहत जमानत की गणना करें, नोटिस स्कैन करें और अपने अधिकारों को समझें।",
+            "ਪੁਲਿਸ ਸ਼ਿਕਾਇਤਾਂ ਤਿਆਰ ਕਰੋ, ਧਾਰਾ 479 ਅਧੀਨ ਜ਼ਮਾਨਤ ਦੀ ਗਣਨਾ ਕਰੋ ਅਤੇ ਕਾਨੂੰਨੀ ਨੋਟਿਸ ਸਕੈਨ ਕਰੋ।"
           )}
         </p>
+
+        {/* Navigation Tabs Bar */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 mt-6 border-t border-line/60 pt-5 no-scrollbar">
+          {tabs.map((t) => {
+            const Icon = t.icon;
+            const isSel = activeTab === t.id;
+            return (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => setActiveTab(t.id)}
+                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all border ${
+                  isSel
+                    ? "bg-accent text-white border-accent shadow-md"
+                    : "bg-surface/60 text-muted hover:text-ink hover:bg-surface border-line"
+                }`}
+              >
+                <Icon size={14} />
+                <span>{t.label}</span>
+              </button>
+            );
+          })}
+        </div>
       </section>
 
-      <div className="space-y-4">
-        {BOOKS.map((b, i) => {
-          const isOpen = open === b.id;
-          return (
-            <article
-              key={b.id}
-              className={"card acc zoom-hover-sm rise " + (isOpen ? "acc-open" : "")}
-              style={{ "--tone": b.tone, animationDelay: i * 70 + "ms" }}
-            >
-              <button
-                type="button"
-                className="acc-head"
-                aria-expanded={isOpen}
-                aria-controls={"hb-" + b.id}
-                onClick={() => setOpen(isOpen ? null : b.id)}
+      {/* Tab 1: AI Drafting Studio */}
+      {activeTab === "drafting" && <FirDraftStudio />}
+
+      {/* Tab 2: Section 479 BNSS Bail Calculator */}
+      {activeTab === "bail" && <BailCalculator />}
+
+      {/* Tab 3: Legal Document Scanner & Risk Analyzer */}
+      {activeTab === "scanner" && <DocAnalyzer />}
+
+      {/* Tab 4: Interactive Decision Trees */}
+      {activeTab === "flowcharts" && <DecisionTrees />}
+
+      {/* Tab 5: Original Legal Handbooks */}
+      {activeTab === "handbooks" && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between pb-2">
+            <span className="text-xs uppercase tracking-wider font-bold text-muted">
+              {tr("Core Civic Rights Guides", "प्रमुख नागरिक अधिकार मार्गदर्शिकाएँ", "ਮੁੱਖ ਨਾਗਰਿਕ ਅਧਿਕਾਰ ਗਾਈਡਾਂ")}
+            </span>
+            <span className="text-xs text-muted">
+              {tr("6 Verified Handbooks", "6 सत्यापित पुस्तिकाएँ", "6 ਪ੍ਰਮਾਣਿਤ ਗਾਈਡਾਂ")}
+            </span>
+          </div>
+
+          {BOOKS.map((b, i) => {
+            const isOpen = open === b.id;
+            return (
+              <article
+                key={b.id}
+                className={"card acc zoom-hover-sm rise " + (isOpen ? "acc-open" : "")}
+                style={{ "--tone": b.tone, animationDelay: i * 70 + "ms" }}
               >
-                <span className="min-w-0 flex-1">
-                  <span className="tone-badge">{tr(...b.cat)}</span>
-                  <span className="mono-line mt-2 block">{b.law}</span>
-                  <span className={"font-display mt-1 block text-xl font-bold " + (isOpen ? "text-accent" : "")}>
-                    {tr(...b.title)}
+                <button
+                  type="button"
+                  className="acc-head"
+                  aria-expanded={isOpen}
+                  aria-controls={"hb-" + b.id}
+                  onClick={() => setOpen(isOpen ? null : b.id)}
+                >
+                  <span className="min-w-0 flex-1">
+                    <span className="tone-badge">{tr(...b.cat)}</span>
+                    <span className="mono-line mt-2 block">{b.law}</span>
+                    <span className={"font-display mt-1 block text-xl font-bold " + (isOpen ? "text-accent" : "")}>
+                      {tr(...b.title)}
+                    </span>
+                    <span className="mt-1 block text-sm text-muted">{tr(...b.desc)}</span>
                   </span>
-                  <span className="mt-1 block text-sm text-muted">{tr(...b.desc)}</span>
-                </span>
-                <span className="acc-chev">
-                  <ChevronDown size={18} />
-                </span>
-              </button>
+                  <span className="acc-chev">
+                    <ChevronDown size={18} />
+                  </span>
+                </button>
 
-              <div id={"hb-" + b.id} className={"acc-body " + (isOpen ? "open" : "")}>
-                <div>
-                  <div className="acc-inner">
-                    {b.rights.length > 0 && (
-                      <>
-                        <h3 className="eyebrow flex items-center gap-1.5">
-                          <CheckCircle2 size={13} />
-                          {tr("Your legal rights under the law", "कानून के तहत आपके अधिकार", "ਕਾਨੂੰਨ ਅਧੀਨ ਤੁਹਾਡੇ ਅਧਿਕਾਰ")}
-                        </h3>
-                        <div className="mt-3 grid gap-2.5 sm:grid-cols-2">
-                          {b.rights.map((r, k) => (
-                            <div key={k} className="check-item">
-                              <CheckCircle2 size={16} className="mt-0.5 shrink-0 tone-text" />
-                              <span>{tr(...r)}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </>
-                    )}
-
-                    <h3 className="eyebrow mt-5">
-                      {tr("What to do, step by step", "क्या करें, चरण-दर-चरण", "ਕੀ ਕਰੀਏ, ਕਦਮ-ਦਰ-ਕਦਮ")}
-                    </h3>
-                    <ol className="mt-3 space-y-3">
-                      {b.steps.map((s, k) => (
-                        <li key={k} className="flex gap-3">
-                          <span className="btn-primary grid h-7 w-7 shrink-0 place-items-center rounded-full text-xs font-bold">
-                            {k + 1}
-                          </span>
-                          <p className="pt-0.5 text-sm">{tr(...s)}</p>
-                        </li>
-                      ))}
-                    </ol>
-
-                    <div className="mt-5 flex flex-wrap gap-2 border-t pt-4">
-                      <button
-                        type="button"
-                        className="btn btn-primary btn-sm"
-                        onClick={() => nav("/assistant", { state: { q: tr(...b.ask) } })}
-                      >
-                        <Sparkles size={14} />
-                        {tr("Ask the AI about this", "इस बारे में एआई से पूछें", "ਇਸ ਬਾਰੇ ਏਆਈ ਤੋਂ ਪੁੱਛੋ")}
-                      </button>
-                      <button type="button" className="btn btn-ghost btn-sm" onClick={() => nav("/legal-aid")}>
-                        <HeartHandshake size={14} />
-                        {tr("Check free legal aid", "निःशुल्क विधिक सहायता जाँचें", "ਮੁਫ਼ਤ ਕਾਨੂੰਨੀ ਸਹਾਇਤਾ ਜਾਂਚੋ")}
-                      </button>
-                    </div>
-                    <p className="mt-3 text-xs text-muted">
-                      {tr(
-                        "General information, not legal advice.",
-                        "यह सामान्य जानकारी है, कानूनी सलाह नहीं।",
-                        "ਇਹ ਆਮ ਜਾਣਕਾਰੀ ਹੈ, ਕਾਨੂੰਨੀ ਸਲਾਹ ਨਹੀਂ।"
+                <div id={"hb-" + b.id} className={"acc-body " + (isOpen ? "open" : "")}>
+                  <div>
+                    <div className="acc-inner">
+                      {b.rights.length > 0 && (
+                        <>
+                          <h3 className="eyebrow flex items-center gap-1.5">
+                            <CheckCircle2 size={13} />
+                            {tr("Your legal rights under the law", "कानून के तहत आपके अधिकार", "ਕਾਨੂੰਨ ਅਧੀਨ ਤੁਹਾਡੇ ਅਧਿਕਾਰ")}
+                          </h3>
+                          <div className="mt-3 grid gap-2.5 sm:grid-cols-2">
+                            {b.rights.map((r, k) => (
+                              <div key={k} className="check-item">
+                                <CheckCircle2 size={16} className="mt-0.5 shrink-0 tone-text" />
+                                <span>{tr(...r)}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </>
                       )}
-                    </p>
+
+                      <h3 className="eyebrow mt-5">
+                        {tr("What to do, step by step", "क्या करें, चरण-दर-चरण", "ਕੀ ਕਰੀਏ, ਕਦਮ-ਦਰ-ਕਦਮ")}
+                      </h3>
+                      <ol className="mt-3 space-y-3">
+                        {b.steps.map((s, k) => (
+                          <li key={k} className="flex gap-3">
+                            <span className="btn-primary grid h-7 w-7 shrink-0 place-items-center rounded-full text-xs font-bold">
+                              {k + 1}
+                            </span>
+                            <p className="pt-0.5 text-sm">{tr(...s)}</p>
+                          </li>
+                        ))}
+                      </ol>
+
+                      <div className="mt-5 flex flex-wrap gap-2 border-t pt-4">
+                        <button
+                          type="button"
+                          className="btn btn-primary btn-sm"
+                          onClick={() => nav("/assistant", { state: { q: tr(...b.ask) } })}
+                        >
+                          <Sparkles size={14} />
+                          {tr("Ask the AI about this", "इस बारे में एआई से पूछें", "ਇਸ ਬਾਰੇ ਏਆਈ ਤੋਂ ਪੁੱਛੋ")}
+                        </button>
+                        <button type="button" className="btn btn-ghost btn-sm" onClick={() => nav("/legal-aid")}>
+                          <HeartHandshake size={14} />
+                          {tr("Check free legal aid", "निःशुल्क विधिक सहायता जाँचें", "ਮੁਫ਼ਤ ਕਾਨੂੰਨੀ ਸਹਾਇਤਾ ਜਾਂਚੋ")}
+                        </button>
+                      </div>
+                      <p className="mt-3 text-xs text-muted">
+                        {tr(
+                          "General information, not legal advice.",
+                          "यह सामान्य जानकारी है, कानूनी सलाह नहीं।",
+                          "ਇਹ ਆਮ ਜਾਣਕਾਰੀ ਹੈ, ਕਾਨੂੰਨੀ ਸਲਾਹ ਨਹੀਂ।"
+                        )}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </article>
-          );
-        })}
-      </div>
+              </article>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

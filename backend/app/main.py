@@ -88,6 +88,18 @@ class FeedbackIn(BaseModel):
     up: bool
 
 
+class DraftIn(BaseModel):
+    doc_type: str = "fir"
+    inputs: dict[str, Any] = {}
+    lang: str = "en"
+
+
+class AnalyzeDocIn(BaseModel):
+    text: str
+    doc_type: str | None = None
+    lang: str = "en"
+
+
 def _log(user: dict[str, Any] | None, q: str, topic: str, lang: str,
          answered: bool, acts: Iterable[str] = ()) -> None:
     # Only signed-in users are tracked. Phone, email and ID numbers are
@@ -279,3 +291,226 @@ def stats(authorization: str | None = Header(default=None)) -> dict[str, Any]:
                    for r in rows[:8]],
     })
     return out
+
+
+@app.post("/api/draft")
+def draft_doc(body: DraftIn) -> dict[str, Any]:
+    """Generate legally grounded formal drafts: Zero-FIR, Legal Notices, Bail Memo."""
+    dt = (body.doc_type or "fir").lower()
+    inp = body.inputs or {}
+    lang = body.lang if body.lang in ("en", "hi", "pa") else "en"
+
+    c_name = inp.get("complainant_name") or inp.get("sender_name") or "Complainant"
+    c_contact = inp.get("contact") or inp.get("phone") or "Provided on Record"
+    c_addr = inp.get("address") or "Residing within Territorial Jurisdiction"
+    op_name = inp.get("accused_name") or inp.get("opposite_party") or "Accused / Opposite Party"
+    incident_dt = inp.get("date") or inp.get("incident_date") or time.strftime("%d/%m/%Y")
+    incident_place = inp.get("location") or inp.get("place") or "Within Jurisdiction"
+    desc = inp.get("description") or "Details of the legal grievance as stated herein."
+    amount = inp.get("amount") or inp.get("cheque_amount") or ""
+    chq_num = inp.get("cheque_number") or ""
+    bank = inp.get("bank_name") or ""
+    police_stn = inp.get("police_station") or "Station House Officer, Concerned Police Station"
+
+    # Build prompt for generative LLM
+    prompt = f"""You are a senior Indian legal drafting advocate. Generate a formal, professional legal draft under current Indian law.
+DOCUMENT TYPE: {dt}
+LANGUAGE: {lang}
+INPUT DETAILS:
+- Complainant / Sender: {c_name}
+- Contact & Address: {c_contact}, {c_addr}
+- Opposite Party / Accused / Police Station: {op_name} at {police_stn}
+- Incident / Transaction Date & Place: {incident_dt} at {incident_place}
+- Description & Facts: {desc}
+- Financial / Property Value (if any): {amount} (Cheque No: {chq_num}, Bank: {bank})
+
+REQUIREMENTS:
+1. Use formal Indian legal court/advocate formatting (all capital headings, numbered paragraphs, verification clause, prayer).
+2. Explicitly cite the modern 2023 statutes:
+   - For Police Complaint / FIR: Cite Section 173 Bharatiya Nagarik Suraksha Sanhita, 2023 (BNSS) and relevant Bharatiya Nyaya Sanhita, 2023 (BNS) offences (e.g. Theft BNS 303, Cheating BNS 318, Simple Hurt BNS 115, Cyber Offences under IT Act 2000).
+   - For Cheque Bounce: Cite Section 138 of Negotiable Instruments Act, 1881 with statutory 15-day demand.
+   - For Consumer Notice: Cite Consumer Protection Act, 2019 for deficiency in service and unfair trade practice.
+   - For Tenant Notice: Cite statutory tenancy rights and 15-day refund demand.
+3. Write clean, complete, ready-to-print legal text in {lang} language."""
+
+    try:
+        draft_text = llm.generate(prompt)
+        if draft_text and len(draft_text.strip()) > 100:
+            return {"draft": draft_text.strip(), "doc_type": dt, "status": "generated", "lang": lang}
+    except Exception as e:
+        print(f"[DRAFT] LLM generation note: {e}")
+
+    # Fallback template if LLM is offline or busy
+    if dt == "cheque_notice":
+        draft_text = f"""LEGAL DEMAND NOTICE
+(UNDER SECTION 138 OF THE NEGOTIABLE INSTRUMENTS ACT, 1881)
+
+REGISTERED A.D. / SPEED POST
+Date: {time.strftime('%d/%m/%Y')}
+
+TO,
+{op_name}
+{incident_place}
+
+FROM,
+{c_name}
+{c_addr}
+Contact: {c_contact}
+
+SUBJECT: STATUTORY DEMAND NOTICE UNDER SECTION 138 OF THE NEGOTIABLE INSTRUMENTS ACT, 1881 FOR DISHONOUR OF CHEQUE NO. {chq_num} FOR RS. {amount}/- DRAWN ON {bank}.
+
+Sir/Madam,
+
+Under instructions from and on behalf of my client {c_name}, I hereby serve upon you the following statutory notice:
+
+1. That in discharge of your legally enforceable debt and liability towards my client, you had issued Cheque bearing No. {chq_num} dated {incident_dt} for a sum of Rs. {amount}/- drawn on {bank}.
+2. That my client presented the said cheque for encashment through their bankers within the period of its validity.
+3. That the said cheque was returned unpaid and dishonoured by your bankers with the return memo stating reason 'Funds Insufficient' / 'Payment Stopped'.
+4. That the said dishonour of cheque clearly attracts criminal culpability under Section 138 read with Section 141 of the Negotiable Instruments Act, 1881.
+5. {desc}
+
+NOW THEREFORE, I hereby call upon you to make the payment of the aforesaid cheque amount of Rs. {amount}/- (Rupees {amount} only) to my client within 15 (FIFTEEN) DAYS from the date of receipt of this notice, failing which my client shall be constrained to initiate criminal proceedings against you in the Competent Court of Judicial Magistrate under Section 138 of the Negotiable Instruments Act, 1881, at your sole cost and peril.
+
+Copy retained for legal record.
+
+{c_name}
+(Complainant / Payee)"""
+    elif dt in ("consumer_notice", "consumer"):
+        draft_text = f"""LEGAL NOTICE FOR DEFICIENCY IN SERVICE & UNFAIR TRADE PRACTICE
+(UNDER THE CONSUMER PROTECTION ACT, 2019)
+
+Date: {time.strftime('%d/%m/%Y')}
+
+TO,
+{op_name}
+{incident_place}
+
+FROM,
+{c_name}
+{c_addr}
+Contact: {c_contact}
+
+SUBJECT: NOTICE FOR DEFICIENCY IN SERVICE, DEFECTIVE PRODUCT, AND DAMAGES UNDER SECTIONS 2(11) & 35 OF THE CONSUMER PROTECTION ACT, 2019.
+
+Sir/Madam,
+
+1. That the Complainant had engaged your services / purchased goods from you on {incident_dt} for valuable consideration amounting to Rs. {amount}/-.
+2. That upon receiving the said goods/services, the Complainant discovered severe deficiency, negligence, and non-compliance with statutory standards.
+3. Particulars of Deficiency: {desc}
+4. That despite repeated reminders and representations, you have failed and neglected to rectify the defect, provide replacement, or refund the consideration amount.
+5. That your aforesaid acts constitute gross deficiency in service under Section 2(11) and Unfair Trade Practice under Section 2(47) of the Consumer Protection Act, 2019.
+
+NOW THEREFORE, you are hereby called upon to:
+a) Refund the sum of Rs. {amount}/- along with interest @ 18% p.a.;
+b) Pay a sum of Rs. 25,000/- towards mental harassment and litigation expenses;
+within 15 days of receipt of this notice, failing which a formal Consumer Complaint shall be instituted before the Competent District Consumer Disputes Redressal Commission under Section 35 of the Consumer Protection Act, 2019.
+
+Yours faithfully,
+
+{c_name}"""
+    else:  # Default: Police Complaint / FIR under Section 173 BNSS
+        draft_text = f"""FORMAL POLICE COMPLAINT / ZERO-FIR APPLICATION
+(UNDER SECTION 173 OF THE BHARATIYA NAGARIK SURAKSHA SANHITA, 2023)
+
+TO,
+THE STATION HOUSE OFFICER (SHO),
+{police_stn}
+Date: {time.strftime('%d/%m/%Y')}
+
+SUBJECT: COMPLAINT UNDER SECTION 173 BHARATIYA NAGARIK SURAKSHA SANHITA, 2023 (BNSS) FOR REGISTRATION OF FIR IN RESPECT OF COGNIZABLE OFFENCES COMMITTED UNDER THE BHARATIYA NYAYA SANHITA, 2023 (BNS).
+
+1. COMPLAINANT DETAILS:
+   - Full Name: {c_name}
+   - Contact Number: {c_contact}
+   - Permanent / Current Address: {c_addr}
+
+2. INCIDENT DETAILS:
+   - Date and Time of Incident: {incident_dt}
+   - Exact Place of Occurrence: {incident_place}
+   - Details of Suspect/Accused (if known): {op_name}
+
+3. FACTS OF THE COMPLAINT:
+   {desc}
+
+4. OFFENCES COMMITTED:
+   The acts committed by the accused persons disclose cognizable offences under the Bharatiya Nyaya Sanhita, 2023 (including Section 303 for theft, Section 318 for cheating/fraud, Section 115 for hurt, and Section 351 for criminal intimidation, as applicable).
+
+5. PRAYER:
+   In light of Section 173(1) of the Bharatiya Nagarik Suraksha Sanhita, 2023, it is mandatory for the police officer to register a First Information Report (FIR) upon receiving information disclosing a cognizable offence. It is therefore respectfully prayed that:
+   a) A First Information Report (FIR) be registered forthwith;
+   b) A free copy of the registered FIR be provided to the Complainant as mandated by Section 173(2) BNSS;
+   c) Immediate investigation be launched and appropriate legal action be taken against the culprits.
+
+VERIFICATION:
+I, {c_name}, do hereby verify and declare that the contents of the above complaint are true and correct to the best of my personal knowledge and belief, and nothing material has been concealed therein.
+
+Place: {incident_place}
+Date: {time.strftime('%d/%m/%Y')}
+
+____________________________
+Signature / Thumb Impression of Complainant
+({c_name})"""
+
+    return {"draft": draft_text.strip(), "doc_type": dt, "status": "template_fallback", "lang": lang}
+
+
+@app.post("/api/analyze-doc")
+def analyze_document(body: AnalyzeDocIn) -> dict[str, Any]:
+    """Scan and summarize legal documents, contracts, summons, and notices with risk ratings."""
+    text = (body.text or "").strip()
+    lang = body.lang if body.lang in ("en", "hi", "pa") else "en"
+    if not text:
+        return {"error": "Document text cannot be empty.", "analyzed": False}
+
+    prompt = f"""You are a specialized Indian legal analyst. Analyze the following legal document / notice / agreement text:
+DOCUMENT TEXT:
+\"\"\"{text[:4000]}\"\"\"
+
+Provide a structured, plain-language analysis in {lang} addressing:
+1. EXECUTIVE SUMMARY: What is this document and what is its core purpose?
+2. URGENT DEADLINES & RISK LEVEL: Identify any time windows (e.g. 7 days, 15 days), consequences of non-compliance, and overall risk rating (LOW, MEDIUM, HIGH, CRITICAL).
+3. KEY STATUTORY SAFEGUARDS: What rights or protections does the individual have under Indian law (Constitution, BNSS, BNS, Consumer Act, NI Act, etc.)?
+4. RECOMMENDED ACTION CHECKLIST: Clear step-by-step instructions on what to do next.
+
+Format using bold titles and clean bullet points."""
+
+    try:
+        analysis_text = llm.generate(prompt)
+        if analysis_text and len(analysis_text.strip()) > 100:
+            return {"analysis": analysis_text.strip(), "analyzed": True, "lang": lang}
+    except Exception as e:
+        print(f"[DOC ANALYZE] Note: {e}")
+
+    # Fallback heuristic analysis
+    has_bnss_notice = bool(re.search(r"35|notice|appearance|police", text, re.I))
+    has_138 = bool(re.search(r"138|cheque|negotiable|dishonour", text, re.I))
+    has_lease = bool(re.search(r"rent|lease|tenant|landlord|deposit", text, re.I))
+
+    if has_138:
+        summary = "This document appears to be a Statutory Legal Notice under Section 138 of the Negotiable Instruments Act, 1881 regarding dishonour of a cheque."
+        risks = "CRITICAL RISK: A mandatory 15-day cure period applies from the date of receipt. Failure to pay within 15 days allows the payee to file a criminal complaint in the Magistrate Court within the next 30 days."
+        rights = "You have the right to inspect the bank memo, verify the debt liability, and present defenses if the cheque was given for security or if there was no existing debt."
+        steps = "1. Consult an advocate immediately.\n2. Do not ignore the notice.\n3. Reply within 15 days stating your legal defense or clear the undisputed dues."
+    elif has_bnss_notice:
+        summary = "This document appears to be a Notice of Appearance under Section 35(3) of the Bharatiya Nagarik Suraksha Sanhita, 2023 (or former Section 41A CrPC)."
+        risks = "HIGH RISK: The police officer is requiring your appearance for investigation. If you comply with the notice, the police CANNOT arrest you without prior written court permission under Section 35(4) BNSS."
+        rights = "Under Section 35(3) and (4) BNSS, you have the right not to be arrested as long as you comply with the terms of the notice. You have the right to have an advocate accompany you under Article 22(1)."
+        steps = "1. Note the appearance date and time.\n2. Carry identity documents and evidence supporting your innocence.\n3. Keep a copy of your appearance acknowledgment signed by the investigating officer."
+    else:
+        summary = "This document represents a formal legal communication, agreement, or notice between parties."
+        risks = "MEDIUM RISK: Review all timeline clauses and liability terms carefully before signing or responding."
+        rights = "Any clause violating statutory public policy or fundamental rights under Article 21 is void and unenforceable under Section 23 of the Indian Contract Act."
+        steps = "1. Read all clauses thoroughly.\n2. Note any monetary claims or deadlines.\n3. Seek free legal consultation via NALSA helpline 15100 if in doubt."
+
+    fallback_analysis = f"""### 1. Executive Summary
+{summary}
+
+### 2. Urgent Deadlines & Risk Level
+{risks}
+
+### 3. Key Statutory Safeguards & Rights
+{rights}
+
+### 4. Recommended Action Checklist
+{steps}"""
+    return {"analysis": fallback_analysis, "analyzed": True, "lang": lang}

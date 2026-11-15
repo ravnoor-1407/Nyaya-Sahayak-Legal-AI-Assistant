@@ -3,7 +3,7 @@ import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   Scale, Sun, Moon, ChevronDown, Menu, X, HeartHandshake, BookOpen,
   Search, Library, FileText, Phone, Mail, ShieldCheck, Sparkles,
-  LogIn, LogOut, LayoutDashboard,
+  LogIn, LogOut, LayoutDashboard, GitFork,
 } from "lucide-react";
 import { useLang } from "../LangContext";
 import { useTheme } from "../ThemeContext";
@@ -87,18 +87,38 @@ export default function Navbar() {
 
   const groups = [
     {
-      title: tr("Citizen rights and aid", "नागरिक अधिकार और सहायता", "ਨਾਗਰਿਕ ਅਧਿਕਾਰ ਅਤੇ ਸਹਾਇਤਾ"),
+      title: tr("Citizen rights and tools", "नागरिक अधिकार व उपकरण", "ਨਾਗਰਿਕ ਅਧਿਕਾਰ ਅਤੇ ਸੰਦ"),
       tone: "var(--c-gold)",
       items: [
+        {
+          to: "/hub", icon: BookOpen, tone: "var(--c-blue)",
+          name: tr("Citizen Hub", "नागरिक केंद्र", "ਨਾਗਰਿਕ ਕੇਂਦਰ"),
+          note: tr("Arrest, FIR, RTI guides", "नागरिक अधिकार पुस्तिकाएं", "ਨਾਗਰਿਕ ਗਾਈਡਾਂ"),
+        },
+        {
+          to: "/drafting", icon: FileText, tone: "var(--c-rose)",
+          name: tr("AI Drafting Studio", "प्रारूपण स्टूडियो", "ਡਰਾਫਟਿੰਗ ਸਟੂਡੀਓ"),
+          note: tr("FIR & Statutory notices", "एफआईआर व कानूनी नोटिस", "ਐਫ਼ਆਈਆਰ ਅਤੇ ਨੋਟਿਸ"),
+        },
+        {
+          to: "/bail-calculator", icon: Scale, tone: "var(--c-blue)",
+          name: tr("Sec 479 Bail Calculator", "जमानत कैलकुलेटर", "ਜ਼ਮਾਨਤ ਕੈਲਕੁਲੇਟਰ"),
+          note: tr("Mandatory undertrial bail", "अनिवार्य विचाराधीन जमानत", "ਲਾਜ਼ਮੀ ਜ਼ਮਾਨਤ"),
+        },
+        {
+          to: "/scanner", icon: Search, tone: "var(--c-purple)",
+          name: tr("Doc Risk Scanner", "दस्तावेज़ स्कैनर", "ਦਸਤਾਵੇਜ਼ ਸਕੈਨਰ"),
+          note: tr("Notice & contract analyzer", "नोटिस व अनुबंध विश्लेषण", "ਨੋਟਿਸ ਵਿਸ਼ਲੇਸ਼ਣ"),
+        },
+        {
+          to: "/flowcharts", icon: GitFork, tone: "#10b981",
+          name: tr("Decision Trees", "निर्णय वृक्ष", "ਫੈਸਲਾ ਰੁੱਖ"),
+          note: tr("Procedural rights flowcharts", "प्रक्रियात्मक अधिकार फ्लोचार्ट", "ਪ੍ਰਕਿਰਿਆ ਫਲੋਚਾਰਟ"),
+        },
         {
           to: "/legal-aid", icon: HeartHandshake, tone: "var(--c-green)",
           name: tr("Free legal aid", "निःशुल्क विधिक सहायता", "ਮੁਫ਼ਤ ਕਾਨੂੰਨੀ ਸਹਾਇਤਾ"),
           note: tr("Section 12 calculator", "धारा 12 कैलकुलेटर", "ਧਾਰਾ 12 ਕੈਲਕੁਲੇਟਰ"),
-        },
-        {
-          to: "/hub", icon: BookOpen, tone: "var(--c-blue)",
-          name: tr("Citizen Hub", "नागरिक केंद्र", "ਨਾਗਰਿਕ ਕੇਂਦਰ"),
-          note: tr("Arrest, FIR, RTI, consumer", "गिरफ्तारी, एफआईआर, आरटीआई", "ਗ੍ਰਿਫ਼ਤਾਰੀ, ਐਫ਼ਆਈਆਰ, ਆਰਟੀਆਈ"),
         },
       ],
     },

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   Search, Sparkles, Phone, HeartHandshake, BookOpen, Library,
-  ShieldCheck, Volume2, Lock, Scale, RotateCcw,
+  ShieldCheck, Volume2, Lock, Scale, RotateCcw, FileText, GitFork,
 } from "lucide-react";
 import { useLang } from "../LangContext";
 import { useAuth } from "../AuthContext";
@@ -217,6 +217,47 @@ export default function Home() {
   ];
 
   const tools = [
+    {
+      to: "/drafting", icon: FileText, tone: "var(--c-rose)",
+      title: tr("AI Legal Drafting Studio", "एआई कानूनी प्रारूपण स्टूडियो", "ਏਆਈ ਕਾਨੂੰਨੀ ਡਰਾਫਟਿੰਗ ਸਟੂਡੀਓ"),
+      text: tr(
+        "Generate structured Police Complaints (Zero-FIR under Sec 173 BNSS) and 15-day statutory notices ready for print.",
+        "धारा 173 बीएनएसएस के तहत पुलिस शिकायत और 15-दिवसीय कानूनी नोटिस तुरंत तैयार करें।",
+        "ਧਾਰਾ 173 ਬੀਐਨਐਸਐਸ ਤਹਿਤ ਪੁਲਿਸ ਸ਼ਿਕਾਇਤ ਅਤੇ 15-ਦਿਨਾਂ ਦੇ ਕਾਨੂੰਨੀ ਨੋਟਿਸ ਤਿਆਰ ਕਰੋ।"
+      ),
+      cta: tr("Open drafting studio", "प्रारूपण स्टूडियो खोलें", "ਡਰਾਫਟਿੰਗ ਸਟੂਡੀਓ ਖੋਲ੍ਹੋ"),
+    },
+    {
+      to: "/bail-calculator", icon: Scale, tone: "var(--c-blue)",
+      title: tr("Sec 479 Bail Calculator", "बीएनएसएस धारा 479 जमानत कैलकुलेटर", "ਬੀਐਨਐਸਐਸ ਧਾਰਾ 479 ਜ਼ਮਾਨਤ ਕੈਲਕੁਲੇਟਰ"),
+      text: tr(
+        "Calculate mandatory statutory bail eligibility for undertrial prisoners under the 2024 reform (1/3rd sentence threshold).",
+        "2024 के नए कानून (धारा 479 बीएनएसएस) के तहत विचाराधीन कैदियों की अनिवार्य जमानत पात्रता की गणना करें।",
+        "2024 ਦੇ ਨਵੇਂ ਕਾਨੂੰਨ ਅਧੀਨ ਅੰਡਰਟਰਾਇਲਾਂ ਦੀ ਲਾਜ਼ਮੀ ਜ਼ਮਾਨਤ ਯੋਗਤਾ ਦੀ ਗਣਨਾ ਕਰੋ।"
+      ),
+      cta: tr("Calculate bail eligibility", "जमानत पात्रता जाँचें", "ਜ਼ਮਾਨਤ ਯੋਗਤਾ ਜਾਂਚੋ"),
+    },
+    {
+      to: "/scanner", icon: Search, tone: "var(--c-purple)",
+      title: tr("Legal Document Scanner", "कानूनी दस्तावेज़ स्कैनर", "ਕਾਨੂੰਨੀ ਦਸਤਾਵੇਜ਼ ਸਕੈਨਰ"),
+      text: tr(
+        "Paste court summons, police notices or rental agreements for plain-language risk assessment and deadline extraction.",
+        "सरल भाषा में विश्लेषण और समय सीमा निकालने के लिए किसी भी कानूनी नोटिस या अनुबंध का विश्लेषण करें।",
+        "ਕਿਸੇ ਵੀ ਕਾਨੂੰਨੀ ਨੋਟਿਸ ਜਾਂ ਇਕਰਾਰਨਾਮੇ ਦਾ ਸਰਲ ਵਿਸ਼ਲੇਸ਼ਣ ਕਰੋ।"
+      ),
+      cta: tr("Scan document", "दस्तावेज़ स्कैन करें", "ਦਸਤਾਵੇਜ਼ ਸਕੈਨ ਕਰੋ"),
+    },
+    {
+      to: "/flowcharts", icon: GitFork, tone: "#10b981",
+      title: tr("Procedural Decision Trees", "प्रक्रियात्मक निर्णय वृक्ष", "ਪ੍ਰਕਿਰਿਆਤਮਕ ਫੈਸਲਾ ਰੁੱਖ"),
+      text: tr(
+        "Interactive condition flowcharts for arrest safeguards, bailable offences, consumer jurisdiction and cyber reporting.",
+        "गिरफ्तारी सुरक्षा, जमानती अपराध और साइबर रिपोर्टिंग के इंटरैक्टिव फ्लोचार्ट।",
+        "ਗ੍ਰਿਫ਼ਤਾਰੀ ਸੁਰੱਖਿਆ ਅਤੇ ਸਾਈਬਰ ਰਿਪੋਰਟਿੰਗ ਦੇ ਇੰਟਰਐਕਟਿਵ ਫਲੋਚਾਰਟ।"
+      ),
+      cta: tr("Explore decision trees", "फ्लोचार्ट देखें", "ਫਲੋਚਾਰਟ ਵੇਖੋ"),
+    },
+
     {
       to: "/legal-aid", icon: HeartHandshake, tone: "var(--c-green)",
       title: tr("Free Legal Aid Calculator", "निःशुल्क विधिक सहायता कैलकुलेटर", "ਮੁਫ਼ਤ ਕਾਨੂੰਨੀ ਸਹਾਇਤਾ ਕੈਲਕੁਲੇਟਰ"),
