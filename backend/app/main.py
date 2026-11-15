@@ -138,10 +138,13 @@ def chat(body: ChatIn, authorization: str | None = Header(default=None)) -> dict
                 "topic": "support", "lang": lang}
 
     topic: str = cast(str, CLF.predict([q])[0]) if CLF else "general"
+    audit: dict[str, Any] = {}
     try:
-        text, sources, ok = cast(
-            tuple[str, list[dict[str, Any]], bool], rag.answer(q, lang)  # type: ignore[reportUnknownMemberType]
-        )
+        ans_tuple = rag.answer(q, lang)
+        if len(ans_tuple) >= 4:
+            text, sources, ok, audit = ans_tuple[:4]
+        else:
+            text, sources, ok = ans_tuple[:3]
     except Exception as e:
         return {"answer": "The AI service is busy. Please try again.",
                 "sources": [], "answered": False, "error": str(e)[:300], "lang": lang}
@@ -158,7 +161,7 @@ def chat(body: ChatIn, authorization: str | None = Header(default=None)) -> dict
                 acts.append(a)
     _log(user, q, topic, lang, ok, acts)
     return {"answer": text, "sources": sources, "answered": ok,
-            "topic": topic, "lang": lang}
+            "topic": topic, "lang": lang, "grounding_audit": audit}
 
 
 @app.get("/api/search")

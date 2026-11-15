@@ -1,0 +1,184 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1350" width="1000" height="1350" style="background:#ffffff; font-family:'Segoe UI', Arial, sans-serif;">
+  <style>
+    .title { font-size: 16px; font-weight: bold; fill: #111; letter-spacing: 0.5px; }
+    .subtitle { font-size: 12px; fill: #444; font-style: italic; }
+    .box { fill: #fdfdfd; stroke: #1e293b; stroke-width: 2; rx: 6; }
+    .box-highlight { fill: #f8fafc; stroke: #0f172a; stroke-width: 2.5; rx: 8; }
+    .box-sub { fill: #ffffff; stroke: #475569; stroke-width: 1.5; rx: 5; }
+    .numeral { font-size: 13px; font-weight: bold; fill: #0f172a; }
+    .text-title { font-size: 13px; font-weight: bold; fill: #0f172a; }
+    .text-desc { font-size: 11px; fill: #334155; }
+    .arrow { stroke: #1e293b; stroke-width: 1.8; fill: none; marker-end: url(#arrowhead); }
+    .arrow-dashed { stroke: #475569; stroke-width: 1.5; stroke-dasharray: 4,4; fill: none; marker-end: url(#arrowhead); }
+    .container { fill: #f1f5f9; stroke: #64748b; stroke-width: 1.5; stroke-dasharray: 6,4; rx: 10; }
+  </style>
+
+  <defs>
+    <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#1e293b" />
+    </marker>
+  </defs>
+
+  <!-- Title Section -->
+  <text x="500" y="35" text-anchor="middle" class="title">FIG. 1</text>
+  <text x="500" y="55" text-anchor="middle" class="subtitle">System Architecture and Processing Pipeline of Dual-Stage Grounded Legal Retrieval System</text>
+
+  <!-- Block 100: User Client Query Input -->
+  <g id="block_100">
+    <rect x="250" y="80" width="500" height="65" class="box" />
+    <text x="265" y="105" class="numeral">100</text>
+    <text x="500" y="105" text-anchor="middle" class="text-title">User Query Interface / Client Terminal</text>
+    <text x="500" y="125" text-anchor="middle" class="text-desc">Accepts Multilingual Citizen Legal Query (English, Hindi, Punjabi) via Web/Audio</text>
+  </g>
+
+  <!-- Arrow 100 -> 102 -->
+  <path d="M 500 145 L 500 175" class="arrow" />
+
+  <!-- Block 102: PII Redaction -->
+  <g id="block_102">
+    <rect x="250" y="175" width="500" height="65" class="box" />
+    <text x="265" y="200" class="numeral">102</text>
+    <text x="500" y="200" text-anchor="middle" class="text-title">Localized PII Sanitization &amp; Privacy Redaction Engine</text>
+    <text x="500" y="220" text-anchor="middle" class="text-desc">Strips Aadhaar (12-digit), PAN, Phone, Names via Local Regex Before Transmission</text>
+  </g>
+
+  <!-- Arrow 102 -> 104 -->
+  <path d="M 500 240 L 500 270" class="arrow" />
+
+  <!-- Container for Concordance & Normalization -->
+  <rect x="120" y="270" width="760" height="150" class="container" />
+  <text x="140" y="292" class="numeral" style="fill:#475569;">104-CONTAINER: DYNAMIC STATUTORY EXPANSION SUBSYSTEM</text>
+
+  <!-- Block 104: Bidirectional Concordance Expander -->
+  <g id="block_104">
+    <rect x="140" y="310" width="340" height="90" class="box-highlight" />
+    <text x="155" y="335" class="numeral">104</text>
+    <text x="310" y="335" text-anchor="middle" class="text-title">Concordance Expander</text>
+    <text x="310" y="355" text-anchor="middle" class="text-desc">Maps IPC (1860) &lt;--&gt; BNS (2023)</text>
+    <text x="310" y="375" text-anchor="middle" class="text-desc">(e.g., IPC 420 &lt;--&gt; BNS 318(4) Cheating)</text>
+  </g>
+
+  <!-- Block 106: Gazette Database -->
+  <g id="block_106">
+    <rect x="520" y="310" width="340" height="90" class="box-highlight" />
+    <text x="535" y="335" class="numeral">106</text>
+    <text x="690" y="335" text-anchor="middle" class="text-title">Bilingual Concordance Gazette DB</text>
+    <text x="690" y="355" text-anchor="middle" class="text-desc">578 Verified Statutory Cross-References</text>
+    <text x="690" y="375" text-anchor="middle" class="text-desc">Indexed Metadata: IPC, CrPC, BNS, BNSS</text>
+  </g>
+
+  <!-- Bi-directional arrow between 104 and 106 -->
+  <path d="M 480 355 L 520 355" class="arrow" />
+  <path d="M 520 355 L 480 355" class="arrow" />
+
+  <!-- Arrow from container -> Tripartite Hybrid Retriever -->
+  <path d="M 500 420 L 500 460" class="arrow" />
+
+  <!-- Container for Tripartite Hybrid Retriever -->
+  <rect x="60" y="460" width="880" height="240" class="container" />
+  <text x="80" y="482" class="numeral" style="fill:#475569;">108-CONTAINER: TRIPARTITE STATUTORY RETRIEVAL SUBSYSTEM</text>
+
+  <!-- Block 110: Dense Vector Search -->
+  <g id="block_110">
+    <rect x="80" y="500" width="250" height="100" class="box-sub" />
+    <text x="95" y="525" class="numeral">110</text>
+    <text x="205" y="525" text-anchor="middle" class="text-title">Dense Vector Search</text>
+    <text x="205" y="545" text-anchor="middle" class="text-desc">all-MiniLM-L6-v2 Embeddings</text>
+    <text x="205" y="565" text-anchor="middle" class="text-desc">Cosine Similarity Distance</text>
+    <text x="205" y="585" text-anchor="middle" class="text-desc">Rank r_dense(d)</text>
+  </g>
+
+  <!-- Block 112: Sparse Lexical Search -->
+  <g id="block_112">
+    <rect x="375" y="500" width="250" height="100" class="box-sub" />
+    <text x="390" y="525" class="numeral">112</text>
+    <text x="500" y="525" text-anchor="middle" class="text-title">Sparse Lexical Search</text>
+    <text x="500" y="545" text-anchor="middle" class="text-desc">Statutory BM25 / TF-IDF</text>
+    <text x="500" y="565" text-anchor="middle" class="text-desc">Term Frequency Weighting</text>
+    <text x="500" y="585" text-anchor="middle" class="text-desc">Rank r_sparse(d)</text>
+  </g>
+
+  <!-- Block 114: Deterministic Section Booster -->
+  <g id="block_114">
+    <rect x="670" y="500" width="250" height="100" class="box-sub" />
+    <text x="685" y="525" class="numeral">114</text>
+    <text x="795" y="525" text-anchor="middle" class="text-title">Deterministic Section Booster</text>
+    <text x="795" y="545" text-anchor="middle" class="text-desc">Regex Section Extractor</text>
+    <text x="795" y="565" text-anchor="middle" class="text-desc">Statute Specific Match</text>
+    <text x="795" y="585" text-anchor="middle" class="text-desc">Weight W_regex * Indicator I(d)</text>
+  </g>
+
+  <!-- Arrow down to RRF Module -->
+  <path d="M 205 600 L 205 630 L 460 630" class="arrow" />
+  <path d="M 500 600 L 500 630" class="arrow" />
+  <path d="M 795 600 L 795 630 L 540 630" class="arrow" />
+
+  <!-- Block 116: Reciprocal Rank Fusion Engine -->
+  <g id="block_116">
+    <rect x="200" y="630" width="600" height="55" class="box" />
+    <text x="215" y="655" class="numeral">116</text>
+    <text x="500" y="655" text-anchor="middle" class="text-title">Reciprocal Rank Fusion (RRF) Ranking Module (k=60)</text>
+    <text x="500" y="673" text-anchor="middle" class="text-desc">Score(d) = Sum( 1 / (60 + r_i(d)) ) + W_regex * I(d)</text>
+  </g>
+
+  <!-- Arrow 116 -> 118 -->
+  <path d="M 500 685 L 500 730" class="arrow" />
+
+  <!-- Block 118: Context Assembly -->
+  <g id="block_118">
+    <rect x="250" y="730" width="500" height="65" class="box" />
+    <text x="265" y="755" class="numeral">118</text>
+    <text x="500" y="755" text-anchor="middle" class="text-title">Statutory Passage Assembler &amp; Token Limiter</text>
+    <text x="500" y="775" text-anchor="middle" class="text-desc">Top-K Passage Aggregation, Gazette Verification Headers, 2400-Token Cap</text>
+  </g>
+
+  <!-- Arrow 118 -> 120 -->
+  <path d="M 500 795 L 500 830" class="arrow" />
+
+  <!-- Block 120: LLM Inference Cluster -->
+  <g id="block_120">
+    <rect x="200" y="830" width="600" height="85" class="box" />
+    <text x="215" y="855" class="numeral">120</text>
+    <text x="500" y="855" text-anchor="middle" class="text-title">LLM Inference Engine with Resilient Cascading Fallback</text>
+    <text x="500" y="875" text-anchor="middle" class="text-desc">Strict System Grounding Guardrail ("Cite only supplied gazette provisions")</text>
+    <text x="500" y="895" text-anchor="middle" class="text-desc">Cascading Cascade: Primary Groq Llama-3.3-70B -&gt; GPT-OSS-120B -&gt; Qwen-27B</text>
+  </g>
+
+  <!-- Arrow 120 -> 122 -->
+  <path d="M 500 915 L 500 950" class="arrow" />
+
+  <!-- Block 122: Citation Grounding & Hallucination Auditor -->
+  <g id="block_122">
+    <rect x="180" y="950" width="640" height="110" class="box-highlight" />
+    <text x="195" y="975" class="numeral">122</text>
+    <text x="500" y="975" text-anchor="middle" class="text-title">Citation Grounding &amp; Hallucination Auditor</text>
+    <text x="500" y="995" text-anchor="middle" class="text-desc">1. Regex Extraction of All Generated Legal Citations (Sections, Acts)</text>
+    <text x="500" y="1015" text-anchor="middle" class="text-desc">2. Cross-Verification Against Retrieved Source Section Inventory</text>
+    <text x="500" y="1035" text-anchor="middle" class="text-desc">3. Grounding Score Computation: S = |Verified Citations| / |Total Citations|</text>
+  </g>
+
+  <!-- Decision Fork from Auditor -->
+  <path d="M 500 1060 L 500 1100" class="arrow" />
+
+  <!-- Block 124: Audit Decision Gate -->
+  <polygon points="500,1100 620,1140 500,1180 380,1140" fill="#f8fafc" stroke="#1e293b" stroke-width="2" />
+  <text x="500" y="1136" text-anchor="middle" class="text-title" style="font-size:11px;">Auditor Gate: 124</text>
+  <text x="500" y="1150" text-anchor="middle" class="text-desc">Score == 1.0?</text>
+
+  <!-- Branch: Yes -> Output -->
+  <path d="M 500 1180 L 500 1220" class="arrow" />
+  <text x="515" y="1205" class="text-desc" style="font-weight:bold;">YES (Audit Pass)</text>
+
+  <!-- Branch: No -> Self-Correction / Warning -->
+  <path d="M 620 1140 L 780 1140 L 780 872 L 700 872" class="arrow-dashed" />
+  <text x="700" y="1130" class="text-desc" style="font-weight:bold; fill:#b91c1c;">NO (Flag / Retry)</text>
+
+  <!-- Block 126: Output Advisory -->
+  <g id="block_126">
+    <rect x="250" y="1220" width="500" height="75" class="box" />
+    <text x="265" y="1245" class="numeral">126</text>
+    <text x="500" y="1245" text-anchor="middle" class="text-title">Verified Legal Guidance Output Interface</text>
+    <text x="500" y="1265" text-anchor="middle" class="text-desc">Statutory Audit Badge (100% Grounded Citations against Gazette)</text>
+    <text x="500" y="1282" text-anchor="middle" class="text-desc">Multilingual Explanation, Penalties, Procedural Rights &amp; Source Accordion</text>
+  </g>
+</svg>

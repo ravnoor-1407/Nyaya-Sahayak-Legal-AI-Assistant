@@ -54,7 +54,13 @@ export default function Assistant() {
       const answerLang = d.lang || effectiveLang;
       setMsgs((m) => [
         ...m,
-        { role: "assistant", text: d.answer || "...", sources: d.sources || [], lang: answerLang },
+        {
+          role: "assistant",
+          text: d.answer || "...",
+          sources: d.sources || [],
+          lang: answerLang,
+          grounding_audit: d.grounding_audit,
+        },
       ]);
     } catch (e) {
       setMsgs((m) => [
@@ -266,7 +272,12 @@ export default function Assistant() {
               return (
                 <div key={i} className="msg-in flex justify-start">
                   <div className="bubble-ai max-w-[92%] px-4 py-3">
-                    <AnswerBlock text={m.text} sources={m.sources} lang={m.lang} />
+                    <AnswerBlock
+                      text={m.text}
+                      sources={m.sources}
+                      lang={m.lang}
+                      grounding_audit={m.grounding_audit}
+                    />
                   </div>
                 </div>
               );

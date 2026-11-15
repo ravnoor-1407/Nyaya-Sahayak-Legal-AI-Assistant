@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 620" width="900" height="620" style="background:#ffffff; font-family:'Segoe UI', Arial, sans-serif;">
+  <style>
+    .title { font-size: 16px; font-weight: bold; fill: #111; letter-spacing: 0.5px; }
+    .subtitle { font-size: 12px; fill: #444; font-style: italic; }
+    .axis { stroke: #1e293b; stroke-width: 2; }
+    .grid { stroke: #e2e8f0; stroke-width: 1; stroke-dasharray: 3,3; }
+    .label { font-size: 12px; fill: #1e293b; font-weight: bold; }
+    .val-label { font-size: 12px; font-weight: bold; fill: #0f172a; }
+    .numeral { font-size: 13px; font-weight: bold; fill: #0f172a; }
+    .legend-text { font-size: 11px; fill: #1e293b; }
+  </style>
+
+  <text x="450" y="35" text-anchor="middle" class="title">FIG. 4</text>
+  <text x="450" y="55" text-anchor="middle" class="subtitle">Multilingual Statutory Retrieval Performance (MRR@5 and Hit@5) Across Indic Linguistic Strata</text>
+
+  <!-- Legend -->
+  <rect x="620" y="80" width="220" height="60" fill="#f8fafc" stroke="#94a3b8" stroke-width="1" rx="4" />
+  <rect x="635" y="93" width="16" height="12" fill="#0f172a" stroke="#000" stroke-width="1" />
+  <text x="660" y="103" class="legend-text" style="font-weight:bold;">Mean Reciprocal Rank (MRR@5)</text>
+  <rect x="635" y="117" width="16" height="12" fill="#cbd5e1" stroke="#1e293b" stroke-width="1" />
+  <text x="660" y="127" class="legend-text" style="font-weight:bold;">Statutory Hit Rate (Hit@5 %)</text>
+
+  <!-- Y-Axis (0.0 to 1.0 / 0% to 100%) -->
+  <!-- Origin at (150, 480), Height 360px (3.6px per %) -->
+  <line x1="150" y1="480" x2="800" y2="480" class="axis" />
+  <line x1="150" y1="480" x2="150" y2="120" class="axis" />
+
+  <line x1="150" y1="480" x2="800" y2="480" class="grid" />
+  <text x="135" y="485" text-anchor="end" class="label">0.0 / 0%</text>
+
+  <line x1="150" y1="408" x2="800" y2="408" class="grid" />
+  <text x="135" y="413" text-anchor="end" class="label">0.2 / 20%</text>
+
+  <line x1="150" y1="336" x2="800" y2="336" class="grid" />
+  <text x="135" y="341" text-anchor="end" class="label">0.4 / 40%</text>
+
+  <line x1="150" y1="264" x2="800" y2="264" class="grid" />
+  <text x="135" y="269" text-anchor="end" class="label">0.6 / 60%</text>
+
+  <line x1="150" y1="192" x2="800" y2="192" class="grid" />
+  <text x="135" y="197" text-anchor="end" class="label">0.8 / 80%</text>
+
+  <line x1="150" y1="120" x2="800" y2="120" class="grid" />
+  <text x="135" y="125" text-anchor="end" class="label">1.0 / 100%</text>
+
+  <!-- Group 1: English (MRR = 0.935, Hit = 96.2%) -->
+  <!-- MRR bar: H = 0.935 * 360 = 336.6px -> Y = 480 - 336.6 = 143.4 -->
+  <!-- Hit bar: H = 0.962 * 360 = 346.3px -> Y = 480 - 346.3 = 133.7 -->
+  <g id="group_402">
+    <rect x="200" y="143" width="55" height="337" fill="#0f172a" stroke="#000" stroke-width="1.5" />
+    <text x="227" y="133" text-anchor="middle" class="val-label">0.935</text>
+
+    <rect x="265" y="134" width="55" height="346" fill="#cbd5e1" stroke="#1e293b" stroke-width="1.5" />
+    <text x="292" y="124" text-anchor="middle" class="val-label">96.2%</text>
+
+    <text x="260" y="505" text-anchor="middle" class="label" style="font-size:13px;">English</text>
+    <text x="260" y="522" text-anchor="middle" class="subtitle">(Primary Legal)</text>
+    <text x="260" y="542" text-anchor="middle" class="numeral">402</text>
+  </g>
+
+  <!-- Group 2: Punjabi / Gurmukhi (MRR = 0.833, Hit = 88.5%) -->
+  <!-- MRR bar: H = 0.833 * 360 = 299.9px -> Y = 480 - 299.9 = 180.1 -->
+  <!-- Hit bar: H = 0.885 * 360 = 318.6px -> Y = 480 - 318.6 = 161.4 -->
+  <g id="group_404">
+    <rect x="400" y="180" width="55" height="300" fill="#0f172a" stroke="#000" stroke-width="1.5" />
+    <text x="427" y="170" text-anchor="middle" class="val-label">0.833</text>
+
+    <rect x="465" y="161" width="55" height="319" fill="#cbd5e1" stroke="#1e293b" stroke-width="1.5" />
+    <text x="492" y="151" text-anchor="middle" class="val-label">88.5%</text>
+
+    <text x="460" y="505" text-anchor="middle" class="label" style="font-size:13px;">Punjabi</text>
+    <text x="460" y="522" text-anchor="middle" class="subtitle">(Gurmukhi Script)</text>
+    <text x="460" y="542" text-anchor="middle" class="numeral">404</text>
+  </g>
+
+  <!-- Group 3: Hindi / Devanagari (MRR = 0.625, Hit = 78.4%) -->
+  <!-- MRR bar: H = 0.625 * 360 = 225.0px -> Y = 480 - 225.0 = 255.0 -->
+  <!-- Hit bar: H = 0.784 * 360 = 282.2px -> Y = 480 - 282.2 = 197.8 -->
+  <g id="group_406">
+    <rect x="600" y="255" width="55" height="225" fill="#0f172a" stroke="#000" stroke-width="1.5" />
+    <text x="627" y="245" text-anchor="middle" class="val-label">0.625</text>
+
+    <rect x="665" y="198" width="55" height="282" fill="#cbd5e1" stroke="#1e293b" stroke-width="1.5" />
+    <text x="692" y="188" text-anchor="middle" class="val-label">78.4%</text>
+
+    <text x="660" y="505" text-anchor="middle" class="label" style="font-size:13px;">Hindi</text>
+    <text x="660" y="522" text-anchor="middle" class="subtitle">(Devanagari Script)</text>
+    <text x="660" y="542" text-anchor="middle" class="numeral">406</text>
+  </g>
+
+  <text x="450" y="585" text-anchor="middle" class="subtitle">Cross-lingual semantic retrieval using multilingual translation gating &amp; dual-script section boosting.</text>
+</svg>

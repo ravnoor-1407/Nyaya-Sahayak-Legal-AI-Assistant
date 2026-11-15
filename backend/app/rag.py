@@ -240,6 +240,67 @@ def to_english(text: str) -> str:
     return out
 
 
+# ---------- Bidirectional IPC <-> BNS Concordance Resolver ----------
+_CONCORDANCE_MAP_FILE = _DATA_DIR / "raw" / "ipc_bns_map.csv"
+IPC_TO_BNS: dict[str, dict[str, str]] = {}
+BNS_TO_IPC: dict[str, dict[str, str]] = {}
+
+if _CONCORDANCE_MAP_FILE.exists():
+    try:
+        import csv
+        with open(_CONCORDANCE_MAP_FILE, encoding="utf-8") as f:
+            for r in csv.DictReader(f):
+                ipc_sec = (r.get("IPC_Section") or "").strip()
+                bns_sec = (r.get("BNS_Section") or "").strip()
+                if ipc_sec:
+                    clean_ipc = re.sub(r"[^\w]", "", ipc_sec).upper()
+                    IPC_TO_BNS[clean_ipc] = r
+                if bns_sec:
+                    base_bns = re.sub(r"\(.*?\)", "", bns_sec).strip().upper()
+                    clean_bns = re.sub(r"[^\w]", "", bns_sec).upper()
+                    BNS_TO_IPC[clean_bns] = r
+                    if base_bns and base_bns not in BNS_TO_IPC:
+                        BNS_TO_IPC[base_bns] = r
+    except Exception as ex:
+        print(f"[RAG] Warning: Could not load concordance map: {ex}")
+
+
+def resolve_concordance_expansions(q: str) -> tuple[list[str], list[str]]:
+    """Detect IPC/BNS references in the query and generate cross-statute expansion texts and section numbers."""
+    expanded_texts: list[str] = []
+    extra_boost_sections: list[str] = []
+
+    # 1. Detect IPC mentions (e.g. IPC 420, 302 IPC, Section 420 IPC)
+    ipc_nums = re.findall(r"(?:ipc|indian penal code|आईपीसी)\s*(?:section|sec\.?|धारा|ਧਾਰਾ)?\s*(\d{1,3}[A-Za-z]?)", q, re.I)
+    ipc_nums += re.findall(r"(\d{1,3}[A-Za-z]?)\s*(?:section|sec\.?|धारा|ਧਾਰਾ)?\s*(?:ipc|indian penal code|आईपीसी)", q, re.I)
+    for n in set(ipc_nums):
+        clean = n.upper()
+        if clean in IPC_TO_BNS:
+            row = IPC_TO_BNS[clean]
+            bns_sec = row.get("BNS_Section", "").strip()
+            bns_title = row.get("BNS_Title", "").strip()
+            if bns_sec:
+                expanded_texts.append(f"Bharatiya Nyaya Sanhita Section {bns_sec} {bns_title}")
+                base_bns = re.sub(r"\(.*?\)", "", bns_sec).strip()
+                extra_boost_sections.append(base_bns)
+                extra_boost_sections.append(bns_sec)
+
+    # 2. Detect BNS mentions (e.g. BNS 318, 103 BNS, Section 318 BNS)
+    bns_nums = re.findall(r"(?:bns|nyaya sanhita|बीएनएस|ਬੀਐਨਐਸ)\s*(?:section|sec\.?|धारा|ਧਾਰਾ)?\s*(\d{1,3}[A-Za-z]?)", q, re.I)
+    bns_nums += re.findall(r"(\d{1,3}[A-Za-z]?)\s*(?:section|sec\.?|धारा|ਧਾਰਾ)?\s*(?:bns|nyaya sanhita|बीएनएस|ਬੀਐਨਐਸ)", q, re.I)
+    for n in set(bns_nums):
+        clean = n.upper()
+        if clean in BNS_TO_IPC:
+            row = BNS_TO_IPC[clean]
+            ipc_sec = row.get("IPC_Section", "").strip()
+            ipc_title = row.get("IPC_Title", "").strip()
+            if ipc_sec:
+                expanded_texts.append(f"Indian Penal Code IPC Section {ipc_sec} {ipc_title}")
+                extra_boost_sections.append(ipc_sec)
+
+    return expanded_texts, extra_boost_sections
+
+
 # ---------- IPC -> BNS mapping expansion ----------
 def expand_mapping(c: Chunk) -> list[int]:
     # Legacy IPC mapping chunks reference their corresponding BNS sections by number.
@@ -257,18 +318,21 @@ def retrieve(question: str, k: int = 8) -> list[Chunk]:
     """Run hybrid retrieval and return the highest-ranked legal chunks.
 
     Reciprocal-rank fusion combines dense semantic results with TF-IDF keyword
-    results. Exact section references and title matches add focused signals;
-    IPC mapping chunks can then expand to their corresponding BNS chunks.
+    results. Exact section references, concordance expansions, and title matches add focused signals.
     """
-    # Hybrid retrieval balances semantic similarity with exact legal-text cues.
     n = 20
     q_en = to_english(question)
     queries: list[str] = [question] if q_en == question else [question, q_en]
     scores: dict[int, float] = {}
     dense_dist: dict[int, float] = {}
 
-    # Semantic retrieval supports both the original-language and translated query.
-    # Reciprocal-rank contributions keep scores comparable across retrieval methods.
+    # Dynamic Concordance Expansion: inject corresponding BNS/IPC texts
+    concordance_texts, extra_sections = resolve_concordance_expansions(question)
+    for ext in concordance_texts:
+        if ext not in queries:
+            queries.append(ext)
+
+    # Semantic retrieval supports original-language, translated, and concordance queries.
     for qq in queries:
         try:
             q_emb = _get_query_embedding(qq)
@@ -286,32 +350,32 @@ def retrieve(question: str, k: int = 8) -> list[Chunk]:
     if USE_KEYWORD:
         vectorizer: Any = TFIDF
         matrix: Any = MATRIX
-        query_matrix: Any = vectorizer.transform([q_en])
-        score_matrix: Any = matrix @ query_matrix.T
-        sims: list[float] = cast(
-            list[float], score_matrix.toarray().ravel().tolist())
-        ranked_indices = sorted(
-            range(len(sims)), key=lambda idx: sims[idx], reverse=True)[:n]
-        for rank, idx in enumerate(ranked_indices):
-            if sims[idx] > 0:
-                scores[idx] = scores.get(idx, 0) + 1 / (60 + rank)
+        for q_lex in queries:
+            query_matrix: Any = vectorizer.transform([q_lex])
+            score_matrix: Any = matrix @ query_matrix.T
+            sims: list[float] = cast(
+                list[float], score_matrix.toarray().ravel().tolist())
+            ranked_indices = sorted(
+                range(len(sims)), key=lambda idx: sims[idx], reverse=True)[:n]
+            for rank, idx in enumerate(ranked_indices):
+                if sims[idx] > 0:
+                    scores[idx] = scores.get(idx, 0) + 1 / (60 + rank)
 
-    # Give explicit section/article references a strong boost, scoped to the Act.
+    # Give explicit section/article references and concordance sections a strong boost.
     if USE_SECTION:
         prefix = act_hint(queries)
+        target_sections = {s.upper() for s in extra_sections}
         for text in queries:
             for word, num in SEC_RE.findall(text):
-                is_article = word.lower() in ARTICLE_WORDS
-                for idx, c in enumerate(CHUNKS):
-                    if c["section"].upper() != num.upper():
-                        continue
-                    if is_article:
-                        ok = c["unit"] == "Article"
-                    else:
-                        ok = (c["act"].startswith(prefix)
-                              and c["unit"] != "Article")
-                    if ok:
-                        scores[idx] = scores.get(idx, 0) + 1.0
+                target_sections.add(num.upper())
+
+        for idx, c in enumerate(CHUNKS):
+            c_sec = c["section"].upper()
+            base_sec = re.sub(r"\(.*?\)", "", c_sec).strip()
+            if c_sec in target_sections or base_sec in target_sections:
+                ok = (c["act"].startswith(prefix) or c["act"] == "IPC to BNS Mapping" or c["act"] == BNS_ACT)
+                if ok:
+                    scores[idx] = scores.get(idx, 0) + 1.2
 
     # Boost chunks whose legal title directly matches the query's subject.
     if USE_TITLE:
@@ -364,9 +428,59 @@ CONTEXT:
 QUESTION: {question}
 ANSWER:"""
 
-# LLM answer generstion flow
-def answer(question: str, lang: str = "en") -> tuple[str, list[dict[str, Any]], bool]:
-    """Retrieve supporting chunks, generate a grounded answer, and expose sources."""
+def audit_grounding(answer_text: str, sources: list[dict[str, Any]]) -> dict[str, Any]:
+    """Audit the generated response against retrieved statutory sources for hallucination detection."""
+    source_sections: set[str] = set()
+    for s in sources:
+        sec = s.get("section", "").upper()
+        if sec:
+            source_sections.add(sec)
+            base = re.sub(r"\(.*?\)", "", sec).strip()
+            if base:
+                source_sections.add(base)
+
+    bracket_cites = re.findall(r"\[([^\]]+)\]", answer_text)
+    inline_cites = re.findall(
+        r"\b(?:Section|Sec\.?|धारा|ਧਾਰਾ|Article|अनुच्छेद|ਅਨੁਛੇਦ)\s*(\d{1,3}[A-Za-z]?(?:\(\d+\))?)",
+        answer_text, re.I
+    )
+
+    raw_candidates: set[str] = set()
+    for b in bracket_cites:
+        cleaned = b.strip()
+        if cleaned and not cleaned.lower().startswith("emergency"):
+            raw_candidates.add(cleaned)
+    for num in inline_cites:
+        raw_candidates.add(f"Section {num.strip()}")
+
+    verified: list[str] = []
+    unverified: list[str] = []
+
+    for c in raw_candidates:
+        m = re.search(r"\b(\d{1,3}[A-Za-z]?)", c)
+        num = m.group(1).upper() if m else ""
+        if num and (num in source_sections or any(num in s_sec for s_sec in source_sections)):
+            verified.append(c)
+        elif any(act_word in c.lower() for act_word in ["bns", "ipc", "bnss", "bsa", "constitution"]) and any(num in s_sec for s_sec in source_sections):
+            verified.append(c)
+        else:
+            unverified.append(c)
+
+    total = len(verified) + len(unverified)
+    score = round(len(verified) / total, 2) if total > 0 else 1.0
+
+    return {
+        "total_citations": total,
+        "verified_citations": sorted(list(set(verified))),
+        "unverified_citations": sorted(list(set(unverified))),
+        "grounding_score": score,
+        "is_hallucination_free": len(unverified) == 0
+    }
+
+
+# LLM answer generation flow
+def answer(question: str, lang: str = "en") -> tuple[str, list[dict[str, Any]], bool, dict[str, Any]]:
+    """Retrieve supporting chunks, generate a grounded answer, and audit sources for hallucination detection."""
     # Auto-detect language if question is written in Indic script and lang is default/en
     hi_count = sum(1 for ch in question if "\u0900" <= ch <= "\u097f")
     pa_count = sum(1 for ch in question if "\u0a00" <= ch <= "\u0a7f")
@@ -376,7 +490,10 @@ def answer(question: str, lang: str = "en") -> tuple[str, list[dict[str, Any]], 
     hits = retrieve(question, k=6)
     has_dense = any(h.get("has_dense", False) for h in hits)
     if not hits or (has_dense and min(h["distance"] for h in hits) > MAX_DIST):
-        return NOT_FOUND.get(lang, NOT_FOUND["en"]), [], False
+        return NOT_FOUND.get(lang, NOT_FOUND["en"]), [], False, {
+            "total_citations": 0, "verified_citations": [], "unverified_citations": [],
+            "grounding_score": 0.0, "is_hallucination_free": True
+        }
     context = "\n\n".join(
         "[" + label(h) + "] " + h["title"] + "\n" + h["text"][:1200]
         for h in hits)
@@ -387,4 +504,5 @@ def answer(question: str, lang: str = "en") -> tuple[str, list[dict[str, Any]], 
                 "unit": h["unit"], "title": h["title"],
                 "snippet": h["text"][:500], "url": h.get("source_url", ""),
                 "distance": round(h["distance"], 3)} for h in hits]
-    return text, sources, True
+    audit = audit_grounding(text, sources)
+    return text, sources, True, audit

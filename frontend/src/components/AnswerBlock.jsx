@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { Volume2, Square, ThumbsUp, ThumbsDown, Copy, Check } from "lucide-react";
+import { Volume2, Square, ThumbsUp, ThumbsDown, Copy, Check, ShieldCheck } from "lucide-react";
 import { useLang } from "../LangContext";
 import { sendFeedback } from "../api";
 
@@ -28,6 +28,7 @@ export default function AnswerBlock({
   lang = "en",
   compact = false,
   feedback = true,
+  grounding_audit = null,
 }) {
   const { tr } = useLang();
   const [open, setOpen] = useState(null);
@@ -114,6 +115,19 @@ export default function AnswerBlock({
               {active.snippet}
             </div>
           )}
+        </div>
+      )}
+
+      {grounding_audit && grounding_audit.total_citations > 0 && (
+        <div className="mt-2.5 flex items-center gap-1.5 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-500/10 border border-emerald-500/30 rounded-lg px-2.5 py-1 w-fit">
+          <ShieldCheck size={14} className="shrink-0 text-emerald-500" />
+          <span>
+            {tr(
+              `Statutory Audit: ${Math.round(grounding_audit.grounding_score * 100)}% verified citations against official gazettes`,
+              `वैधानिक ऑडिट: आधिकारिक राजपत्रों से ${Math.round(grounding_audit.grounding_score * 100)}% सत्यापित संदर्भ`,
+              `ਕਾਨੂੰਨੀ ਆਡਿਟ: ਅਧਿਕਾਰਤ ਗਜ਼ਟਾਂ ਤੋਂ ${Math.round(grounding_audit.grounding_score * 100)}% ਪ੍ਰਮਾਣਿਤ ਹਵਾਲੇ`
+            )}
+          </span>
         </div>
       )}
 
