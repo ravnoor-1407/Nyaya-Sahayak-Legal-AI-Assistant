@@ -10,7 +10,7 @@ function initial() {
   } catch (e) {
     /* ignore */
   }
-  return "dark";
+  return "light";
 }
 
 export function ThemeProvider({ children }) {

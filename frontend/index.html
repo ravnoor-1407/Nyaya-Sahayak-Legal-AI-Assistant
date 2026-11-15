@@ -22,10 +22,10 @@
       (function () {
         try {
           var t = localStorage.getItem("ns-theme");
-          if (t !== "light" && t !== "dark") t = "dark";
+          if (t !== "light" && t !== "dark") t = "light";
           document.documentElement.setAttribute("data-theme", t);
         } catch (e) {
-          document.documentElement.setAttribute("data-theme", "dark");
+          document.documentElement.setAttribute("data-theme", "light");
         }
       })();
     </script>
