@@ -402,17 +402,17 @@ export default function Auth() {
       {/* Right Column: Interactive Sign In / Sign Up Forms */}
       <section className="card card-accent card-raised p-6 sm:p-8">
         {location.state?.from === "/assistant" && (
-          <div className="mb-5 flex items-start gap-3 rounded-xl border-2 border-amber-500/80 bg-amber-100/90 dark:bg-amber-950/70 dark:border-amber-500/60 p-4 text-xs shadow-sm">
-            <Lock size={18} className="mt-0.5 shrink-0 text-amber-800 dark:text-amber-300" />
+          <div className="mb-5 flex items-start gap-3 rounded-xl border-2 border-amber-500 bg-amber-50 dark:bg-amber-950/80 dark:border-amber-500 p-4 text-xs shadow-sm">
+            <Lock size={18} className="mt-0.5 shrink-0 text-amber-700 dark:text-amber-400" />
             <div>
-              <div className="font-extrabold text-sm text-amber-950 dark:text-amber-100 tracking-tight">
+              <div className="font-black text-sm text-amber-950 dark:text-amber-100 tracking-tight">
                 {tr(
                   "Sign in required to consult AI Assistant",
                   "एआई सहायक से पूछने के लिए साइन इन आवश्यक है",
                   "ਏਆਈ ਸਹਾਇਕ ਨੂੰ ਪੁੱਛਣ ਲਈ ਸਾਈਨ ਇਨ ਲਾਜ਼ਮੀ ਹੈ"
                 )}
               </div>
-              <div className="mt-1 text-xs font-semibold text-amber-900 dark:text-amber-200 leading-relaxed">
+              <div className="mt-1 text-xs font-semibold text-amber-950/90 dark:text-amber-200 leading-relaxed">
                 {tr(
                   "Please sign in with Google or Email code to continue to the AI Legal Assistant.",
                   "एआई कानूनी सहायक का उपयोग करने के लिए कृपया Google या ईमेल कोड से साइन इन करें।",

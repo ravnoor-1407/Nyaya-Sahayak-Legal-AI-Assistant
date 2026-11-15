@@ -383,8 +383,8 @@ export default function FirDraftStudio() {
           </div>
 
           <div className="flex items-center justify-between pt-2">
-            <span className="text-[11px] text-muted flex items-center gap-1.5">
-              <AlertCircle size={14} className="text-accent shrink-0" />
+            <span className="text-xs font-semibold text-ink/80 flex items-center gap-1.5">
+              <AlertCircle size={15} className="text-accent shrink-0" />
               {tr(
                 "Drafts are formatted under modern 2023 statutes with verification declarations.",
                 "प्रारूप 2023 के आधुनिक कानूनों के तहत तैयार किए जाते हैं।",
@@ -410,13 +410,13 @@ export default function FirDraftStudio() {
 
       {/* Generated Draft Preview */}
       {draft && (
-        <div className="card card-accent card-raised p-6 sm:p-8 relative bg-white dark:bg-slate-900 border border-amber-500/30">
+        <div className="card card-accent card-raised p-6 sm:p-8 relative bg-surface border-2 border-line">
           <div className="flex items-center justify-between pb-4 mb-4 border-b border-line print:hidden">
             <div className="flex items-center gap-2">
-              <span className="tone-icon-sm" style={{ background: "rgba(16,185,129,0.12)", color: "#10b981" }}>
+              <span className="tone-icon-sm" style={{ background: "rgba(16,185,129,0.15)", color: "#10b981" }}>
                 <Check size={16} />
               </span>
-              <span className="text-sm font-bold text-ink">
+              <span className="text-sm font-extrabold text-ink">
                 {tr("Statutory Legal Draft Ready", "वैधानिक कानूनी प्रारूप तैयार है", "ਕਾਨੂੰਨੀ ਡਰਾਫਟ ਤਿਆਰ ਹੈ")}
               </span>
             </div>
@@ -424,7 +424,7 @@ export default function FirDraftStudio() {
               <button
                 type="button"
                 onClick={handleCopy}
-                className="btn btn-sm btn-ghost flex items-center gap-1.5 text-xs"
+                className="btn btn-sm btn-ghost flex items-center gap-1.5 text-xs font-bold text-ink hover:bg-surface-2"
               >
                 {copied ? <Check size={14} className="text-emerald-500" /> : <Copy size={14} />}
                 <span>{copied ? tr("Copied!", "कॉपी हो गया!", "ਕਾਪੀ ਹੋ ਗਿਆ!") : tr("Copy Text", "टेक्स्ट कॉपी करें", "ਟੈਕਸਟ ਕਾਪੀ ਕਰੋ")}</span>
@@ -432,7 +432,7 @@ export default function FirDraftStudio() {
               <button
                 type="button"
                 onClick={handleDownloadDoc}
-                className="btn btn-sm btn-ghost border border-line flex items-center gap-1.5 text-xs"
+                className="btn btn-sm btn-ghost border border-line flex items-center gap-1.5 text-xs font-bold text-ink hover:bg-surface-2"
               >
                 <Download size={14} />
                 <span>{tr("Word (.doc)", "वर्ड (.doc)", "ਵਰਡ (.doc)")}</span>
@@ -440,7 +440,7 @@ export default function FirDraftStudio() {
               <button
                 type="button"
                 onClick={handlePrint}
-                className="btn btn-sm btn-primary flex items-center gap-1.5 text-xs"
+                className="btn btn-sm btn-primary flex items-center gap-1.5 text-xs font-bold"
               >
                 <Printer size={14} />
                 <span>{tr("Print / PDF", "प्रिंट / पीडीएफ", "ਪ੍ਰਿੰਟ / ਪੀਡੀਐਫ")}</span>
@@ -451,7 +451,7 @@ export default function FirDraftStudio() {
           {/* Printable Letterhead Format */}
           <div
             id="printable-legal-draft"
-            className="p-6 sm:p-8 border border-gray-300 dark:border-gray-700 bg-amber-500/[0.02] rounded-lg font-mono text-xs sm:text-sm text-gray-900 dark:text-gray-100 whitespace-pre-wrap leading-relaxed selection:bg-amber-500/20"
+            className="p-6 sm:p-8 border-2 border-line bg-surface-2 rounded-xl font-mono text-xs sm:text-sm text-ink whitespace-pre-wrap leading-relaxed selection:bg-amber-500/20 shadow-inner"
           >
             {draft}
           </div>

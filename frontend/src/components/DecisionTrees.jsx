@@ -443,17 +443,17 @@ export default function DecisionTrees() {
 
       {/* QUESTION OR RESULT DISPLAY */}
       {currentNode ? (
-        <div className="card card-accent card-raised p-6 sm:p-8 bg-white dark:bg-slate-900 border border-line space-y-6">
+        <div className="card card-accent card-raised p-6 sm:p-8 bg-surface border border-line space-y-6">
           {/* Breadcrumb / Step tracker */}
           <div className="flex items-center justify-between text-xs text-muted pb-3 border-b border-line">
-            <span className="font-semibold text-accent uppercase tracking-wider">
+            <span className="font-extrabold text-accent uppercase tracking-wider text-xs">
               {tr("Step", "कदम", "ਕਦਮ")} {history.length + 1}
             </span>
             {history.length > 0 && (
               <button
                 type="button"
                 onClick={handleGoBack}
-                className="text-xs text-accent hover:underline flex items-center gap-1"
+                className="text-xs text-accent hover:underline flex items-center gap-1 font-bold"
               >
                 &larr; {tr("Back to previous question", "पिछले प्रश्न पर लौटें", "ਪਿਛਲੇ ਸਵਾਲ 'ਤੇ ਵਾਪਸ")}
               </button>
@@ -461,10 +461,10 @@ export default function DecisionTrees() {
           </div>
 
           <div>
-            <h3 className="text-base sm:text-lg font-bold text-ink">
+            <h3 className="text-lg sm:text-xl font-black text-ink tracking-tight">
               {currentNode.question}
             </h3>
-            <p className="text-xs text-muted mt-1">
+            <p className="text-xs sm:text-sm text-muted mt-1 font-medium leading-relaxed">
               {currentNode.subtitle}
             </p>
           </div>
@@ -476,19 +476,19 @@ export default function DecisionTrees() {
                 key={opt.id}
                 type="button"
                 onClick={() => handleSelectOption(opt)}
-                className="w-full text-left p-4 sm:p-5 rounded-2xl border border-line bg-surface/40 hover:border-accent hover:bg-accent/5 transition-all group flex items-start gap-4"
+                className="w-full text-left p-4 sm:p-5 rounded-2xl border-2 border-line hover:border-accent bg-surface/70 hover:bg-surface transition-all group flex items-start gap-4 shadow-xs"
               >
                 <div className="text-2xl shrink-0 mt-0.5">{opt.icon}</div>
                 <div className="flex-1">
-                  <div className="text-sm font-bold text-ink group-hover:text-accent transition-colors">
+                  <div className="text-sm sm:text-base font-bold text-ink group-hover:text-amber-800 dark:group-hover:text-amber-300 transition-colors">
                     {opt.title}
                   </div>
-                  <div className="text-xs text-muted mt-0.5 leading-relaxed">
+                  <div className="text-xs text-muted mt-1 leading-relaxed font-medium">
                     {opt.detail}
                   </div>
                 </div>
-                <div className="p-2 rounded-full bg-surface group-hover:bg-accent/20 group-hover:text-accent transition-all shrink-0 mt-1">
-                  <ArrowRight size={16} />
+                <div className="p-2.5 rounded-full bg-surface-2 group-hover:bg-accent/20 transition-all shrink-0 mt-1 border border-line">
+                  <ArrowRight size={16} className="text-ink group-hover:text-accent" />
                 </div>
               </button>
             ))}
@@ -544,7 +544,7 @@ export default function DecisionTrees() {
           </div>
 
           {/* Action Checklist & Helpline */}
-          <div className="card card-accent card-raised p-6 sm:p-8 bg-white dark:bg-slate-900 border border-line space-y-5">
+          <div className="card card-accent card-raised p-6 sm:p-8 bg-surface border border-line space-y-5">
             <div>
               <h4 className="text-sm font-bold text-ink uppercase tracking-wider flex items-center gap-2">
                 <CheckCircle2 size={16} className="text-emerald-500" />

@@ -194,7 +194,13 @@ export default function Navbar() {
   };
 
   return (
-    <header className="sticky top-3 z-40 px-3">
+    <header
+      className={`sticky top-0 z-40 px-3 py-2 transition-all duration-200 ${
+        scrolled
+          ? "bg-surface/90 backdrop-blur-md shadow-xs border-b border-line/40"
+          : "bg-transparent"
+      }`}
+    >
       <div ref={wrap} className="relative mx-auto max-w-7xl">
         <div
           className={

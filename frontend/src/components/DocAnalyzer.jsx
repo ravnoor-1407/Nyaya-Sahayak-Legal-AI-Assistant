@@ -535,15 +535,16 @@ Standard civil rights and contract law protections apply.
 
           {/* Extraction Confirmation Banner if file was read */}
           {extractionMsg && (
-            <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-between text-xs text-emerald-800 dark:text-emerald-200">
-              <span className="flex items-center gap-1.5 font-medium">
-                <CheckCircle2 size={14} className="text-emerald-500 shrink-0" />
+            <div className="p-3 rounded-xl bg-emerald-100 dark:bg-emerald-950/70 border-2 border-emerald-600/70 flex items-center justify-between text-xs text-emerald-950 dark:text-emerald-100 shadow-xs">
+              <span className="flex items-center gap-2 font-bold">
+                <CheckCircle2 size={16} className="text-emerald-800 dark:text-emerald-300 shrink-0" />
                 {extractionMsg}
               </span>
               <button
                 type="button"
                 onClick={() => setExtractionMsg("")}
-                className="text-emerald-600 hover:text-emerald-800 ml-2"
+                className="text-emerald-900 dark:text-emerald-200 hover:text-emerald-950 font-extrabold ml-2 p-1"
+                aria-label="Dismiss message"
               >
                 ✕
               </button>
@@ -630,21 +631,21 @@ Standard civil rights and contract law protections apply.
 
       {/* FANCY ERROR SCREEN: NON-LEGAL DOCUMENT DETECTED */}
       {invalidDoc && invalidDoc.isInvalid && (
-        <div className="card p-6 sm:p-8 rounded-2xl bg-amber-500/10 border-2 border-amber-500/40 shadow-lg space-y-5">
+        <div className="card p-6 sm:p-8 rounded-2xl bg-amber-50 dark:bg-amber-950/80 border-2 border-amber-500 dark:border-amber-600 shadow-md space-y-5">
           <div className="flex items-start gap-4">
-            <div className="p-3.5 rounded-full bg-amber-500 text-white shadow-md shrink-0">
+            <div className="p-3 rounded-2xl bg-amber-500 text-slate-950 shadow-md shrink-0">
               <AlertTriangle size={32} />
             </div>
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="badge bg-amber-500/20 text-amber-900 dark:text-amber-200 border border-amber-500/40 font-bold text-xs uppercase px-2.5 py-0.5">
+                <span className="badge bg-amber-200 dark:bg-amber-900/80 text-amber-950 dark:text-amber-100 border border-amber-600 font-extrabold text-xs uppercase px-2.5 py-0.5">
                   {tr("NON-LEGAL DOCUMENT DETECTED", "अमान्य दस्तावेज़ — केवल कानूनी दस्तावेज़ समर्थित हैं", "ਗੈਰ-ਕਾਨੂੰਨੀ ਦਸਤਾਵੇਜ਼")}
                 </span>
               </div>
-              <h3 className="text-lg sm:text-xl font-extrabold text-amber-950 dark:text-amber-100">
+              <h3 className="text-xl sm:text-2xl font-black text-amber-950 dark:text-amber-100 tracking-tight">
                 {tr("Not a Valid Legal Document — Analysis Paused", "अमान्य दस्तावेज़ — केवल कानूनी दस्तावेज़ विश्लेषित किए जाते हैं", "ਗੈਰ-ਕਾਨੂੰਨੀ ਦਸਤਾਵੇਜ਼ — ਵਿਸ਼ਲੇਸ਼ਣ ਰੋਕਿਆ ਗਿਆ")}
               </h3>
-              <p className="text-xs sm:text-sm text-amber-900 dark:text-amber-200 leading-relaxed">
+              <p className="text-xs sm:text-sm text-amber-950 dark:text-amber-100 font-medium leading-relaxed">
                 {tr(
                   "NyayaSahayak's Scanner is engineered exclusively for official legal notices, police summons (BNSS/CrPC), court warrants, 15-day cheque dishonour demand letters (Sec 138 NI Act), and tenancy/commercial contracts. The document you submitted appears to be an academic assignment, resume, or general non-legal file.",
                   "न्याय सहायक का स्कैनर केवल आधिकारिक कानूनी नोटिसों, पुलिस समन (बीएनएसएस), अदालती वारंट, चेक बाउंस नोटिस (धारा 138) और कानूनी अनुबंधों के विश्लेषण हेतु तैयार किया गया है। आपका दस्तावेज़ एक सामान्य असाइनमेंट या गैर-कानूनी फाइल प्रतीत होता है।",
@@ -655,13 +656,13 @@ Standard civil rights and contract law protections apply.
           </div>
 
           {/* Two Guidance Columns */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 pt-2 border-t border-amber-500/20">
-            <div className="p-3.5 rounded-xl bg-surface/70 border border-line">
-              <div className="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5 mb-1.5">
-                <CheckCircle2 size={15} />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-amber-400 dark:border-amber-700/60">
+            <div className="p-4 rounded-xl bg-surface border-2 border-emerald-500/50 shadow-xs">
+              <div className="text-xs font-black text-emerald-950 dark:text-emerald-200 flex items-center gap-1.5 mb-2">
+                <CheckCircle2 size={16} className="text-emerald-700 dark:text-emerald-400" />
                 {tr("Documents You CAN Scan Here:", "यहाँ समर्थित कानूनी दस्तावेज़:", "ਇੱਥੇ ਸਕੈਨ ਕਰਨ ਯੋਗ ਦਸਤਾਵੇਜ਼:")}
               </div>
-              <ul className="text-[11px] text-muted space-y-1 list-disc list-inside">
+              <ul className="text-xs text-ink font-medium space-y-1.5 list-disc list-inside">
                 <li>{tr("Police Notices & Appearance Orders (Sec 35 BNSS)", "पुलिस उपस्थिति समन व नोटिस (धारा 35 बीएनएसएस)", "ਪੁਲਿਸ ਨੋਟਿਸ (ਧਾਰਾ 35 ਬੀਐਨਐਸਐਸ)")}</li>
                 <li>{tr("Court Summons & Judicial Arrest Warrants", "अदालती समन एवं न्यायिक वारंट", "ਅਦਾਲਤੀ ਸਮਨ ਅਤੇ ਵਾਰੰਟ")}</li>
                 <li>{tr("15-Day Cheque Dishonour Notices (Sec 138 NI Act)", "15-दिवसीय चेक अनादर नोटिस (धारा 138)", "ਚੈੱਕ ਬਾਊਂਸ ਨੋਟਿਸ (ਧਾਰਾ 138)")}</li>
@@ -670,12 +671,12 @@ Standard civil rights and contract law protections apply.
               </ul>
             </div>
 
-            <div className="p-3.5 rounded-xl bg-surface/70 border border-line">
-              <div className="text-xs font-bold text-red-600 dark:text-red-400 flex items-center gap-1.5 mb-1.5">
-                <AlertOctagon size={15} />
+            <div className="p-4 rounded-xl bg-surface border-2 border-red-500/50 shadow-xs">
+              <div className="text-xs font-black text-red-950 dark:text-red-200 flex items-center gap-1.5 mb-2">
+                <AlertOctagon size={16} className="text-red-700 dark:text-red-400" />
                 {tr("Documents NOT Supported:", "असमर्थित दस्तावेज़:", "ਅਸਮਰਥਿਤ ਦਸਤਾਵੇਜ਼:")}
               </div>
-              <ul className="text-[11px] text-muted space-y-1 list-disc list-inside">
+              <ul className="text-xs text-ink font-medium space-y-1.5 list-disc list-inside">
                 <li>{tr("University Assignments, Homework & Thesis Papers", "विश्वविद्यालय असाइनमेंट, गृहकार्य व थीसिस", "ਯੂਨੀਵਰਸਿਟੀ ਅਸਾਈਨਮੈਂਟ ਅਤੇ ਥੀਸਿਸ")}</li>
                 <li>{tr("Resumes, CVs, and Job Applications", "बायोडाटा एवं नौकरी आवेदन", "ਨੌਕਰੀ ਲਈ ਰਿਜ਼ਿਊਮ")}</li>
                 <li>{tr("Software Code, Technical Manuals & Articles", "सॉफ्टवेयर कोड, तकनीकी लेख व मैनुअल", "ਤਕਨੀਕੀ ਲੇਖ ਅਤੇ ਕੋਡ")}</li>
@@ -685,29 +686,29 @@ Standard civil rights and contract law protections apply.
           </div>
 
           {/* Quick Recovery Actions */}
-          <div className="flex items-center justify-between flex-wrap gap-2 pt-2 border-t border-amber-500/20">
-            <span className="text-xs font-semibold text-muted">
+          <div className="flex items-center justify-between flex-wrap gap-2 pt-2 border-t border-amber-400 dark:border-amber-700/60">
+            <span className="text-xs font-bold text-amber-950 dark:text-amber-100">
               {tr("Try testing with a real legal sample:", "वास्तविक कानूनी नमूने के साथ परीक्षण करें:", "ਅਸਲ ਕਾਨੂੰਨੀ ਨਮੂਨੇ ਨਾਲ ਟੈਸਟ ਕਰੋ:")}
             </span>
             <div className="flex items-center gap-2 flex-wrap">
               <button
                 type="button"
                 onClick={() => handleSelectSample("bnss35")}
-                className="btn btn-sm btn-ghost border border-line text-xs font-semibold text-red-600"
+                className="btn btn-sm btn-ghost border-2 border-red-500/60 text-xs font-extrabold text-red-800 dark:text-red-200 hover:bg-red-50 dark:hover:bg-red-950/40"
               >
                 🔴 {tr("Load Police Summons", "पुलिस समन लोड करें", "ਪੁਲਿਸ ਸਮਨ")}
               </button>
               <button
                 type="button"
                 onClick={() => handleSelectSample("ni138")}
-                className="btn btn-sm btn-ghost border border-line text-xs font-semibold text-red-600"
+                className="btn btn-sm btn-ghost border-2 border-red-500/60 text-xs font-extrabold text-red-800 dark:text-red-200 hover:bg-red-50 dark:hover:bg-red-950/40"
               >
                 🔴 {tr("Load Cheque Bounce Notice", "चेक बाउंस नोटिस", "ਚੈੱਕ ਬਾਊਂਸ ਨੋਟਿਸ")}
               </button>
               <button
                 type="button"
                 onClick={handleClear}
-                className="btn btn-sm btn-ghost text-xs text-muted hover:text-ink ml-1"
+                className="btn btn-sm btn-ghost text-xs text-ink font-bold border border-line ml-1 hover:bg-surface-2"
               >
                 {tr("Clear Form", "फ़ॉर्म साफ़ करें", "ਸਾਫ਼ ਕਰੋ")}
               </button>

@@ -351,7 +351,7 @@ export default function BailCalculator() {
             </div>
             <div className="p-3.5 rounded-xl bg-surface/60 border border-line">
               <div className="text-[11px] text-muted font-medium">{tr("Mandatory Threshold", "अनिवार्य सीमा", "ਲਾਜ਼ਮੀ ਸੀਮਾ")}</div>
-              <div className="text-2xl font-extrabold text-accent mt-0.5">{thresholdDays} <span className="text-xs font-normal text-muted">{tr("Days", "दिन", "ਦਿਨ")}</span></div>
+              <div className="text-2xl font-extrabold text-amber-800 dark:text-amber-300 mt-0.5">{thresholdDays} <span className="text-xs font-normal text-muted">{tr("Days", "दिन", "ਦਿਨ")}</span></div>
             </div>
             <div className="p-3.5 rounded-xl bg-surface/60 border border-line">
               <div className="text-[11px] text-muted font-medium">{tr("Statutory Ratio", "वैधानिक अंश", "ਕਾਨੂੰਨੀ ਅੰਸ਼")}</div>
@@ -423,30 +423,32 @@ export default function BailCalculator() {
               </button>
             </div>
           ) : (
-            <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-start justify-between gap-4 flex-wrap">
+            <div className="p-4 sm:p-5 rounded-2xl bg-amber-100 dark:bg-amber-950/70 border-2 border-amber-500 dark:border-amber-600 flex items-start justify-between gap-4 flex-wrap shadow-xs">
               <div className="flex items-start gap-3">
-                <Info className="text-amber-500 shrink-0 mt-0.5" size={20} />
-                <div className="text-xs text-amber-900 dark:text-amber-200 max-w-xl">
-                  <span className="font-bold block text-sm mb-0.5">
+                <Info className="text-amber-800 dark:text-amber-300 shrink-0 mt-0.5" size={22} />
+                <div className="text-xs max-w-xl space-y-1">
+                  <span className="font-extrabold text-amber-950 dark:text-amber-100 block text-sm tracking-tight">
                     {tr(
                       `Custody in Progress (${daysRemaining} Days Remaining)`,
                       `हिरासत अवधि जारी (${daysRemaining} दिन शेष)`,
                       `ਹਿਰਾਸਤ ਜਾਰੀ (${daysRemaining} ਦਿਨ ਬਾਕੀ)`
                     )}
                   </span>
-                  {tr(
-                    `Mandatory statutory bail entitlement under Section 479 will activate on ${eligibilityDate} upon completing ${thresholdDays} days in custody.`,
-                    `${thresholdDays} दिन पूरे होने पर ${eligibilityDate} को धारा 479 के तहत अनिवार्य जमानत का अधिकार सक्रिय होगा।`,
-                    `${thresholdDays} ਦਿਨ ਪੂਰੇ ਹੋਣ 'ਤੇ ${eligibilityDate} ਨੂੰ ਲਾਜ਼ਮੀ ਜ਼ਮਾਨਤ ਦਾ ਅਧਿਕਾਰ ਮਿਲੇਗਾ।`
-                  )}
+                  <p className="text-amber-900 dark:text-amber-200 font-medium leading-relaxed">
+                    {tr(
+                      `Mandatory statutory bail entitlement under Section 479 will activate on ${eligibilityDate} upon completing ${thresholdDays} days in custody.`,
+                      `${thresholdDays} दिन पूरे होने पर ${eligibilityDate} को धारा 479 के तहत अनिवार्य जमानत का अधिकार सक्रिय होगा।`,
+                      `${thresholdDays} ਦਿਨ ਪੂਰੇ ਹੋਣ 'ਤੇ ${eligibilityDate} ਨੂੰ ਲਾਜ਼ਮੀ ਜ਼ਮਾਨਤ ਦਾ ਅਧਿਕਾਰ ਮਿਲੇਗਾ।`
+                    )}
+                  </p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => setShowMemo(true)}
-                className="btn btn-sm btn-ghost border border-line flex items-center gap-1.5 text-xs font-semibold"
+                className="btn btn-sm btn-ghost bg-surface border-2 border-line hover:border-accent text-ink flex items-center gap-1.5 text-xs font-bold shadow-xs"
               >
-                <FileText size={15} />
+                <FileText size={15} className="text-accent" />
                 <span>{tr("Preview Bail Petition Draft", "अर्जी प्रारूप देखें", "ਅਰਜ਼ੀ ਪ੍ਰਾਰੂਪ ਦੇਖੋ")}</span>
               </button>
             </div>
