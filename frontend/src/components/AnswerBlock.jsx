@@ -119,9 +119,9 @@ export default function AnswerBlock({
       )}
 
       {grounding_audit && grounding_audit.total_citations > 0 && (
-        <div className="mt-2.5 flex items-center gap-1.5 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-500/10 border border-emerald-500/30 rounded-lg px-2.5 py-1 w-fit">
-          <ShieldCheck size={14} className="shrink-0 text-emerald-500" />
-          <span>
+        <div className="mt-3 flex items-center gap-2 text-xs font-bold text-emerald-950 dark:text-emerald-100 bg-emerald-100/95 dark:bg-emerald-950/70 border-2 border-emerald-600/60 dark:border-emerald-500/50 rounded-lg px-3 py-1.5 w-fit shadow-xs">
+          <ShieldCheck size={15} className="shrink-0 text-emerald-800 dark:text-emerald-300" />
+          <span className="leading-snug">
             {tr(
               `Statutory Audit: ${Math.round(grounding_audit.grounding_score * 100)}% verified citations against official gazettes`,
               `वैधानिक ऑडिट: आधिकारिक राजपत्रों से ${Math.round(grounding_audit.grounding_score * 100)}% सत्यापित संदर्भ`,

@@ -189,12 +189,12 @@ export default function CitizenHub({ defaultTab = "handbooks" }) {
                 onClick={() => setActiveTab(t.id)}
                 className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all border ${
                   isSel
-                    ? "bg-accent text-white border-accent shadow-md"
-                    : "bg-surface/60 text-muted hover:text-ink hover:bg-surface border-line"
+                    ? "tab-active"
+                    : "bg-surface text-muted hover:text-ink hover:bg-surface-2 border-line"
                 }`}
               >
-                <Icon size={14} />
-                <span>{t.label}</span>
+                <Icon size={14} className={isSel ? "text-slate-950" : "text-muted"} />
+                <span className={isSel ? "text-slate-950 font-extrabold" : ""}>{t.label}</span>
               </button>
             );
           })}

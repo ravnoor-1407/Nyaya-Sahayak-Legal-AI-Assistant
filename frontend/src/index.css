@@ -1,6 +1,13 @@
 @import "tailwindcss";
 
 @theme static {
+  --color-accent: #f59e0b;
+  --color-accent-deep: #d97706;
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
   --font-sans: "Plus Jakarta Sans", "Noto Sans Devanagari",
     "Noto Sans Gurmukhi", system-ui, sans-serif;
   --font-serif: "Playfair Display", "Noto Serif Devanagari",
@@ -127,6 +134,24 @@
   .text-accent { color: var(--accent-ink); }
   .bg-surface { background: var(--surface); }
   .bg-surface-2 { background: var(--surface-2); }
+  .bg-accent { background-color: var(--accent); }
+  .border-accent { border-color: var(--accent); }
+
+  /* Navigation tab active state */
+  .tab-active {
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%) !important;
+    color: #0f172a !important;
+    border-color: #d97706 !important;
+    box-shadow: 0 4px 14px rgba(217, 119, 6, 0.4) !important;
+    font-weight: 800 !important;
+  }
+  :root[data-theme="dark"] .tab-active {
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 60%, #d97706 100%) !important;
+    color: #020617 !important;
+    border-color: #f59e0b !important;
+    box-shadow: 0 4px 16px rgba(245, 158, 11, 0.45) !important;
+    font-weight: 800 !important;
+  }
 
   /* ---------- glass surfaces ---------- */
   .card {
