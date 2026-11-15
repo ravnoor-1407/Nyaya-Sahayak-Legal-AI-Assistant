@@ -101,16 +101,21 @@ export const draftDocument = (doc_type, inputs, lang = "en") =>
 export const analyzeDocument = (text, lang = "en") =>
   post("/api/analyze-doc", { text, lang });
 
-export const extractTextFromFile = async (file) => {
+export const analyzeDocumentFile = async (file, lang = "en") => {
   const formData = new FormData();
   formData.append("file", file);
-  const res = await fetch(API_BASE + "/api/extract-text", {
+  formData.append("lang", lang);
+
+  const res = await fetch(API_BASE + "/api/analyze-doc-file", {
     method: "POST",
-    headers: headers(),
+    headers: {
+      ...(localStorage.getItem("token") ? { Authorization: `Bearer ${localStorage.getItem("token")}` } : {}),
+    },
     body: formData,
   });
   if (!res.ok) {
-    throw new Error(`Extraction failed: ${res.statusText}`);
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || err.error || "File analysis failed");
   }
   return res.json();
 };

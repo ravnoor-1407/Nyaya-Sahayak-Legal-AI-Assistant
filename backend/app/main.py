@@ -1,16 +1,18 @@
 import json
+import os
+import re
 import time
 from collections import Counter
 from pathlib import Path
 from typing import Any, Iterable, cast
 
 import joblib  # type: ignore[reportMissingTypeStubs]
-from fastapi import FastAPI, Header, Request, UploadFile, File
+from fastapi import FastAPI, Header, Request, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
-from . import rag
+from . import rag, llm
 from .auth import db, router as auth_router, user_from_header
 import os
 from .safety import check_blocked, self_harm, danger_note, scrub  # type: ignore[reportUnknownVariableType]
@@ -454,145 +456,181 @@ Signature / Thumb Impression of Complainant
     return {"draft": draft_text.strip(), "doc_type": dt, "status": "template_fallback", "lang": lang}
 
 
-@app.post("/api/extract-text")
-async def extract_text_endpoint(file: UploadFile = File(...)) -> dict[str, Any]:
-    """Extract plain text from uploaded legal notices or contracts (.txt, .pdf, .docx)."""
-    try:
-        content = await file.read()
-        filename = file.filename or "document.txt"
-        ext = Path(filename).suffix.lower()
-        extracted = ""
+def _perform_doc_analysis(text: str, lang: str = "en", filename: str = "") -> dict[str, Any]:
+    """Helper to perform automated legal risk assessment and plain-language breakdown."""
+    text_clean = text.strip()
+    if not text_clean:
+        return {"error": "Document text cannot be empty.", "analyzed": False}
 
-        if ext == ".txt":
-            extracted = content.decode("utf-8", errors="replace")
-        elif ext == ".pdf":
-            import io
-            import pdfplumber
-            with pdfplumber.open(io.BytesIO(content)) as pdf:
-                pages = [page.extract_text() or "" for page in pdf.pages[:30]]
-                extracted = "\n\n".join(pages).strip()
-        elif ext == ".docx":
-            import io
-            import zipfile
-            import xml.etree.ElementTree as ET
-            with zipfile.ZipFile(io.BytesIO(content)) as docx:
-                xml_content = docx.read("word/document.xml")
-                tree = ET.fromstring(xml_content)
-                namespace = {"w": "http://schemas.openxmlformats.org/wordprocessingml/2006/main"}
-                texts = [node.text for node in tree.iterfind(".//w:t", namespace) if node.text]
-                extracted = " ".join(texts).strip()
-        else:
-            extracted = content.decode("utf-8", errors="ignore")
+    # Deterministic heuristics for baseline safety/danger classification
+    is_benign = bool(re.search(r"\b(receipt|no objection certificate|noc|clearance|satisfaction|full and final|settlement agreement|consent)\b", text_clean, re.I))
+    is_danger = bool(re.search(r"\b(warrant|arrest|summons|police|cheque bounce|dishonour|forfeiture|penalty|default|criminal|prosecution|138|35\(3\)|demand notice|eviction|litigation|damages|breach)\b", text_clean, re.I))
 
-        if not extracted.strip():
-            return {"error": "Could not extract readable text from the uploaded document.", "text": "", "filename": filename}
+    # LLM Prompt with structured output format
+    prompt = f"""You are a senior Indian legal analyst assessing a document for an ordinary citizen.
+Analyze the following document text:
+\"\"\"{text_clean[:4000]}\"\"\"
 
-        return {"filename": filename, "text": extracted[:25000].strip(), "chars": len(extracted)}
-    except Exception as e:
-        return {"error": f"Failed to extract document text: {str(e)}", "text": "", "filename": file.filename or "unknown"}
+Respond strictly in the following format:
+STATUS: [SAFE or DANGER]
+RISK_LEVEL: [LOW, MEDIUM, HIGH, or CRITICAL]
 
+### 1. Executive Summary (In Plain Words)
+What is this document and why did the citizen receive it? (Explain simply without confusing legal jargon)
 
-@app.post("/api/analyze-doc")
-def analyze_document(body: AnalyzeDocIn) -> dict[str, Any]:
-    """Scan and summarize legal documents, contracts, summons, and notices with automated risk ratings."""
-    text = (body.text or "").strip()
-    lang = body.lang if body.lang in ("en", "hi", "pa") else "en"
-    if not text:
-        return {"error": "Document text cannot be empty.", "analyzed": False, "is_danger": False, "risk_level": "SAFE"}
+### 2. Automated Legal Risk Assessment
+- Danger / Red Flags Detected: (Are there threats of arrest, financial forfeiture, court litigation, or criminal prosecution?)
+- Critical Deadlines: (Exact number of days to respond, appearance dates, or specify if there is no deadline)
+- Risk Severity: (Explain why this is safe or dangerous)
 
-    # Deterministic heuristic danger detection check
-    danger_pattern = r"(arrest|custody|warrant|summons|police|inquiry|investigation|section 35|section 41a|138|cheque bounce|dishonour|penal|criminal|forfeit|penalty|non-compliance|deficiency|breach|show cause|liable|evict)"
-    heuristic_danger = bool(re.search(danger_pattern, text, re.I))
-
-    prompt = f"""You are a specialized Indian legal analyst. Analyze the following legal document / notice / agreement text:
-DOCUMENT TEXT:
-\"\"\"{text[:4000]}\"\"\"
-
-FIRST LINE REQUIREMENT:
-You MUST start your response with EXACTLY one of these status tags on its own line:
-[STATUS: DANGER] -> if this document involves a police summons, threat of arrest, criminal notice, Section 138 cheque bounce demand, forfeiture of money, strict adverse legal consequences, or court appearance.
-[STATUS: SAFE] -> if this is a standard benign agreement, informational circular, receipt, or no immediate punitive/coercive threat is detected.
-
-Then provide a structured, plain-language breakdown in {lang} with these 4 sections:
-### 1. Executive Summary
-What is this document and what is its core purpose in simple words?
-
-### 2. Urgent Deadlines & Risk Level
-Identify any time windows (e.g. 7 days, 15 days), consequences of non-compliance, and overall risk rating.
-
-### 3. Key Statutory Safeguards & Rights
-What rights or protections does the individual have under Indian law (Constitution Art 21/22, BNSS, Consumer Act, NI Act, etc.)?
+### 3. Key Statutory Safeguards & Citizen Rights
+What rights protect the citizen under Indian law (e.g. Constitution Articles 21/22, BNSS Section 35, Consumer Protection Act, NI Act Section 138, etc.)?
 
 ### 4. Recommended Action Checklist
-Clear step-by-step practical instructions on what the person should do next. Format using clean bullet points."""
+Clear, numbered step-by-step instructions on what the citizen should do right now.
 
-    is_danger = heuristic_danger
-    analysis_text = ""
+Provide the text in {lang} language."""
 
     try:
         raw_output = llm.generate(prompt)
         if raw_output and len(raw_output.strip()) > 80:
             lines = raw_output.strip().splitlines()
-            first_line = lines[0].strip().upper()
-            if "STATUS: DANGER" in first_line:
-                is_danger = True
-                analysis_text = "\n".join(lines[1:]).strip()
-            elif "STATUS: SAFE" in first_line:
-                is_danger = False
-                analysis_text = "\n".join(lines[1:]).strip()
-            else:
-                analysis_text = raw_output.strip()
+            status_val = "DANGER"
+            risk_val = "HIGH"
+            content_start_idx = 0
+
+            for i, line in enumerate(lines[:6]):
+                l_str = line.strip().upper()
+                if l_str.startswith("STATUS:"):
+                    status_val = "SAFE" if "SAFE" in l_str else "DANGER"
+                    content_start_idx = max(content_start_idx, i + 1)
+                elif l_str.startswith("RISK_LEVEL:") or l_str.startswith("RISK:"):
+                    if "LOW" in l_str or "SAFE" in l_str:
+                        risk_val = "LOW"
+                    elif "CRITICAL" in l_str:
+                        risk_val = "CRITICAL"
+                    elif "MEDIUM" in l_str:
+                        risk_val = "MEDIUM"
+                    else:
+                        risk_val = "HIGH"
+                    content_start_idx = max(content_start_idx, i + 1)
+
+            cleaned_markdown = "\n".join(lines[content_start_idx:]).strip()
+            is_safe = (status_val == "SAFE" or risk_val == "LOW") and not is_danger
+
+            return {
+                "analyzed": True,
+                "is_safe": is_safe,
+                "risk_status": "safe" if is_safe else "danger",
+                "risk_level": "LOW" if is_safe else risk_val,
+                "extracted_text": text_clean[:2500],
+                "analysis": cleaned_markdown or raw_output.strip(),
+                "filename": filename,
+                "lang": lang,
+            }
     except Exception as e:
-        print(f"[DOC ANALYZE] LLM Note: {e}")
+        print(f"[DOC ANALYZER] LLM error fallback: {e}")
 
-    # Fallback heuristic analysis if LLM fails or is empty
-    if not analysis_text:
-        has_bnss_notice = bool(re.search(r"35|notice|appearance|police|summons|warrant", text, re.I))
-        has_138 = bool(re.search(r"138|cheque|negotiable|dishonour", text, re.I))
-        has_lease = bool(re.search(r"rent|lease|tenant|landlord|deposit|forfeit", text, re.I))
+    # Deterministic fallback
+    has_138 = bool(re.search(r"138|cheque|dishonour|negotiable", text_clean, re.I))
+    has_bnss_notice = bool(re.search(r"35|notice|appearance|police|summons|investigation", text_clean, re.I))
+    
+    if is_benign and not is_danger:
+        is_safe = True
+        risk_level = "LOW"
+        summary = "This document appears to be a standard acknowledgment, receipt, or no-objection certificate. It serves as legitimate proof of transaction or clearance without punitive threats."
+        risks = "- Danger / Red Flags Detected: None. No threats of arrest, prosecution, or financial forfeiture found.\n- Critical Deadlines: None. No statutory limitation clock is ticking.\n- Risk Severity: LOW. This is an informational or receipt document."
+        rights = "Standard civil law protections apply. You are entitled to keep this document as valid legal proof of payment or mutual agreement."
+        steps = "1. Verify that all personal details (name, amount, dates) are accurate.\n2. Save a digital copy and file the original safely for future tax or legal records.\n3. No urgent legal action or court appearance required."
+    elif has_138:
+        is_safe = False
+        risk_level = "CRITICAL"
+        summary = "This document is a Statutory Legal Notice under Section 138 of the Negotiable Instruments Act, 1881 regarding dishonour of a cheque."
+        risks = "- Danger / Red Flags Detected: Threat of criminal complaint under Section 138 NI Act with up to 2 years imprisonment or fine up to double the cheque amount.\n- Critical Deadlines: CRITICAL: 15-day statutory cure window from the date of receipt. Failure to pay permits criminal court filing within 30 days thereafter.\n- Risk Severity: CRITICAL DANGER. Do not ignore this document under any circumstances."
+        rights = "You have the right to inspect bank return memos, verify if a legally enforceable debt actually existed, and raise defenses (e.g. stop payment for fraud or advance security cheque)."
+        steps = "1. Immediately check the date this notice was received (day 1 of 15 starts then).\n2. Consult an advocate to prepare a formal reply within 15 days.\n3. If amount is legitimately due, pay and obtain a signed written receipt/acknowledgment."
+    elif has_bnss_notice:
+        is_safe = False
+        risk_level = "HIGH"
+        summary = "This document is a formal Notice of Appearance issued by the Police under Section 35(3) of the Bharatiya Nagarik Suraksha Sanhita, 2023 (formerly Sec 41A CrPC)."
+        risks = "- Danger / Red Flags Detected: Formal police investigation. Failure to appear can lead to arrest with prior Magistrate permission under Section 35(5) BNSS.\n- Critical Deadlines: Strict date and time of appearance mentioned in the notice.\n- Risk Severity: HIGH DANGER. Immediate legal attention required."
+        rights = "Under Section 35(3) & 35(4) BNSS, as long as you comply with the notice and appear, police CANNOT arrest you without recorded reasons and Magistrate permission. You have the right to legal counsel under Article 22(1)."
+        steps = "1. Note the exact date, time, and police station mentioned.\n2. Do NOT evade the notice. Cooperate in the inquiry.\n3. Take a copy of the notice and get your attendance marked/signed by the investigating officer.\n4. Call 15100 for free legal aid if you cannot afford an advocate."
+    else:
+        is_safe = False
+        risk_level = "MEDIUM"
+        summary = "This document contains formal legal clauses, contractual commitments, or notice terms that affect your civil rights or finances."
+        risks = "- Danger / Red Flags Detected: Review penalty clauses, forfeiture terms, or unilateral termination conditions.\n- Critical Deadlines: Check specified notice periods (usually 15 to 30 days).\n- Risk Severity: MEDIUM. Caution required before signing or consenting."
+        rights = "Unilateral or unconscionable clauses violating public policy are void under Section 23 of the Indian Contract Act."
+        steps = "1. Read every clause carefully, especially refund and termination terms.\n2. Seek clarification or legal review before signing or replying.\n3. Contact legal aid or a civil advocate if rights are being infringed."
 
-        if has_138:
-            is_danger = True
-            summary = "This document is a Statutory Legal Notice under Section 138 of the Negotiable Instruments Act, 1881 regarding dishonour of a cheque."
-            risks = "**CRITICAL RISK (RED):** A mandatory 15-day cure period applies from the date of receipt. Failure to pay within 15 days allows the complainant to file a criminal case in the Magistrate Court within the next 30 days."
-            rights = "You have the statutory right to verify the cheque memo, verify actual existing debt liability, and present defenses if the cheque was given merely as security or without consideration."
-            steps = "1. Consult an advocate immediately.\n2. Do not ignore the notice.\n3. Reply within 15 days stating your legal defense or clear the undisputed dues."
-        elif has_bnss_notice:
-            is_danger = True
-            summary = "This document is a formal Notice of Appearance under Section 35(3) of the Bharatiya Nagarik Suraksha Sanhita, 2023 (or former Section 41A CrPC)."
-            risks = "**HIGH RISK (RED):** The police are summoning you for investigation. As long as you comply with the notice, police CANNOT arrest you without prior written Magistrate sanction under Section 35(4) BNSS."
-            rights = "Under Section 35(3) and (4) BNSS, you have the right not to be arrested while complying with the terms. You have the right to have an advocate present during questioning under Article 22(1)."
-            steps = "1. Note the appearance date, time, and police station.\n2. Carry identity proof and relevant documents.\n3. Request a signed written acknowledgment of your appearance."
-        elif has_lease:
-            is_danger = True
-            summary = "This agreement contains harsh forfeiture or penalty clauses regarding security deposit or tenancy termination."
-            risks = "**HIGH RISK (RED):** Clauses threatening unilateral deposit forfeiture or illegal disconnection of utilities violate public policy."
-            rights = "Under Indian Contract Act Section 23 and tenancy law principles, unreasonable penal clauses cannot be enforced without proving actual damages."
-            steps = "1. Issue a formal legal notice disputing the penalty clause.\n2. Demand itemized accounting of deductions.\n3. Approach the Rent Authority or Consumer Commission."
-        else:
-            is_danger = False
-            summary = "This document appears to be an informational notice, standard business communication, or benign contractual extract."
-            risks = "**LOW RISK (GREEN):** No immediate penal provisions, threat of arrest, or strict statutory forfeiture detected."
-            rights = "Standard consumer and contractual protections apply. You have the right to clarify terms before signing."
-            steps = "1. Read all clauses carefully.\n2. Keep a signed copy in your records.\n3. Consult free legal aid at 15100 if you have any questions."
-
-        analysis_text = f"""### 1. Executive Summary
+    fallback_analysis = f"""### 1. Executive Summary (In Plain Words)
 {summary}
 
-### 2. Urgent Deadlines & Risk Level
+### 2. Automated Legal Risk Assessment
 {risks}
 
-### 3. Key Statutory Safeguards & Rights
+### 3. Key Statutory Safeguards & Citizen Rights
 {rights}
 
 ### 4. Recommended Action Checklist
 {steps}"""
 
     return {
-        "analysis": analysis_text,
-        "is_danger": is_danger,
-        "risk_level": "DANGER" if is_danger else "SAFE",
-        "risk_headline": "DANGER / HIGH RISK DETECTED: URGENT LEGAL ACTION REQUIRED" if is_danger else "SAFE / LOW RISK: NO IMMEDIATE COERCIVE THREAT DETECTED",
         "analyzed": True,
+        "is_safe": is_safe,
+        "risk_status": "safe" if is_safe else "danger",
+        "risk_level": risk_level,
+        "extracted_text": text_clean[:2500],
+        "analysis": fallback_analysis,
+        "filename": filename,
         "lang": lang,
     }
+
+
+@app.post("/api/analyze-doc")
+def analyze_document(body: AnalyzeDocIn) -> dict[str, Any]:
+    """Scan and summarize legal documents, contracts, summons, and notices with risk ratings."""
+    text = (body.text or "").strip()
+    lang = body.lang if body.lang in ("en", "hi", "pa") else "en"
+    return _perform_doc_analysis(text, lang)
+
+
+@app.post("/api/analyze-doc-file")
+async def analyze_document_file(
+    file: UploadFile = File(...),
+    lang: str = Form("en"),
+) -> dict[str, Any]:
+    """Extract text from uploaded legal file (.pdf, .docx, .txt) and analyze risks."""
+    filename = (file.filename or "").lower()
+    content_bytes = await file.read()
+    extracted_text = ""
+
+    if filename.endswith(".pdf"):
+        import io
+        import pypdf
+        try:
+            reader = pypdf.PdfReader(io.BytesIO(content_bytes))
+            extracted_text = "\n".join([page.extract_text() or "" for page in reader.pages])
+        except Exception as e:
+            return {"error": f"Failed to parse PDF document: {e}", "analyzed": False}
+    elif filename.endswith(".docx"):
+        import io
+        import docx
+        try:
+            doc = docx.Document(io.BytesIO(content_bytes))
+            extracted_text = "\n".join([p.text for p in doc.paragraphs if p.text])
+        except Exception as e:
+            return {"error": f"Failed to parse Word (.docx) document: {e}", "analyzed": False}
+    else:
+        # text / txt / markdown
+        try:
+            extracted_text = content_bytes.decode("utf-8")
+        except UnicodeDecodeError:
+            extracted_text = content_bytes.decode("latin-1", errors="ignore")
+
+    extracted_text = extracted_text.strip()
+    if not extracted_text:
+        return {"error": "Could not extract readable text from the uploaded file.", "analyzed": False}
+
+    return _perform_doc_analysis(extracted_text, lang, filename=file.filename or "")

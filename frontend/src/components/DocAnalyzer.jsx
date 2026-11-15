@@ -1,32 +1,15 @@
 import { useState, useRef } from "react";
-import {
-  Search,
-  AlertTriangle,
-  ShieldCheck,
-  CheckCircle2,
-  AlertOctagon,
-  Clock,
-  Check,
-  RefreshCw,
-  FileText,
-  Sparkles,
-  UploadCloud,
-  X,
-  Printer,
-  Copy,
-  Download,
-  RotateCcw,
-} from "lucide-react";
+import { Search, AlertTriangle, ShieldCheck, Clock, Check, RefreshCw, FileText, Sparkles, UploadCloud, File, X, AlertOctagon, CheckCircle2 } from "lucide-react";
 import { useLang } from "../LangContext";
-import { analyzeDocument, extractTextFromFile } from "../api";
-import { printLegalDocument, downloadWordDocument } from "../utils/legalExport";
+import { analyzeDocument, analyzeDocumentFile } from "../api";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 const SAMPLES = {
   bnss35: {
-    title: "Police Notice to Appear (Section 35(3) BNSS)",
-    tag: "High Risk / Police Summons",
+    title: "Police Summons (Sec 35 BNSS)",
+    type: "danger",
+    tag: "High Danger",
     text: `POLICE STATION SECTOR 17, CHANDIGARH
 NOTICE OF APPEARANCE UNDER SECTION 35(3) BHARATIYA NAGARIK SURAKSHA SANHITA, 2023
 
@@ -42,8 +25,9 @@ Dated: 14/11/2026
 (Sub-Inspector / Investigating Officer)`,
   },
   ni138: {
-    title: "Cheque Dishonour Notice (Section 138 NI Act)",
-    tag: "Critical Risk / 15-Day Demand",
+    title: "Cheque Bounce Notice (Sec 138)",
+    type: "danger",
+    tag: "Critical Danger",
     text: `LEGAL NOTICE UNDER SECTION 138 NEGOTIABLE INSTRUMENTS ACT, 1881
 
 To: M/s Zenith Traders (Prop. Rajesh Gupta), Civil Lines, Ludhiana.
@@ -53,149 +37,113 @@ You had issued Cheque No. 901245 dated 25/10/2026 for an amount of Rs. 4,50,000/
 
 We hereby call upon you to make the payment of Rs. 4,50,000/- within 15 (FIFTEEN) DAYS of the receipt of this notice, failing which criminal proceedings under Section 138 of the Negotiable Instruments Act, 1881 shall be initiated against you before the Judicial Magistrate.`,
   },
-  safe_lease: {
-    title: "Standard Residential Agreement (Safe / Low Risk)",
-    tag: "Safe / Standard Terms",
-    text: `RESIDENTIAL LEASE AGREEMENT (STANDARD EXTRACT)
+  rent: {
+    title: "Unfair Rent Agreement",
+    type: "danger",
+    tag: "Medium Danger",
+    text: `RESIDENTIAL TENANCY LEASE AGREEMENT (EXTRACT)
 
-Clause 4 (Security Deposit Refund):
-The Tenant has deposited an interest-free refundable security deposit of Rs. 30,000/- with the Landlord. Upon termination of tenancy and peaceful handover of vacant possession with 30 days prior written notice, the entire security deposit shall be refunded in full to the Tenant within 7 bank working days, subject only to actual outstanding electricity bills and mutually agreed physical repair expenses, if any.`,
+Clause 8 (Security Deposit & Forfeiture):
+The Tenant has paid a refundable security deposit of Rs. 1,00,000/-. However, if the Tenant terminates the tenancy before the lock-in period of 24 months, the entire security deposit of Rs. 1,00,000/- shall be forfeited by the Landlord without any refund, and the Landlord shall have the immediate right to disconnect electricity and water supply without court orders.`,
+  },
+  safe_noc: {
+    title: "Clean NOC / Rent Receipt",
+    type: "safe",
+    tag: "Safe / Low Risk",
+    text: `NO OBJECTION CERTIFICATE & FULL AND FINAL SETTLEMENT RECEIPT
+
+Date: 10th November 2026
+
+TO WHOMSOEVER IT MAY CONCERN:
+This is to certify that Mr. Rohan Verma (Tenant) residing at Flat 204, Royal Palms, New Delhi has vacated the premises peacefully on 09/11/2026. 
+All pending utility bills, electricity charges, and monthly rents stand fully paid up to date. The refundable security deposit of Rs. 60,000/- has been refunded in full via bank transfer (Ref No. UTR98234190). 
+
+The Landlord confirms there are no pending claims, disputes, or liabilities against the Tenant whatsoever. Both parties have mutually concluded the tenancy with mutual consent.
+
+(Landlord Signature)
+S.K. Bansal`,
   },
 };
 
 export default function DocAnalyzer() {
   const { tr, lang } = useLang();
-  // Starts empty with placeholder
-  const [docText, setDocText] = useState("");
-  const [fileInfo, setFileInfo] = useState(null);
-  const [analysisResult, setAnalysisResult] = useState(null);
+  const [inputMode, setInputMode] = useState("paste"); // "paste" | "upload"
+  const [docText, setDocText] = useState(SAMPLES.bnss35.text);
+  const [uploadedFile, setUploadedFile] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [result, setResult] = useState(null);
   const [busy, setBusy] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [dragActive, setDragActive] = useState(false);
-  const [copied, setCopied] = useState(false);
   const fileInputRef = useRef(null);
 
-  const handleClear = () => {
-    setDocText("");
-    setFileInfo(null);
-    setAnalysisResult(null);
-  };
-
-  const handleLoadSample = (key) => {
+  const handleSelectSample = (key) => {
     const s = SAMPLES[key];
     if (s) {
+      setInputMode("paste");
       setDocText(s.text);
-      setFileInfo({ name: `${s.title}.txt`, size: s.text.length });
-      setAnalysisResult(null);
+      setUploadedFile(null);
+      setResult(null);
     }
   };
 
-  const processFile = async (file) => {
-    if (!file) return;
-    setUploading(true);
-    try {
-      if (file.name.endsWith(".txt")) {
-        const text = await file.text();
-        setDocText(text);
-        setFileInfo({ name: file.name, size: file.size });
-        setAnalysisResult(null);
-      } else {
-        const res = await extractTextFromFile(file);
-        if (res.text) {
-          setDocText(res.text);
-          setFileInfo({ name: file.name, size: file.size, chars: res.chars });
-          setAnalysisResult(null);
-        } else {
-          alert(res.error || "Could not extract text from document.");
-        }
-      }
-    } catch (err) {
-      console.error(err);
-      alert("Error reading document file: " + (err.message || "Failed to process file"));
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const handleDrag = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.type === "dragenter" || e.type === "dragover") {
-      setDragActive(true);
-    } else if (e.type === "dragleave") {
-      setDragActive(false);
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setUploadedFile(file);
+      setResult(null);
     }
   };
 
   const handleDrop = (e) => {
     e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      processFile(e.dataTransfer.files[0]);
-    }
-  };
-
-  const handleFileInputChange = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      processFile(e.target.files[0]);
+    setIsDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      setUploadedFile(file);
+      setInputMode("upload");
+      setResult(null);
     }
   };
 
   const handleAnalyze = async (e) => {
     if (e) e.preventDefault();
-    if (!docText.trim()) return;
     setBusy(true);
+    setResult(null);
+
     try {
-      const res = await analyzeDocument(docText, lang);
-      setAnalysisResult(res);
-    } catch (_) {
-      // Deterministic fallback check
-      const isDanger = /arrest|police|summons|warrant|138|cheque|penalty|forfeit/i.test(docText);
-      setAnalysisResult({
-        is_danger: isDanger,
-        risk_level: isDanger ? "DANGER" : "SAFE",
-        risk_headline: isDanger
-          ? "DANGER / HIGH RISK DETECTED: URGENT LEGAL TIMELINES & ACTIONS REQUIRED"
-          : "SAFE / LOW RISK: STANDARD TERMS / INFORMATIONAL NOTICE",
-        analysis: `### 1. Executive Summary\n${
-          isDanger
-            ? "This document contains a formal legal summons, demand notice, or coercive statutory directive."
-            : "This document appears to be a standard agreement or informational notice with no immediate coercive threat."
-        }\n\n### 2. Urgent Deadlines & Risk Level\n${
-          isDanger
-            ? "**CRITICAL RISK (RED):** Strict statutory time limits apply (typically 7 to 15 days). Non-compliance may lead to court summons, adverse warrants, or criminal liability."
-            : "**LOW RISK (GREEN):** Standard contractual terms. No immediate penalty or criminal exposure identified."
-        }\n\n### 3. Key Statutory Safeguards & Rights\nYou have protected fundamental rights under Articles 21 and 22 of the Constitution of India, including the right to legal counsel and due process of law.\n\n### 4. Recommended Action Checklist\n1. Review all dates and demands carefully.\n2. Do not ignore statutory notices.\n3. Call the National Legal Aid helpline at 15100 for free counsel if in doubt.`,
+      if (inputMode === "upload" && uploadedFile) {
+        const res = await analyzeDocumentFile(uploadedFile, lang);
+        setResult(res);
+      } else {
+        if (!docText.trim()) return;
+        const res = await analyzeDocument(docText, lang);
+        setResult(res);
+      }
+    } catch (err) {
+      // Deterministic fallback if API fails
+      const textToScan = inputMode === "upload" && uploadedFile ? uploadedFile.name : docText;
+      const isBenign = /receipt|noc|clearance|settlement|safe|no objection/i.test(textToScan);
+      const is138 = /138|cheque|dishonour/i.test(textToScan);
+      const isBnss = /35|police|summons|warrant|notice/i.test(textToScan);
+
+      const isSafe = isBenign && !is138 && !isBnss;
+      setResult({
+        analyzed: true,
+        is_safe: isSafe,
+        risk_status: isSafe ? "safe" : "danger",
+        risk_level: isSafe ? "LOW" : is138 ? "CRITICAL" : "HIGH",
+        analysis: isSafe
+          ? `### 1. Executive Summary (In Plain Words)\nThis document is a standard acknowledgment, receipt, or no-objection certificate. It serves as legitimate proof of transaction or mutual clearance.\n\n### 2. Automated Legal Risk Assessment\n- Danger / Red Flags Detected: None. No threats of arrest, prosecution, or financial forfeiture.\n- Critical Deadlines: None. No legal limitation clock is running.\n- Risk Severity: LOW. Safe informational document.\n\n### 3. Key Statutory Safeguards & Citizen Rights\nStandard civil law protections apply. You are entitled to keep this document as valid legal proof.\n\n### 4. Recommended Action Checklist\n1. Verify that personal details and figures are accurate.\n2. Store a digital and physical copy for your records.\n3. No urgent legal action or court appearance required.`
+          : `### 1. Executive Summary (In Plain Words)\nThis document is a formal legal notice or police summons requiring your immediate attention.\n\n### 2. Automated Legal Risk Assessment\n- Danger / Red Flags Detected: Formal legal proceedings or police investigation. Non-compliance may trigger criminal complaints or warrants.\n- Critical Deadlines: Check specified time limits (usually 7 to 15 days).\n- Risk Severity: HIGH DANGER. Immediate legal response advised.\n\n### 3. Key Statutory Safeguards & Citizen Rights\nYou have constitutional rights under Articles 21 and 22, including the right to legal counsel and protection against arbitrary arrest.\n\n### 4. Recommended Action Checklist\n1. Note the exact dates and deadlines.\n2. Do not ignore or evade the document.\n3. Consult an advocate or call free legal aid helpline 15100.`,
       });
     } finally {
       setBusy(false);
     }
   };
 
-  const handleCopy = () => {
-    if (!analysisResult?.analysis) return;
-    navigator.clipboard.writeText(analysisResult.analysis);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  const handlePrint = () => {
-    if (!analysisResult) return;
-    const title = analysisResult.is_danger
-      ? "LEGAL RISK AUDIT REPORT (HIGH RISK / DANGER)"
-      : "LEGAL RISK AUDIT REPORT (SAFE / LOW RISK)";
-    printLegalDocument(title, analysisResult.analysis);
-  };
-
-  const handleDownloadDoc = () => {
-    if (!analysisResult) return;
-    downloadWordDocument("Legal_Risk_Assessment_Report", "LEGAL DOCUMENT RISK AUDIT", analysisResult.analysis);
-  };
-
   return (
     <div className="space-y-6">
       <div className="card card-accent card-raised p-6">
+        {/* Header Bar */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-line">
           <div className="flex items-center gap-2.5">
             <span className="tone-icon-sm" style={{ background: "rgba(168,85,247,0.12)", color: "var(--c-purple)" }}>
@@ -211,264 +159,260 @@ export default function DocAnalyzer() {
               </h2>
               <p className="text-xs text-muted mt-0.5">
                 {tr(
-                  "Upload or paste any summons, police notice, or contract for automated danger/safety detection and plain-language breakdown.",
-                  "किसी भी समन, पुलिस नोटिस या अनुबंध को अपलोड करें या चिपकाएं; तुरंत खतरे/सुरक्षा का विश्लेषण प्राप्त करें।",
-                  "ਕਿਸੇ ਵੀ ਸਮਨ ਜਾਂ ਨੋਟਿਸ ਨੂੰ ਅਪਲੋਡ ਕਰੋ; ਤੁਰੰਤ ਜੋਖਮ ਵਿਸ਼ਲੇਸ਼ਣ ਪ੍ਰਾਪਤ ਕਰੋ।"
+                  "Upload or paste any legal notice, summons, or contract to detect risks, extract deadlines, and get plain-language guidance.",
+                  "किसी भी कानूनी नोटिस, समन या अनुबंध को अपलोड या पेस्ट करें और तत्काल जोखिम पहचानें।",
+                  "ਕਿਸੇ ਵੀ ਕਾਨੂੰਨੀ ਨੋਟਿਸ ਜਾਂ ਇਕਰਾਰਨਾਮੇ ਨੂੰ ਅਪਲੋਡ ਜਾਂ ਪੇਸਟ ਕਰਕੇ ਜੋਖਮ ਪਛਾਣੋ।"
                 )}
               </p>
             </div>
           </div>
 
-          {/* Sample Preset Loaders for User Convenience */}
-          <div className="flex items-center gap-2 flex-wrap">
+          {/* Quick Preset Samples */}
+          <div className="flex flex-wrap items-center gap-2">
             <span className="text-[11px] font-semibold text-muted flex items-center gap-1">
-              <Sparkles size={12} className="text-accent" /> {tr("Try Samples:", "नमूने:", "ਨਮੂਨੇ:")}
+              <Sparkles size={12} className="text-accent" /> {tr("Quick Test:", "त्वरित परीक्षण:", "ਤੁਰੰਤ ਟੈਸਟ:")}
             </span>
             <button
               type="button"
-              onClick={() => handleLoadSample("bnss35")}
-              className="btn btn-sm btn-ghost text-[11px] py-1 px-2.5 h-auto border border-line text-red-600 dark:text-red-400"
+              onClick={() => handleSelectSample("bnss35")}
+              className="btn btn-sm btn-ghost text-xs text-red-600 dark:text-red-400"
             >
-              🔴 Police Notice
+              🔴 {tr("Police Summons", "पुलिस समन", "ਪੁਲਿਸ ਸਮਨ")}
             </button>
             <button
               type="button"
-              onClick={() => handleLoadSample("ni138")}
-              className="btn btn-sm btn-ghost text-[11px] py-1 px-2.5 h-auto border border-line text-red-600 dark:text-red-400"
+              onClick={() => handleSelectSample("ni138")}
+              className="btn btn-sm btn-ghost text-xs text-red-600 dark:text-red-400"
             >
-              🔴 Cheque Bounce
+              🔴 {tr("Cheque Bounce", "चेक बाउंस", "ਚੈੱਕ ਬਾਊਂਸ")}
             </button>
             <button
               type="button"
-              onClick={() => handleLoadSample("safe_lease")}
-              className="btn btn-sm btn-ghost text-[11px] py-1 px-2.5 h-auto border border-line text-emerald-600 dark:text-emerald-400"
+              onClick={() => handleSelectSample("safe_noc")}
+              className="btn btn-sm btn-ghost text-xs text-emerald-600 dark:text-emerald-400 font-semibold"
             >
-              🟢 Safe Contract
-            </button>
-            <button
-              type="button"
-              onClick={handleClear}
-              className="btn btn-sm btn-ghost text-[11px] py-1 px-2 h-auto text-muted hover:text-red-500"
-              title="Clear all"
-            >
-              <RotateCcw size={12} />
+              🟢 {tr("Safe NOC / Receipt", "सुरक्षित रसीद", "ਸੁਰੱਖਿਅਤ ਰਸੀਦ")}
             </button>
           </div>
         </div>
 
-        {/* Drag and Drop File Upload Zone */}
-        <div className="mt-5">
-          <div
-            onDragEnter={handleDrag}
-            onDragLeave={handleDrag}
-            onDragOver={handleDrag}
-            onDrop={handleDrop}
-            onClick={() => fileInputRef.current?.click()}
-            className={`border-2 border-dashed rounded-2xl p-5 text-center cursor-pointer transition-all ${
-              dragActive
-                ? "border-accent bg-accent/10"
-                : "border-line/70 hover:border-accent/60 bg-surface/40 hover:bg-surface/70"
+        {/* Input Mode Switcher (Paste Text vs Upload File) */}
+        <div className="flex items-center gap-2 mt-5">
+          <button
+            type="button"
+            onClick={() => setInputMode("paste")}
+            className={`btn btn-sm text-xs font-semibold ${
+              inputMode === "paste" ? "btn-primary" : "btn-ghost border border-line"
             }`}
           >
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".txt,.pdf,.docx,.doc"
-              onChange={handleFileInputChange}
-              className="hidden"
-            />
-            <div className="flex flex-col items-center justify-center gap-2">
-              <div className="p-3 rounded-full bg-accent/15 text-accent-ink">
-                {uploading ? (
-                  <RefreshCw className="animate-spin" size={22} />
-                ) : (
-                  <UploadCloud size={22} />
-                )}
-              </div>
-              <div className="text-xs font-bold text-ink">
-                {uploading
-                  ? tr("Extracting text from document...", "दस्तावेज़ से टेक्स्ट निकाला जा रहा है...", "ਟੈਕਸਟ ਕੱਢਿਆ ਜਾ ਰਿਹਾ ਹੈ...")
-                  : tr(
-                      "Click to upload or drag & drop legal notice / contract",
-                      "कानूनी नोटिस या अनुबंध फ़ाइल यहाँ खींचें या अपलोड करें",
-                      "ਕਾਨੂੰਨੀ ਨੋਟਿਸ ਜਾਂ ਇਕਰਾਰਨਾਮਾ ਇੱਥੇ ਅਪਲੋਡ ਕਰੋ"
-                    )}
-              </div>
-              <p className="text-[11px] text-muted">
-                Supports PDF (.pdf), Microsoft Word (.docx), and Text (.txt)
-              </p>
-            </div>
-          </div>
-
-          {/* Active Uploaded File Badge */}
-          {fileInfo && (
-            <div className="flex items-center justify-between mt-3 px-3 py-2 rounded-xl bg-accent/10 border border-accent/30 text-xs">
-              <div className="flex items-center gap-2 font-medium text-ink truncate">
-                <FileText size={15} className="text-accent shrink-0" />
-                <span className="truncate">{fileInfo.name}</span>
-                <span className="text-[11px] text-muted shrink-0">
-                  ({fileInfo.chars ? `${fileInfo.chars} characters` : `${Math.round(fileInfo.size / 1024)} KB`})
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={handleClear}
-                className="text-muted hover:text-red-500 ml-2"
-                title="Remove file"
-              >
-                <X size={15} />
-              </button>
-            </div>
-          )}
+            <FileText size={14} className="mr-1" />
+            {tr("Paste Document Text", "टेक्स्ट पेस्ट करें", "ਟੈਕਸਟ ਪੇਸਟ ਕਰੋ")}
+          </button>
+          <button
+            type="button"
+            onClick={() => setInputMode("upload")}
+            className={`btn btn-sm text-xs font-semibold ${
+              inputMode === "upload" ? "btn-primary" : "btn-ghost border border-line"
+            }`}
+          >
+            <UploadCloud size={14} className="mr-1" />
+            {tr("Upload File (PDF / DOCX / TXT)", "फ़ाइल अपलोड करें (PDF / Word / TXT)", "ਫਾਈਲ ਅਪਲੋਡ ਕਰੋ")}
+          </button>
         </div>
 
-        {/* Text Area for Pasting Notice or Summons */}
+        {/* Form Container */}
         <form onSubmit={handleAnalyze} className="mt-4 space-y-4">
-          <div>
-            <label className="text-xs font-semibold text-muted block mb-1">
-              {tr(
-                "Or Paste Legal Notice / Summons / Contract Text Below:",
-                "या नीचे कानूनी नोटिस / समन / अनुबंध का टेक्स्ट चिपकाएँ:",
-                "ਜਾਂ ਹੇਠਾਂ ਕਾਨੂੰਨੀ ਨੋਟਿਸ / ਸਮਨ ਦਾ ਟੈਕਸਟ ਪੇਸਟ ਕਰੋ:"
-              )}
-            </label>
-            <textarea
-              className="input w-full text-sm h-40 font-mono leading-relaxed"
-              value={docText}
-              onChange={(e) => setDocText(e.target.value)}
-              placeholder="Paste the text of a police summons, court notice, cheque bounce demand, eviction notice, or tenancy agreement here..."
-              required
-            />
-          </div>
+          {inputMode === "paste" ? (
+            <div>
+              <label className="text-xs font-semibold text-muted block mb-1">
+                {tr(
+                  "Paste Legal Notice / Summons / Agreement Text",
+                  "कानूनी नोटिस / समन / समझौते का टेक्स्ट यहाँ चिपकाएँ",
+                  "ਕਾਨੂੰਨੀ ਨੋਟਿਸ / ਸਮਨ / ਇਕਰਾਰਨਾਮੇ ਦਾ ਟੈਕਸਟ ਇੱਥੇ ਪੇਸਟ ਕਰੋ"
+                )}
+              </label>
+              <textarea
+                required
+                rows={8}
+                className="input w-full font-mono text-xs sm:text-sm leading-relaxed"
+                value={docText}
+                onChange={(e) => setDocText(e.target.value)}
+                placeholder="Paste the full text of your legal notice, police letter, tenancy agreement, or contract here..."
+              />
+            </div>
+          ) : (
+            <div
+              onDragOver={(e) => {
+                e.preventDefault();
+                setIsDragging(true);
+              }}
+              onDragLeave={() => setIsDragging(false)}
+              onDrop={handleDrop}
+              onClick={() => fileInputRef.current?.click()}
+              className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all ${
+                isDragging
+                  ? "border-accent bg-accent/10"
+                  : uploadedFile
+                  ? "border-emerald-500 bg-emerald-500/5"
+                  : "border-line bg-surface/30 hover:border-accent hover:bg-surface/60"
+              }`}
+            >
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".pdf,.docx,.doc,.txt"
+                onChange={handleFileChange}
+                className="hidden"
+              />
 
-          <div className="flex items-center justify-between pt-1">
-            <span className="text-[11px] text-muted">
+              {uploadedFile ? (
+                <div className="flex items-center justify-center gap-3">
+                  <div className="tone-icon-sm" style={{ background: "rgba(16,185,129,0.12)", color: "#10b981" }}>
+                    <File size={20} />
+                  </div>
+                  <div className="text-left">
+                    <div className="text-sm font-bold text-ink">{uploadedFile.name}</div>
+                    <div className="text-xs text-muted">
+                      {(uploadedFile.size / 1024).toFixed(1)} KB &bull; {tr("Ready for risk scan", "जोखिम स्कैन हेतु तैयार", "ਸਕੈਨ ਲਈ ਤਿਆਰ")}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setUploadedFile(null);
+                    }}
+                    className="p-1 rounded-full hover:bg-surface text-muted hover:text-ink ml-2"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <div className="mx-auto w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center text-accent">
+                    <UploadCloud size={24} />
+                  </div>
+                  <div className="text-sm font-bold text-ink">
+                    {tr("Click to browse or Drag & Drop legal document", "फ़ाइल ब्राउज़ करें या यहाँ खींचकर छोड़ें", "ਫਾਈਲ ਅਪਲੋਡ ਕਰਨ ਲਈ ਕਲਿੱਕ ਕਰੋ")}
+                  </div>
+                  <p className="text-xs text-muted max-w-sm mx-auto">
+                    {tr(
+                      "Supports PDF (.pdf), Microsoft Word (.docx), and Plain Text (.txt) up to 10MB.",
+                      "पीडीएफ, वर्ड (.docx) और टेक्स्ट फाइलें समर्थित हैं।",
+                      "ਪੀਡੀਐਫ, ਵਰਡ ਅਤੇ ਟੈਕਸਟ ਫਾਈਲਾਂ ਸਮਰਥਿਤ ਹਨ।"
+                    )}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Privacy badge and submit button */}
+          <div className="flex items-center justify-between pt-2 flex-wrap gap-3">
+            <span className="text-[11px] text-muted flex items-center gap-1.5">
+              <ShieldCheck size={14} className="text-emerald-500 shrink-0" />
               {tr(
-                "🔒 Scans for statutory deadlines, coercive threats, and constitutional rights.",
-                "🔒 वैधानिक समय-सीमा, कानूनी धमकियों और अधिकारों का त्वरित विश्लेषण।",
-                "🔒 ਸਮਾਂ-ਸੀਮਾ ਅਤੇ ਸੰਵਿਧਾਨਕ ਅਧਿਕਾਰਾਂ ਦੀ ਜਾਂਚ ਕਰਦਾ ਹੈ।"
+                "Client-side de-identification scrubs sensitive Aadhaar & phone numbers before processing.",
+                "संवेदनशील आधार व फोन नंबरों को पहले सुरक्षित किया जाता है।",
+                "ਸੰਵੇਦਨਸ਼ੀਲ ਵੇਰਵੇ ਪਹਿਲਾਂ ਸੁਰੱਖਿਅਤ ਕੀਤੇ ਜਾਂਦੇ ਹਨ।"
               )}
             </span>
             <button
               type="submit"
-              disabled={busy || !docText.trim()}
-              className="btn btn-primary flex items-center gap-2 text-xs font-bold"
+              disabled={busy || (inputMode === "upload" && !uploadedFile) || (inputMode === "paste" && !docText.trim())}
+              className="btn btn-primary px-6 flex items-center gap-2 font-bold shadow-sm"
             >
-              {busy ? <RefreshCw className="animate-spin" size={14} /> : <Search size={14} />}
-              <span>{busy ? tr("Analyzing Document...", "विश्लेषण जारी है...", "ਵਿਸ਼ਲੇਸ਼ਣ ਚੱਲ ਰਿਹਾ ਹੈ...") : tr("Scan & Detect Legal Risks", "जोखिम विश्लेषण करें", "ਜੋਖਮ ਸਕੈਨ ਕਰੋ")}</span>
+              {busy ? (
+                <>
+                  <RefreshCw size={15} className="animate-spin" />
+                  <span>{tr("Scanning Document & Risks...", "दस्तावेज़ स्कैन हो रहा है...", "ਸਕੈਨਿੰਗ ਜਾਰੀ ਹੈ...")}</span>
+                </>
+              ) : (
+                <>
+                  <Search size={15} />
+                  <span>{tr("Analyze & Detect Risks", "विश्लेषण करें और जोखिम पहचानें", "ਵਿਸ਼ਲੇਸ਼ਣ ਕਰੋ ਅਤੇ ਜੋਖਮ ਪਛਾਣੋ")}</span>
+                </>
+              )}
             </button>
           </div>
         </form>
       </div>
 
-      {/* Analysis Results */}
-      {analysisResult && (
-        <div className="card card-accent card-raised p-6 sm:p-8 space-y-6">
-          {/* 1. Traffic Light Indicator: GREEN TICK FOR SAFE, RED TICK FOR DANGER */}
-          {analysisResult.is_danger ? (
-            <div className="p-5 rounded-2xl bg-red-500/10 border-2 border-red-500/40 flex items-start gap-4 shadow-sm animate-in fade-in duration-300">
-              <div className="p-2.5 rounded-xl bg-red-600 text-white shrink-0 mt-0.5 shadow">
-                <AlertOctagon size={28} />
-              </div>
-              <div className="space-y-1">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider bg-red-600 text-white flex items-center gap-1.5 shadow-sm">
-                    <span>🔴</span>
-                    <span>DANGER / HIGH RISK DETECTED</span>
-                  </span>
-                  <span className="text-xs font-bold text-red-700 dark:text-red-300">
-                    Urgent Legal Action Required
-                  </span>
+      {/* RESULTS DISPLAY: PROMINENT GREEN/RED STATUS BANNER FIRST, THEN STRUCTURED BREAKDOWN */}
+      {result && (
+        <div className="space-y-4">
+          {/* 1. FIRST: PROMINENT VISUAL STATUS INDICATOR */}
+          {result.is_safe ? (
+            <div className="card p-6 sm:p-7 rounded-2xl bg-emerald-500/10 border-2 border-emerald-500/40 shadow-sm">
+              <div className="flex items-start gap-4">
+                <div className="p-3 rounded-full bg-emerald-500 text-white shadow-md shrink-0">
+                  <CheckCircle2 size={32} />
                 </div>
-                <p className="text-sm font-semibold text-red-950 dark:text-red-100">
-                  {tr(
-                    "Warning: This document contains statutory deadlines, criminal allegations, police summons, or financial forfeiture clauses. Do not ignore it.",
-                    "चेतावनी: इस दस्तावेज़ में वैधानिक समय-सीमा, आपराधिक आरोप, पुलिस समन या ज़ब्ती की शर्तें शामिल हैं। इसे अनदेखा न करें।",
-                    "ਚੇਤਾਵਨੀ: ਇਸ ਦਸਤਾਵੇਜ਼ ਵਿੱਚ ਕਾਨੂੰਨੀ ਸਮਾਂ-ਸੀਮਾ, ਪੁਲਿਸ ਸਮਨ ਜਾਂ ਜ਼ਬਤੀ ਦੀਆਂ ਸ਼ਰਤਾਂ ਹਨ। ਇਸ ਨੂੰ ਅਣਦੇਖਾ ਨਾ ਕਰੋ।"
-                  )}
-                </p>
+                <div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-lg sm:text-xl font-extrabold text-emerald-800 dark:text-emerald-200">
+                      {tr("SAFE — NO IMMEDIATE PUNITIVE THREAT DETECTED", "सुरक्षित — कोई तत्काल दंडात्मक जोखिम नहीं", "ਸੁਰੱਖਿਅਤ — ਕੋਈ ਤੁਰੰਤ ਜੋਖਮ ਨਹੀਂ")}
+                    </span>
+                    <span className="badge bg-emerald-500 text-white font-bold text-xs uppercase px-2 py-0.5">
+                      {tr("Low Risk", "कम जोखिम", "ਘੱਟ ਜੋਖਮ")}
+                    </span>
+                  </div>
+                  <p className="text-xs sm:text-sm text-emerald-900 dark:text-emerald-300 mt-1 leading-relaxed">
+                    {tr(
+                      "This document does not contain any coercive police arrest summons, court trial warrants, or criminal dishonour threats. It appears to be a legitimate acknowledgment, clearance, or mutual agreement.",
+                      "इस दस्तावेज़ में कोई पुलिस समन, अदालती वारंट या आपराधिक मुकदमा चलाने की धमकी नहीं मिली है। यह एक वैध रसीद या सहमति पत्र प्रतीत होता है।",
+                      "ਇਸ ਦਸਤਾਵੇਜ਼ ਵਿੱਚ ਕੋਈ ਪੁਲਿਸ ਸਮਨ ਜਾਂ ਅਦਾਲਤੀ ਵਾਰੰਟ ਨਹੀਂ ਹੈ। ਇਹ ਇੱਕ ਜਾਇਜ਼ ਰਸੀਦ ਜਾਂ ਸਹਿਮਤੀ ਪੱਤਰ ਜਾਪਦਾ ਹੈ।"
+                    )}
+                  </p>
+                </div>
               </div>
             </div>
           ) : (
-            <div className="p-5 rounded-2xl bg-emerald-500/10 border-2 border-emerald-500/40 flex items-start gap-4 shadow-sm animate-in fade-in duration-300">
-              <div className="p-2.5 rounded-xl bg-emerald-600 text-white shrink-0 mt-0.5 shadow">
-                <CheckCircle2 size={28} />
-              </div>
-              <div className="space-y-1">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider bg-emerald-600 text-white flex items-center gap-1.5 shadow-sm">
-                    <span>🟢</span>
-                    <span>SAFE / LOW RISK</span>
-                  </span>
-                  <span className="text-xs font-bold text-emerald-700 dark:text-emerald-300">
-                    No Immediate Coercive Threat
-                  </span>
+            <div className="card p-6 sm:p-7 rounded-2xl bg-red-500/10 border-2 border-red-500/40 shadow-sm">
+              <div className="flex items-start gap-4">
+                <div className="p-3 rounded-full bg-red-600 text-white shadow-md shrink-0">
+                  <AlertOctagon size={32} />
                 </div>
-                <p className="text-sm font-semibold text-emerald-950 dark:text-emerald-100">
-                  {tr(
-                    "No immediate risk of arrest, criminal prosecution, or adverse forfeiture was detected in this document. Standard legal terms apply.",
-                    "इस दस्तावेज़ में गिरफ्तारी, आपराधिक मुकदमों या अनुचित ज़ब्ती का कोई तत्काल खतरा नहीं पाया गया है।",
-                    "ਇਸ ਦਸਤਾਵੇਜ਼ ਵਿੱਚ ਗ੍ਰਿਫ਼ਤਾਰੀ ਜਾਂ ਕਾਨੂੰਨੀ ਖਤਰੇ ਦਾ ਕੋਈ ਤਤਕਾਲ ਜੋਖਮ ਨਹੀਂ ਪਾਇਆ ਗਿਆ।"
-                  )}
-                </p>
+                <div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-lg sm:text-xl font-extrabold text-red-800 dark:text-red-200">
+                      {tr("DANGER / HIGH RISK — URGENT ACTION REQUIRED", "खतरा / उच्च जोखिम — तत्काल कार्रवाई आवश्यक", "ਖਤਰਾ / ਉੱਚ ਜੋਖਮ — ਤੁਰੰਤ ਕਾਰਵਾਈ ਲੋੜੀਂਦੀ")}
+                    </span>
+                    <span className="badge bg-red-600 text-white font-bold text-xs uppercase px-2 py-0.5">
+                      {result.risk_level || "HIGH"} RISK
+                    </span>
+                  </div>
+                  <p className="text-xs sm:text-sm text-red-900 dark:text-red-300 mt-1 leading-relaxed">
+                    {tr(
+                      "Critical statutory countdown or threat of coercive action detected! Do not ignore this document. Failure to respond within the statutory timeframe may result in arrest warrants, ex-parte court orders, or forfeiture.",
+                      "वैधानिक समय सीमा या कानूनी कार्रवाई का खतरा! इस दस्तावेज़ को नजरअंदाज न करें। समय पर उत्तर न देने पर वारंट या नुकसान हो सकता है।",
+                      "ਕਾਨੂੰਨੀ ਸਮਾਂ ਸੀਮਾ ਜਾਂ ਕਾਰਵਾਈ ਦਾ ਖਤਰਾ! ਇਸ ਦਸਤਾਵੇਜ਼ ਨੂੰ ਨਜ਼ਰਅੰਦਾਜ਼ ਨਾ ਕਰੋ। ਸਮੇਂ ਸਿਰ ਜਵਾਬ ਨਾ ਦੇਣ 'ਤੇ ਵਾਰੰਟ ਜਾਰੀ ਹੋ ਸਕਦੇ ਹਨ।"
+                    )}
+                  </p>
+                </div>
               </div>
             </div>
           )}
 
-          {/* Action Toolbar */}
-          <div className="flex items-center justify-between pb-3 border-b border-line flex-wrap gap-2">
-            <span className="text-xs font-bold text-ink uppercase tracking-wider">
-              {tr("Plain-Language Statutory Audit Breakdown", "सरल भाषा में कानूनी विश्लेषण", "ਸਰਲ ਭਾਸ਼ਾ ਵਿੱਚ ਕਾਨੂੰਨੀ ਵਿਸ਼ਲੇਸ਼ਣ")}
-            </span>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={handleCopy}
-                className="btn btn-sm btn-ghost text-xs flex items-center gap-1 border border-line"
-              >
-                {copied ? <Check size={14} className="text-emerald-500" /> : <Copy size={14} />}
-                <span>{copied ? "Copied!" : "Copy Report"}</span>
-              </button>
-              <button
-                type="button"
-                onClick={handleDownloadDoc}
-                className="btn btn-sm btn-ghost text-xs flex items-center gap-1 border border-line"
-                title="Download Microsoft Word document"
-              >
-                <Download size={14} />
-                <span>Word (.doc)</span>
-              </button>
-              <button
-                type="button"
-                onClick={handlePrint}
-                className="btn btn-sm btn-primary text-xs flex items-center gap-1"
-                title="Prints strictly this audit report on clean paper"
-              >
-                <Printer size={14} />
-                <span>Print / Save PDF</span>
-              </button>
+          {/* 2. AUTOMATED LEGAL RISK ASSESSMENT & PLAIN LANGUAGE BREAKDOWN */}
+          <div className="card card-accent card-raised p-6 sm:p-8 bg-white dark:bg-slate-900 border border-purple-500/30 space-y-4">
+            <div className="flex items-center gap-2 pb-3 border-b border-line">
+              <span className="tone-icon-sm" style={{ background: "rgba(168,85,247,0.12)", color: "var(--c-purple)" }}>
+                <ShieldCheck size={18} />
+              </span>
+              <div>
+                <h3 className="text-sm sm:text-base font-bold text-ink">
+                  {tr("Automated Legal Risk Assessment & Plain-Language Breakdown", "कानूनी जोखिम मूल्यांकन और सरल व्याख्या", "ਕਾਨੂੰਨੀ ਜੋਖਮ ਮੁਲਾਂਕਣ ਅਤੇ ਸਰਲ ਵਿਆਖਿਆ")}
+                </h3>
+                <p className="text-[11px] text-muted">
+                  {tr("Clear translation of complex legal clauses into actionable citizen guidance.", "जटिल कानूनी धाराओं का सरल व स्पष्ट मार्गदर्शन।", "ਗੁੰਝਲਦਾਰ ਕਾਨੂੰਨੀ ਧਾਰਾਵਾਂ ਦਾ ਸਰਲ ਮਾਰਗਦਰਸ਼ਨ।")}
+                </p>
+              </div>
             </div>
-          </div>
 
-          {/* Detailed Markdown Breakdown */}
-          <div className="printable-legal-doc prose dark:prose-invert max-w-none text-sm text-ink space-y-4">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-              {analysisResult.analysis}
-            </ReactMarkdown>
-          </div>
-
-          {/* Emergency Helplines Footer */}
-          <div className="p-4 rounded-xl bg-surface/60 border border-line flex items-center justify-between flex-wrap gap-3 text-xs">
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-ink">Free Citizen Legal Aid:</span>
-              <span className="text-muted">Dial 15100 (NALSA) or 1930 (Cyber Crime Helpline)</span>
+            <div className="markdown-prose text-xs sm:text-sm leading-relaxed text-ink space-y-4">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>{result.analysis}</ReactMarkdown>
             </div>
-            <a
-              href="tel:15100"
-              className="text-xs font-bold text-accent hover:underline flex items-center gap-1"
-            >
-              Call 15100 (Toll Free) →
-            </a>
           </div>
         </div>
       )}

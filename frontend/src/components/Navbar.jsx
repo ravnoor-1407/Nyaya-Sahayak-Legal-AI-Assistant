@@ -111,9 +111,9 @@ export default function Navbar() {
           note: tr("Notice & contract analyzer", "नोटिस व अनुबंध विश्लेषण", "ਨੋਟਿਸ ਵਿਸ਼ਲੇਸ਼ਣ"),
         },
         {
-          to: "/flowcharts", icon: ShieldCheck, tone: "#10b981",
-          name: tr("Everyday Action Guides", "त्वरित सहायता गाइड", "ਕਾਰਵਾਈ ਗਾਈਡਾਂ"),
-          note: tr("Common legal emergencies", "दैनिक कानूनी आपात स्थिति", "ਆਮ ਕਾਨੂੰਨੀ ਉਪਾਅ"),
+          to: "/flowcharts", icon: GitFork, tone: "#10b981",
+          name: tr("Decision Trees", "निर्णय वृक्ष", "ਫੈਸਲਾ ਰੁੱਖ"),
+          note: tr("Procedural rights flowcharts", "प्रक्रियात्मक अधिकार फ्लोचार्ट", "ਪ੍ਰਕਿਰਿਆ ਫਲੋਚਾਰਟ"),
         },
         {
           to: "/legal-aid", icon: HeartHandshake, tone: "var(--c-green)",

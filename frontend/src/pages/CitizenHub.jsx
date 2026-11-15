@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   BookOpen, ChevronDown, CheckCircle2, Sparkles, HeartHandshake,
-  FileText, Scale, Search, ShieldCheck
+  FileText, Scale, Search, GitFork
 } from "lucide-react";
 import { useLang } from "../LangContext";
 import FirDraftStudio from "../components/FirDraftStudio";
@@ -155,7 +155,7 @@ export default function CitizenHub({ defaultTab = "handbooks" }) {
     { id: "drafting", icon: FileText, label: tr("AI Drafting Studio", "प्रारूपण स्टूडियो", "ਡਰਾਫਟਿੰਗ ਸਟੂਡੀਓ"), tone: "var(--c-rose)" },
     { id: "bail", icon: Scale, label: tr("Sec 479 Bail Calculator", "जमानत कैलकुलेटर", "ਜ਼ਮਾਨਤ ਕੈਲਕੁਲੇਟਰ"), tone: "var(--c-blue)" },
     { id: "scanner", icon: Search, label: tr("Doc Risk Scanner", "दस्तावेज़ स्कैनर", "ਦਸਤਾਵੇਜ਼ ਸਕੈਨਰ"), tone: "var(--c-purple)" },
-    { id: "flowcharts", icon: ShieldCheck, label: tr("Everyday Action Guides", "त्वरित सहायता गाइड", "ਕਾਰਵਾਈ ਗਾਈਡਾਂ"), tone: "#10b981" },
+    { id: "flowcharts", icon: GitFork, label: tr("Decision Trees", "निर्णय वृक्ष", "ਫੈਸਲਾ ਰੁੱਖ"), tone: "#10b981" },
   ];
 
   return (

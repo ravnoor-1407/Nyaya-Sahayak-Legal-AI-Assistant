@@ -248,14 +248,14 @@ export default function Home() {
       cta: tr("Scan document", "दस्तावेज़ स्कैन करें", "ਦਸਤਾਵੇਜ਼ ਸਕੈਨ ਕਰੋ"),
     },
     {
-      to: "/flowcharts", icon: ShieldCheck, tone: "#10b981",
-      title: tr("Everyday Action Guides", "नागरिक त्वरित सहायता गाइड", "ਨਾਗਰਿਕ ਕਾਰਵਾਈ ਗਾਈਡਾਂ"),
+      to: "/flowcharts", icon: GitFork, tone: "#10b981",
+      title: tr("Procedural Decision Trees", "प्रक्रियात्मक निर्णय वृक्ष", "ਪ੍ਰਕਿਰਿਆਤਮਕ ਫੈਸਲਾ ਰੁੱਖ"),
       text: tr(
-        "Clear, step-by-step rights and immediate remedies for police questioning, cyber fraud, landlord disputes, and bounced cheques.",
-        "पुलिस पूछताछ, साइबर फ्रॉड, मकान मालिक विवाद और चेक बाउंस पर सरल चरणबद्ध अधिकार और उपाय।",
-        "ਪੁਲਿਸ ਪੁੱਛਗਿੱਛ, ਸਾਈਬਰ ਧੋਖਾਧੜੀ ਅਤੇ ਚੈੱਕ ਬਾਊਂਸ ਲਈ ਸਰਲ ਕਾਨੂੰਨੀ ਗਾਈਡ।"
+        "Interactive condition flowcharts for arrest safeguards, bailable offences, consumer jurisdiction and cyber reporting.",
+        "गिरफ्तारी सुरक्षा, जमानती अपराध और साइबर रिपोर्टिंग के इंटरैक्टिव फ्लोचार्ट।",
+        "ਗ੍ਰਿਫ਼ਤਾਰੀ ਸੁਰੱਖਿਆ ਅਤੇ ਸਾਈਬਰ ਰਿਪੋਰਟਿੰਗ ਦੇ ਇੰਟਰਐਕਟਿਵ ਫਲੋਚਾਰਟ।"
       ),
-      cta: tr("View action guides", "सहायता गाइड देखें", "ਗਾਈਡ ਵੇਖੋ"),
+      cta: tr("Explore decision trees", "फ्लोचार्ट देखें", "ਫਲੋਚਾਰਟ ਵੇਖੋ"),
     },
 
     {

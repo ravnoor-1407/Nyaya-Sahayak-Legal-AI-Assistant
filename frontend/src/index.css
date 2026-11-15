@@ -468,29 +468,27 @@
 .menu-link { align-items: center; }
 .menu-link .tone-icon-sm { margin-top: 0; }
 
-/* ---------- Print Styles: Print ONLY designated legal documents ---------- */
+/* Dedicated Clean Print Styles for Legal Documents */
 @media print {
-  /* Hide the rest of the application */
-  header, nav, footer, button, .no-print, [role="navigation"] {
-    display: none !important;
-  }
   body {
     background: #ffffff !important;
-    color: #000000 !important;
-    font-family: "Times New Roman", Times, Georgia, serif !important;
+    color: #111111 !important;
+    font-size: 12pt !important;
   }
-  .printable-legal-doc {
-    position: absolute !important;
-    left: 0 !important;
-    top: 0 !important;
+  header, nav, footer, .navbar, .no-print, button, form, .card-accent:not(#printable-container) {
+    display: none !important;
+  }
+  #printable-legal-draft, #printable-bail-petition {
+    display: block !important;
+    position: static !important;
     width: 100% !important;
     margin: 0 !important;
-    padding: 10mm 15mm !important;
-    background: #ffffff !important;
-    color: #000000 !important;
+    padding: 20px !important;
     border: none !important;
-    box-shadow: none !important;
-    display: block !important;
-    visibility: visible !important;
+    background: transparent !important;
+    font-family: 'Times New Roman', Times, Georgia, serif !important;
+    font-size: 12pt !important;
+    line-height: 1.6 !important;
+    color: #111111 !important;
   }
 }
