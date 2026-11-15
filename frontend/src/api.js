@@ -100,3 +100,17 @@ export const draftDocument = (doc_type, inputs, lang = "en") =>
 
 export const analyzeDocument = (text, lang = "en") =>
   post("/api/analyze-doc", { text, lang });
+
+export const extractTextFromFile = async (file) => {
+  const formData = new FormData();
+  formData.append("file", file);
+  const res = await fetch(API_BASE + "/api/extract-text", {
+    method: "POST",
+    headers: headers(),
+    body: formData,
+  });
+  if (!res.ok) {
+    throw new Error(`Extraction failed: ${res.statusText}`);
+  }
+  return res.json();
+};

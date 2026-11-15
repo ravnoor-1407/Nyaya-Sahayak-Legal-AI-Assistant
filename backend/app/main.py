@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Any, Iterable, cast
 
 import joblib  # type: ignore[reportMissingTypeStubs]
-from fastapi import FastAPI, Header, Request
+from fastapi import FastAPI, Header, Request, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -454,55 +454,129 @@ Signature / Thumb Impression of Complainant
     return {"draft": draft_text.strip(), "doc_type": dt, "status": "template_fallback", "lang": lang}
 
 
+@app.post("/api/extract-text")
+async def extract_text_endpoint(file: UploadFile = File(...)) -> dict[str, Any]:
+    """Extract plain text from uploaded legal notices or contracts (.txt, .pdf, .docx)."""
+    try:
+        content = await file.read()
+        filename = file.filename or "document.txt"
+        ext = Path(filename).suffix.lower()
+        extracted = ""
+
+        if ext == ".txt":
+            extracted = content.decode("utf-8", errors="replace")
+        elif ext == ".pdf":
+            import io
+            import pdfplumber
+            with pdfplumber.open(io.BytesIO(content)) as pdf:
+                pages = [page.extract_text() or "" for page in pdf.pages[:30]]
+                extracted = "\n\n".join(pages).strip()
+        elif ext == ".docx":
+            import io
+            import zipfile
+            import xml.etree.ElementTree as ET
+            with zipfile.ZipFile(io.BytesIO(content)) as docx:
+                xml_content = docx.read("word/document.xml")
+                tree = ET.fromstring(xml_content)
+                namespace = {"w": "http://schemas.openxmlformats.org/wordprocessingml/2006/main"}
+                texts = [node.text for node in tree.iterfind(".//w:t", namespace) if node.text]
+                extracted = " ".join(texts).strip()
+        else:
+            extracted = content.decode("utf-8", errors="ignore")
+
+        if not extracted.strip():
+            return {"error": "Could not extract readable text from the uploaded document.", "text": "", "filename": filename}
+
+        return {"filename": filename, "text": extracted[:25000].strip(), "chars": len(extracted)}
+    except Exception as e:
+        return {"error": f"Failed to extract document text: {str(e)}", "text": "", "filename": file.filename or "unknown"}
+
+
 @app.post("/api/analyze-doc")
 def analyze_document(body: AnalyzeDocIn) -> dict[str, Any]:
-    """Scan and summarize legal documents, contracts, summons, and notices with risk ratings."""
+    """Scan and summarize legal documents, contracts, summons, and notices with automated risk ratings."""
     text = (body.text or "").strip()
     lang = body.lang if body.lang in ("en", "hi", "pa") else "en"
     if not text:
-        return {"error": "Document text cannot be empty.", "analyzed": False}
+        return {"error": "Document text cannot be empty.", "analyzed": False, "is_danger": False, "risk_level": "SAFE"}
+
+    # Deterministic heuristic danger detection check
+    danger_pattern = r"(arrest|custody|warrant|summons|police|inquiry|investigation|section 35|section 41a|138|cheque bounce|dishonour|penal|criminal|forfeit|penalty|non-compliance|deficiency|breach|show cause|liable|evict)"
+    heuristic_danger = bool(re.search(danger_pattern, text, re.I))
 
     prompt = f"""You are a specialized Indian legal analyst. Analyze the following legal document / notice / agreement text:
 DOCUMENT TEXT:
 \"\"\"{text[:4000]}\"\"\"
 
-Provide a structured, plain-language analysis in {lang} addressing:
-1. EXECUTIVE SUMMARY: What is this document and what is its core purpose?
-2. URGENT DEADLINES & RISK LEVEL: Identify any time windows (e.g. 7 days, 15 days), consequences of non-compliance, and overall risk rating (LOW, MEDIUM, HIGH, CRITICAL).
-3. KEY STATUTORY SAFEGUARDS: What rights or protections does the individual have under Indian law (Constitution, BNSS, BNS, Consumer Act, NI Act, etc.)?
-4. RECOMMENDED ACTION CHECKLIST: Clear step-by-step instructions on what to do next.
+FIRST LINE REQUIREMENT:
+You MUST start your response with EXACTLY one of these status tags on its own line:
+[STATUS: DANGER] -> if this document involves a police summons, threat of arrest, criminal notice, Section 138 cheque bounce demand, forfeiture of money, strict adverse legal consequences, or court appearance.
+[STATUS: SAFE] -> if this is a standard benign agreement, informational circular, receipt, or no immediate punitive/coercive threat is detected.
 
-Format using bold titles and clean bullet points."""
+Then provide a structured, plain-language breakdown in {lang} with these 4 sections:
+### 1. Executive Summary
+What is this document and what is its core purpose in simple words?
+
+### 2. Urgent Deadlines & Risk Level
+Identify any time windows (e.g. 7 days, 15 days), consequences of non-compliance, and overall risk rating.
+
+### 3. Key Statutory Safeguards & Rights
+What rights or protections does the individual have under Indian law (Constitution Art 21/22, BNSS, Consumer Act, NI Act, etc.)?
+
+### 4. Recommended Action Checklist
+Clear step-by-step practical instructions on what the person should do next. Format using clean bullet points."""
+
+    is_danger = heuristic_danger
+    analysis_text = ""
 
     try:
-        analysis_text = llm.generate(prompt)
-        if analysis_text and len(analysis_text.strip()) > 100:
-            return {"analysis": analysis_text.strip(), "analyzed": True, "lang": lang}
+        raw_output = llm.generate(prompt)
+        if raw_output and len(raw_output.strip()) > 80:
+            lines = raw_output.strip().splitlines()
+            first_line = lines[0].strip().upper()
+            if "STATUS: DANGER" in first_line:
+                is_danger = True
+                analysis_text = "\n".join(lines[1:]).strip()
+            elif "STATUS: SAFE" in first_line:
+                is_danger = False
+                analysis_text = "\n".join(lines[1:]).strip()
+            else:
+                analysis_text = raw_output.strip()
     except Exception as e:
-        print(f"[DOC ANALYZE] Note: {e}")
+        print(f"[DOC ANALYZE] LLM Note: {e}")
 
-    # Fallback heuristic analysis
-    has_bnss_notice = bool(re.search(r"35|notice|appearance|police", text, re.I))
-    has_138 = bool(re.search(r"138|cheque|negotiable|dishonour", text, re.I))
-    has_lease = bool(re.search(r"rent|lease|tenant|landlord|deposit", text, re.I))
+    # Fallback heuristic analysis if LLM fails or is empty
+    if not analysis_text:
+        has_bnss_notice = bool(re.search(r"35|notice|appearance|police|summons|warrant", text, re.I))
+        has_138 = bool(re.search(r"138|cheque|negotiable|dishonour", text, re.I))
+        has_lease = bool(re.search(r"rent|lease|tenant|landlord|deposit|forfeit", text, re.I))
 
-    if has_138:
-        summary = "This document appears to be a Statutory Legal Notice under Section 138 of the Negotiable Instruments Act, 1881 regarding dishonour of a cheque."
-        risks = "CRITICAL RISK: A mandatory 15-day cure period applies from the date of receipt. Failure to pay within 15 days allows the payee to file a criminal complaint in the Magistrate Court within the next 30 days."
-        rights = "You have the right to inspect the bank memo, verify the debt liability, and present defenses if the cheque was given for security or if there was no existing debt."
-        steps = "1. Consult an advocate immediately.\n2. Do not ignore the notice.\n3. Reply within 15 days stating your legal defense or clear the undisputed dues."
-    elif has_bnss_notice:
-        summary = "This document appears to be a Notice of Appearance under Section 35(3) of the Bharatiya Nagarik Suraksha Sanhita, 2023 (or former Section 41A CrPC)."
-        risks = "HIGH RISK: The police officer is requiring your appearance for investigation. If you comply with the notice, the police CANNOT arrest you without prior written court permission under Section 35(4) BNSS."
-        rights = "Under Section 35(3) and (4) BNSS, you have the right not to be arrested as long as you comply with the terms of the notice. You have the right to have an advocate accompany you under Article 22(1)."
-        steps = "1. Note the appearance date and time.\n2. Carry identity documents and evidence supporting your innocence.\n3. Keep a copy of your appearance acknowledgment signed by the investigating officer."
-    else:
-        summary = "This document represents a formal legal communication, agreement, or notice between parties."
-        risks = "MEDIUM RISK: Review all timeline clauses and liability terms carefully before signing or responding."
-        rights = "Any clause violating statutory public policy or fundamental rights under Article 21 is void and unenforceable under Section 23 of the Indian Contract Act."
-        steps = "1. Read all clauses thoroughly.\n2. Note any monetary claims or deadlines.\n3. Seek free legal consultation via NALSA helpline 15100 if in doubt."
+        if has_138:
+            is_danger = True
+            summary = "This document is a Statutory Legal Notice under Section 138 of the Negotiable Instruments Act, 1881 regarding dishonour of a cheque."
+            risks = "**CRITICAL RISK (RED):** A mandatory 15-day cure period applies from the date of receipt. Failure to pay within 15 days allows the complainant to file a criminal case in the Magistrate Court within the next 30 days."
+            rights = "You have the statutory right to verify the cheque memo, verify actual existing debt liability, and present defenses if the cheque was given merely as security or without consideration."
+            steps = "1. Consult an advocate immediately.\n2. Do not ignore the notice.\n3. Reply within 15 days stating your legal defense or clear the undisputed dues."
+        elif has_bnss_notice:
+            is_danger = True
+            summary = "This document is a formal Notice of Appearance under Section 35(3) of the Bharatiya Nagarik Suraksha Sanhita, 2023 (or former Section 41A CrPC)."
+            risks = "**HIGH RISK (RED):** The police are summoning you for investigation. As long as you comply with the notice, police CANNOT arrest you without prior written Magistrate sanction under Section 35(4) BNSS."
+            rights = "Under Section 35(3) and (4) BNSS, you have the right not to be arrested while complying with the terms. You have the right to have an advocate present during questioning under Article 22(1)."
+            steps = "1. Note the appearance date, time, and police station.\n2. Carry identity proof and relevant documents.\n3. Request a signed written acknowledgment of your appearance."
+        elif has_lease:
+            is_danger = True
+            summary = "This agreement contains harsh forfeiture or penalty clauses regarding security deposit or tenancy termination."
+            risks = "**HIGH RISK (RED):** Clauses threatening unilateral deposit forfeiture or illegal disconnection of utilities violate public policy."
+            rights = "Under Indian Contract Act Section 23 and tenancy law principles, unreasonable penal clauses cannot be enforced without proving actual damages."
+            steps = "1. Issue a formal legal notice disputing the penalty clause.\n2. Demand itemized accounting of deductions.\n3. Approach the Rent Authority or Consumer Commission."
+        else:
+            is_danger = False
+            summary = "This document appears to be an informational notice, standard business communication, or benign contractual extract."
+            risks = "**LOW RISK (GREEN):** No immediate penal provisions, threat of arrest, or strict statutory forfeiture detected."
+            rights = "Standard consumer and contractual protections apply. You have the right to clarify terms before signing."
+            steps = "1. Read all clauses carefully.\n2. Keep a signed copy in your records.\n3. Consult free legal aid at 15100 if you have any questions."
 
-    fallback_analysis = f"""### 1. Executive Summary
+        analysis_text = f"""### 1. Executive Summary
 {summary}
 
 ### 2. Urgent Deadlines & Risk Level
@@ -513,4 +587,12 @@ Format using bold titles and clean bullet points."""
 
 ### 4. Recommended Action Checklist
 {steps}"""
-    return {"analysis": fallback_analysis, "analyzed": True, "lang": lang}
+
+    return {
+        "analysis": analysis_text,
+        "is_danger": is_danger,
+        "risk_level": "DANGER" if is_danger else "SAFE",
+        "risk_headline": "DANGER / HIGH RISK DETECTED: URGENT LEGAL ACTION REQUIRED" if is_danger else "SAFE / LOW RISK: NO IMMEDIATE COERCIVE THREAT DETECTED",
+        "analyzed": True,
+        "lang": lang,
+    }

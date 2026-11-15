@@ -1,288 +1,316 @@
 import { useState } from "react";
-import { GitFork, CheckCircle2, AlertTriangle, ArrowRight, RotateCcw, Shield, Scale, HelpCircle } from "lucide-react";
+import {
+  ShieldAlert,
+  PhoneCall,
+  FileText,
+  AlertTriangle,
+  CheckCircle2,
+  ExternalLink,
+  ArrowRight,
+  Sparkles,
+  HelpCircle,
+  Scale,
+  CreditCard,
+  Building2,
+  ShieldCheck,
+} from "lucide-react";
 import { useLang } from "../LangContext";
+import { Link } from "react-router-dom";
 
-const TREES = [
+const ACTION_GUIDES = [
   {
-    id: "arrest",
-    title: ["Arrest Safeguards Navigator", "गिरफ्तारी सुरक्षा मार्गदर्शिका", "ਗ੍ਰਿਫ਼ਤਾਰੀ ਸੁਰੱਖਿਆ ਮਾਰਗਦਰਸ਼ਕ"],
-    statute: "BNSS Sections 35, 47, 58 & Constitution Article 22",
-    startNode: "q1",
-    nodes: {
-      q1: {
-        text: "Is the alleged offence Cognizable (serious offence like theft, cheating, assault) or Non-Cognizable (defamation, simple nuisance)?",
-        options: [
-          { label: "Non-Cognizable Offence", next: "non_cog" },
-          { label: "Cognizable Offence", next: "q2" },
-        ],
+    id: "police",
+    icon: ShieldAlert,
+    iconColor: "var(--c-blue)",
+    bgColor: "rgba(59,130,246,0.12)",
+    title: ["Police Called or Questioning You?", "पुलिस पूछताछ या थाने बुलाने पर क्या करें?", "ਪੁਲਿਸ ਪੁੱਛਗਿੱਛ ਵੇਲੇ ਕੀ ਕਰੀਏ?"],
+    category: "Criminal Procedure & Personal Liberty",
+    statute: "BNSS Sections 35, 47, 48, 58 & Constitution Article 22",
+    summary: "Clear, practical rules on what the police can and cannot do under India's new criminal laws.",
+    firstStep: "Stay calm and ask the officer for their name, designation, and whether a written Notice of Appearance (Section 35(3) BNSS) has been issued.",
+    rights: [
+      {
+        title: "No Routine Arrest for Offences under 7 Years",
+        desc: "Under Section 35(3) BNSS, police cannot arrest you routinely. They must serve a written Notice of Appearance. As long as you comply, you cannot be arrested without prior written magistrate sanction.",
       },
-      non_cog: {
-        isResult: true,
-        type: "success",
-        title: "ARREST WITHOUT WARRANT IS STRICTLY PROHIBITED",
-        statute: "Section 174 & Section 35 BNSS",
-        guidance: "For non-cognizable offences, a police officer has ZERO legal authority to arrest you without an arrest warrant duly signed and sealed by a Judicial Magistrate. If police threaten arrest, politely ask for the warrant.",
+      {
+        title: "Right to Have an Advocate Present",
+        desc: "Under Article 22(1) of the Constitution and Section 38 BNSS, you have the fundamental right to consult and be defended by a legal practitioner of your choice.",
       },
-      q2: {
-        text: "What is the maximum statutory imprisonment prescribed for the alleged offence?",
-        options: [
-          { label: "7 Years or Less (e.g. Simple theft, cheating, hurt)", next: "less_7" },
-          { label: "More than 7 Years or Life/Death", next: "more_7" },
-        ],
+      {
+        title: "Strict 24-Hour Production Rule",
+        desc: "If detained, police must produce you before the nearest Judicial Magistrate within 24 hours under Section 58 BNSS and Article 22(2). Detention beyond 24 hours without court order is illegal.",
       },
-      less_7: {
-        isResult: true,
-        type: "warning",
-        title: "MANDATORY NOTICE OF APPEARANCE (SECTION 35(3) BNSS)",
-        statute: "Section 35(3) BNSS (formerly Sec 41A CrPC) & Arnesh Kumar Guidelines",
-        guidance: "The police CANNOT arrest you routinely. The investigating officer is statutorily mandated to serve a Notice of Appearance. As long as you comply with the notice and cooperate in investigation, you cannot be arrested without prior written reasons recorded and approved by the Magistrate.",
+      {
+        title: "Mandatory Information to Family",
+        desc: "Under Section 48 BNSS, the police officer is legally mandated to immediately inform a nominated relative or friend about your arrest and the place where you are held.",
       },
-      more_7: {
-        isResult: true,
-        type: "danger",
-        title: "ARREST PERMITTED UNDER SECTION 35(1) BNSS — PROCEDURAL SAFEGUARDS APPLY",
-        statute: "Sections 47, 48, 58 BNSS & Article 22(2)",
-        guidance: "For offences punishable by more than 7 years, police can arrest without warrant if reasonable grounds exist. However, mandatory safeguards apply: 1) Officer must show badge and prepare arrest memo signed by a witness (Sec 47); 2) Right to inform a nominated family member immediately (Sec 48); 3) Mandatory production before a Magistrate within 24 hours (Sec 58).",
-      },
-    },
-  },
-  {
-    id: "bail",
-    title: ["Bailable vs Non-Bailable Navigator", "जमानती बनाम गैर-जमानती अपराध", "ਜ਼ਮਾਨਤੀ ਬਨਾਮ ਗੈਰ-ਜ਼ਮਾਨਤੀ ਅਪਰਾਧ"],
-    statute: "First Schedule & Section 478 / 480 BNSS",
-    startNode: "q1",
-    nodes: {
-      q1: {
-        text: "Is the offence categorized as Bailable in the First Schedule of the Bharatiya Nagarik Suraksha Sanhita, 2023?",
-        options: [
-          { label: "Yes, it is a Bailable Offence", next: "bailable" },
-          { label: "No, it is Non-Bailable (or Unsure)", next: "non_bailable" },
-        ],
-      },
-      bailable: {
-        isResult: true,
-        type: "success",
-        title: "BAIL IS AN ABSOLUTE STATUTORY RIGHT (SECTION 478 BNSS)",
-        statute: "Section 478 Bharatiya Nagarik Suraksha Sanhita, 2023",
-        guidance: "You have an absolute statutory right to be released on bail right at the police station or before the Magistrate upon furnishing personal bond. Police officers have no discretion to refuse bail for a bailable offence.",
-      },
-      non_bailable: {
-        isResult: true,
-        type: "warning",
-        title: "BAIL REQUIRES JUDICIAL DISCRETION (SECTION 480 BNSS)",
-        statute: "Section 480 (Magistrate) & Section 483 (Sessions/High Court) BNSS",
-        guidance: "'Non-bailable' does NOT mean bail cannot be granted; it simply means bail cannot be claimed as a matter of right at the police station. A formal Bail Application must be filed before the Judicial Magistrate or Sessions Judge.",
-      },
-    },
-  },
-  {
-    id: "consumer",
-    title: ["Consumer Forum Jurisdiction", "उपभोक्ता अदालत क्षेत्राधिकार", "ਖਪਤਕਾਰ ਅਦਾਲਤ ਅਧਿਕਾਰ ਖੇਤਰ"],
-    statute: "Consumer Protection Act, 2019 (Sections 34, 47, 58)",
-    startNode: "q1",
-    nodes: {
-      q1: {
-        text: "What is the total value of consideration paid plus compensation claimed?",
-        options: [
-          { label: "Up to ₹50 Lakhs", next: "district" },
-          { label: "Above ₹50 Lakhs up to ₹2 Crores", next: "state" },
-          { label: "Above ₹2 Crores", next: "national" },
-        ],
-      },
-      district: {
-        isResult: true,
-        type: "success",
-        title: "DISTRICT CONSUMER COMMISSION (DCDRC)",
-        statute: "Section 34 Consumer Protection Act, 2019",
-        guidance: "File your complaint before the District Consumer Disputes Redressal Commission having territorial jurisdiction over your residence or where the opposite party operates. Online filing available via e-Daakhil (edaakhil.nic.in).",
-      },
-      state: {
-        isResult: true,
-        type: "warning",
-        title: "STATE CONSUMER COMMISSION (SCDRC)",
-        statute: "Section 47 Consumer Protection Act, 2019",
-        guidance: "Complaints where consideration exceeds ₹50 Lakhs but is below ₹2 Crores lie directly before the State Consumer Commission located at the State capital.",
-      },
-      national: {
-        isResult: true,
-        type: "danger",
-        title: "NATIONAL COMMISSION (NCDRC, NEW DELHI)",
-        statute: "Section 58 Consumer Protection Act, 2019",
-        guidance: "Original jurisdiction lies with the National Consumer Disputes Redressal Commission in New Delhi for high-value claims exceeding ₹2 Crores.",
-      },
-    },
+    ],
+    donts: [
+      "Do not run away, resist physically, or sign blank papers.",
+      "Do not give any statement without understanding what is written; you have the right to remain silent against self-incrimination (Article 20(3)).",
+    ],
+    helpline: { label: "Free Legal Aid (NALSA)", number: "15100", tel: "15100" },
+    actionBtn: { label: "Check Bail Entitlement", link: "/bail-calculator" },
   },
   {
     id: "cyber",
-    title: ["Cyber Crime Reporting Protocol", "साइबर अपराध रिपोर्टिंग प्रोटोकॉल", "ਸਾਈਬਰ ਅਪਰਾਧ ਰਿਪੋਰਟਿੰਗ"],
-    statute: "Information Technology Act, 2000 & MHA 1930 Helpline",
-    startNode: "q1",
-    nodes: {
-      q1: {
-        text: "What type of cyber crime occurred?",
-        options: [
-          { label: "Financial Fraud (UPI, Credit Card, Bank Phishing)", next: "fin" },
-          { label: "Social Media Impersonation / Harassment / Extortion", next: "harass" },
-        ],
+    icon: CreditCard,
+    iconColor: "var(--c-rose)",
+    bgColor: "rgba(224,90,71,0.12)",
+    title: ["Lost Money in an Online Scam / UPI Fraud?", "ऑनलाइन धोखाधड़ी या यूपीआई फ्रॉड हुआ?", "ਆਨਲਾਈਨ ਠੱਗੀ ਹੋਣ 'ਤੇ ਕੀ ਕਰੀਏ?"],
+    category: "Cyber Crime & Financial Protection",
+    statute: "Section 66D Information Technology Act & MHA CFCFRMS Protocol",
+    summary: "Immediate steps to take within the 'Golden 2 Hours' to freeze and recover stolen funds.",
+    firstStep: "Dial 1930 immediately! The National Cyber Crime helpline can trigger an instant freeze on the scammer's bank account before the money is withdrawn.",
+    rights: [
+      {
+        title: "The Golden 2-Hour Window",
+        desc: "When reported within 2 hours, the Indian Cyber Crime Coordination Centre (I4C) communicates directly with bank payment gateways to halt transactions midway.",
       },
-      fin: {
-        isResult: true,
-        type: "danger",
-        title: "CRITICAL: GOLDEN HOUR REPORTING VIA 1930",
-        statute: "Indian Cyber Crime Coordination Centre (I4C) & IT Act Sec 66D",
-        guidance: "Immediately dial 1930 (National Cyber Financial Helpline) within 2 to 4 hours. The police coordination system directly alerts banks to freeze beneficiary accounts before the fraudsters can withdraw the funds. Also register complaint at cybercrime.gov.in.",
+      {
+        title: "Zero Liability for Prompt Reporting",
+        desc: "Under RBI Circular DBR.No.Leg.BC.78/09.07.005, if unauthorized electronic banking transactions are reported within 3 working days, customer liability is zero or strictly capped.",
       },
-      harass: {
-        isResult: true,
-        type: "warning",
-        title: "MANDATORY 24-HOUR TAKEDOWN (IT RULES 2021)",
-        statute: "IT Act Section 66E/67 & Rule 3(2)(b) IT Rules, 2021",
-        guidance: "Preserve screenshots, URLs, and chat logs. Intermediaries (Instagram, WhatsApp, X) are statutorily required to remove non-consensual intimate imagery within 24 hours of receiving a complaint. File at cybercrime.gov.in or nearest Women Cyber Police Station.",
+      {
+        title: "Statutory FIR under Sec 66D IT Act",
+        desc: "Cheating by personation using computer resources carries up to 3 years imprisonment. Every citizen has the right to register a cyber complaint without jurisdictional hurdles.",
       },
-    },
+    ],
+    donts: [
+      "Do not delete SMS, UPI transaction IDs, bank statements, or WhatsApp chat screenshots.",
+      "Do not click any remote-access app links (AnyDesk, TeamViewer, QuickSupport) sent by callers claiming to be bank executives.",
+    ],
+    helpline: { label: "National Cyber Helpline", number: "1930", tel: "1930" },
+    actionBtn: { label: "File on Cybercrime.gov.in", link: "https://cybercrime.gov.in", external: true },
+  },
+  {
+    id: "rent",
+    icon: Building2,
+    iconColor: "var(--c-gold)",
+    bgColor: "rgba(245,158,11,0.12)",
+    title: ["Landlord Refusing to Return Security Deposit?", "मकान मालिक सिक्योरिटी डिपॉजिट वापस नहीं कर रहा?", "ਮਕਾਨ ਮਾਲਕ ਸਕਿਓਰਿਟੀ ਵਾਪਸ ਨਹੀਂ ਕਰ ਰਿਹਾ?"],
+    category: "Tenancy & Civil Rights",
+    statute: "Model Tenancy Act & Indian Contract Act (Section 73/74)",
+    summary: "How to legally recover your security deposit when landlords make unreasonable deductions.",
+    firstStep: "Send a written message/email requesting an itemized breakdown of any alleged damages along with actual repair bills or contractor receipts.",
+    rights: [
+      {
+        title: "No Arbitrary Deductions",
+        desc: "Landlords cannot deduct deposit for normal wear-and-tear (e.g., standard repainting, age of property). Deductions are only permissible for actual proven structural damages.",
+      },
+      {
+        title: "Mandatory Refund Timeline",
+        desc: "Security deposits must be refunded upon peaceful handover of possession within the agreement timeline (typically within 7 to 30 days).",
+      },
+      {
+        title: "Unfair Trade Practice under Consumer Act",
+        desc: "Unjust withholding of rental advance constitutes unfair trade practice. Tenants can issue a formal 15-day demand notice claiming deposit with 12% interest.",
+      },
+    ],
+    donts: [
+      "Do not hand over keys without taking video/photo proof of the vacant, clean premises.",
+      "Do not accept verbal excuses; keep every communication in writing.",
+    ],
+    helpline: { label: "National Consumer Helpline", number: "1915", tel: "1915" },
+    actionBtn: { label: "Draft Rent Refund Notice", link: "/drafting" },
+  },
+  {
+    id: "cheque",
+    icon: Scale,
+    iconColor: "var(--c-purple)",
+    bgColor: "rgba(168,85,247,0.12)",
+    title: ["Cheque Bounced or Money Owed to You?", "चेक बाउंस हो गया या आपका पैसा अटका है?", "ਚੈੱਕ ਬਾਊਂਸ ਹੋ ਗਿਆ ਜਾਂ ਪੈਸੇ ਅਟਕੇ ਹਨ?"],
+    category: "Commercial Law & Negotiable Instruments",
+    statute: "Section 138 Negotiable Instruments Act, 1881",
+    summary: "Strict statutory procedure to recover debt and initiate criminal proceedings for bounced cheques.",
+    firstStep: "Collect the official 'Cheque Return Memo' from your bank specifying the date and dishonour reason (e.g. 'Funds Insufficient').",
+    rights: [
+      {
+        title: "Strict 30-Day Notice Rule",
+        desc: "You must send a formal legal demand notice to the drawer within 30 days from the date you received the bank return memo.",
+      },
+      {
+        title: "15 Days Mandatory Cure Period",
+        desc: "The drawer is given 15 days from the date of receiving the notice to clear the payment. The crime occurs ONLY if they fail to pay within these 15 days.",
+      },
+      {
+        title: "Criminal Prosecution & Double Compensation",
+        desc: "Under Section 138 NI Act, the court can award imprisonment up to 2 years and a fine of up to DOUBLE the cheque amount to the victim.",
+      },
+    ],
+    donts: [
+      "Do not delay sending the notice beyond the 30-day limit, or the criminal remedy may expire.",
+      "Do not surrender the original dishonoured cheque or bank memo.",
+    ],
+    helpline: { label: "National Legal Aid", number: "15100", tel: "15100" },
+    actionBtn: { label: "Draft 15-Day Cheque Notice", link: "/drafting" },
   },
 ];
 
 export default function DecisionTrees() {
   const { tr } = useLang();
-  const [activeTreeId, setActiveTreeId] = useState("arrest");
-  const [currentNodeId, setCurrentNodeId] = useState("q1");
-  const [history, setHistory] = useState([]);
+  const [selectedId, setSelectedId] = useState("police");
 
-  const activeTree = TREES.find((t) => t.id === activeTreeId) || TREES[0];
-  const currentNode = activeTree.nodes[currentNodeId] || activeTree.nodes[activeTree.startNode];
-
-  const handleSelect = (nextId) => {
-    setHistory((prev) => [...prev, currentNodeId]);
-    setCurrentNodeId(nextId);
-  };
-
-  const handleReset = () => {
-    setCurrentNodeId(activeTree.startNode);
-    setHistory([]);
-  };
+  const activeGuide = ACTION_GUIDES.find((g) => g.id === selectedId) || ACTION_GUIDES[0];
+  const Icon = activeGuide.icon;
 
   return (
     <div className="space-y-6">
       <div className="card card-accent card-raised p-6">
-        <div className="flex items-center gap-2.5 pb-4 border-b border-line">
-          <span className="tone-icon-sm" style={{ background: "rgba(16,185,129,0.12)", color: "#10b981" }}>
-            <GitFork size={18} />
-          </span>
-          <div>
-            <h2 className="text-xl font-bold font-display text-ink">
-              {tr(
-                "Interactive Procedural Decision Trees",
-                "इंटरैक्टिव प्रक्रियात्मक निर्णय वृक्ष",
-                "ਇੰਟਰਐਕਟਿਵ ਪ੍ਰਕਿਰਿਆਤਮਕ ਫੈਸਲਾ ਰੁੱਖ"
-              )}
-            </h2>
-            <p className="text-xs text-muted mt-0.5">
-              {tr(
-                "Navigate your exact legal situation step-by-step through interactive statutory condition trees.",
-                "अपने कानूनी परिदृश्य को चरण-दर-चरण नेविगेट करें और सटीक अधिकार जानें।",
-                "ਆਪਣੀ ਕਾਨੂੰਨੀ ਸਥਿਤੀ ਨੂੰ ਕਦਮ-ਦਰ-ਕਦਮ ਸਮਝੋ।"
-              )}
-            </p>
-          </div>
-        </div>
-
-        {/* Tree Selector Tabs */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mt-5">
-          {TREES.map((t) => (
-            <button
-              key={t.id}
-              type="button"
-              onClick={() => {
-                setActiveTreeId(t.id);
-                setCurrentNodeId(t.startNode);
-                setHistory([]);
-              }}
-              className={`p-3 rounded-xl border text-left transition-all ${
-                activeTreeId === t.id
-                  ? "border-accent bg-accent/10 shadow-sm"
-                  : "border-line bg-surface/40 hover:bg-surface/80"
-              }`}
-            >
-              <div className="text-xs font-bold text-ink">{tr(...t.title)}</div>
-              <div className="text-[10px] text-muted truncate mt-0.5">{t.statute}</div>
-            </button>
-          ))}
-        </div>
-
-        {/* Interactive Question / Result Card */}
-        <div className="mt-6 p-6 rounded-2xl border border-line bg-surface/40">
-          <div className="flex items-center justify-between text-xs text-muted font-semibold mb-3">
-            <span className="flex items-center gap-1.5">
-              <Scale size={14} className="text-accent" />
-              <span>{activeTree.statute}</span>
+        <div className="pb-4 border-b border-line">
+          <div className="flex items-center gap-2.5">
+            <span className="tone-icon-sm" style={{ background: "rgba(16,185,129,0.12)", color: "var(--c-green)" }}>
+              <ShieldCheck size={18} />
             </span>
-            <button
-              type="button"
-              onClick={handleReset}
-              className="hover:text-ink flex items-center gap-1 text-[11px]"
+            <div>
+              <h2 className="text-xl font-bold font-display text-ink">
+                {tr(
+                  "Citizen Action Guides: Everyday Legal Situations",
+                  "नागरिक त्वरित सहायता: आम कानूनी स्थितियां",
+                  "ਨਾਗਰਿਕ ਤੁਰੰਤ ਸਹਾਇਤਾ: ਆਮ ਕਾਨੂੰਨੀ ਸਥਿਤੀਆਂ"
+                )}
+              </h2>
+              <p className="text-xs text-muted mt-0.5">
+                {tr(
+                  "Plain-language, step-by-step rights and immediate remedies for real-life legal situations. Zero confusing jargon.",
+                  "वास्तविक जीवन की स्थितियों के लिए सरल भाषा में अधिकार और तत्काल उपाय। कोई जटिल तकनीकी शब्दावली नहीं।",
+                  "ਅਸਲ ਜ਼ਿੰਦਗੀ ਦੀਆਂ ਸਥਿਤੀਆਂ ਲਈ ਸਰਲ ਭਾਸ਼ਾ ਵਿੱਚ ਅਧਿਕਾਰ ਅਤੇ ਤੁਰੰਤ ਕਦਮ।"
+                )}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* 4 Everyday Situation Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-5">
+          {ACTION_GUIDES.map((g) => {
+            const GIcon = g.icon;
+            const isSelected = g.id === selectedId;
+            return (
+              <button
+                key={g.id}
+                type="button"
+                onClick={() => setSelectedId(g.id)}
+                className={`p-4 rounded-xl border text-left transition-all ${
+                  isSelected
+                    ? "bg-accent/15 border-accent shadow-sm"
+                    : "border-line bg-surface/50 hover:bg-surface"
+                }`}
+              >
+                <div
+                  className="h-9 w-9 rounded-lg flex items-center justify-center mb-2.5"
+                  style={{ background: g.bgColor, color: g.iconColor }}
+                >
+                  <GIcon size={18} />
+                </div>
+                <div className="font-bold text-xs text-ink line-clamp-2">{tr(g.title[0], g.title[1], g.title[2])}</div>
+                <div className="text-[10px] text-muted mt-1">{g.category}</div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Selected Situation Breakdown */}
+      <div className="card card-accent card-raised p-6 sm:p-8 space-y-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-line">
+          <div className="flex items-center gap-3">
+            <div
+              className="h-11 w-11 rounded-xl flex items-center justify-center shrink-0"
+              style={{ background: activeGuide.bgColor, color: activeGuide.iconColor }}
             >
-              <RotateCcw size={12} /> {tr("Restart", "पुनः आरंभ", "ਮੁੜ ਸ਼ੁਰੂ")}
-            </button>
+              <Icon size={22} />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-ink">
+                {tr(activeGuide.title[0], activeGuide.title[1], activeGuide.title[2])}
+              </h3>
+              <p className="text-xs text-muted mt-0.5">{activeGuide.statute}</p>
+            </div>
           </div>
 
-          {!currentNode.isResult ? (
-            <div className="space-y-4">
-              <h3 className="text-base sm:text-lg font-bold text-ink font-display leading-snug">
-                {currentNode.text}
-              </h3>
-              <div className="space-y-2.5 pt-2">
-                {currentNode.options.map((opt, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => handleSelect(opt.next)}
-                    className="w-full text-left p-4 rounded-xl border border-line bg-surface hover:border-accent hover:bg-accent/5 transition-all flex items-center justify-between group shadow-sm"
-                  >
-                    <span className="text-xs sm:text-sm font-semibold text-ink group-hover:text-accent">
-                      {opt.label}
-                    </span>
-                    <ArrowRight size={16} className="text-muted group-hover:text-accent group-hover:translate-x-1 transition-all shrink-0" />
-                  </button>
-                ))}
-              </div>
-            </div>
+          {/* Quick Action Button */}
+          {activeGuide.actionBtn.external ? (
+            <a
+              href={activeGuide.actionBtn.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-sm btn-primary flex items-center gap-1.5 text-xs font-bold"
+            >
+              <span>{activeGuide.actionBtn.label}</span>
+              <ExternalLink size={13} />
+            </a>
           ) : (
-            <div className="space-y-4">
-              <div className="flex items-start gap-3">
-                {currentNode.type === "success" ? (
-                  <CheckCircle2 size={24} className="text-emerald-500 shrink-0 mt-0.5" />
-                ) : currentNode.type === "danger" ? (
-                  <AlertTriangle size={24} className="text-red-500 shrink-0 mt-0.5" />
-                ) : (
-                  <AlertTriangle size={24} className="text-amber-500 shrink-0 mt-0.5" />
-                )}
-                <div>
-                  <h3 className="text-sm sm:text-base font-bold text-ink tracking-wide">
-                    {currentNode.title}
-                  </h3>
-                  <div className="text-xs font-semibold text-accent mt-0.5">
-                    {currentNode.statute}
-                  </div>
-                </div>
-              </div>
-
-              <div className="p-4 rounded-xl bg-surface/80 border border-line text-xs sm:text-sm leading-relaxed text-ink/90">
-                {currentNode.guidance}
-              </div>
-
-              <div className="pt-2 flex justify-end">
-                <button
-                  type="button"
-                  onClick={handleReset}
-                  className="btn btn-sm btn-primary flex items-center gap-1.5 text-xs"
-                >
-                  <RotateCcw size={13} />
-                  <span>{tr("Try Another Scenario", "अन्य परिदृश्य का परीक्षण करें", "ਹੋਰ ਸਥਿਤੀ ਦੇਖੋ")}</span>
-                </button>
-              </div>
-            </div>
+            <Link
+              to={activeGuide.actionBtn.link}
+              className="btn btn-sm btn-primary flex items-center gap-1.5 text-xs font-bold"
+            >
+              <span>{activeGuide.actionBtn.label}</span>
+              <ArrowRight size={13} />
+            </Link>
           )}
+        </div>
+
+        {/* Immediate First Step Box */}
+        <div className="p-4 rounded-xl bg-accent/10 border border-accent/30 space-y-1">
+          <div className="flex items-center gap-1.5 text-xs font-bold text-accent-ink uppercase tracking-wider">
+            <Sparkles size={14} className="text-accent" />
+            <span>{tr("Immediate First Step (What to do right now):", "पहला तत्काल कदम:", "ਪਹਿਲਾ ਤੁਰੰਤ ਕਦਮ:")}</span>
+          </div>
+          <p className="text-sm font-semibold text-ink leading-relaxed">
+            {activeGuide.firstStep}
+          </p>
+        </div>
+
+        {/* Key Statutory Rights */}
+        <div>
+          <h4 className="text-xs font-bold text-ink uppercase tracking-wider mb-3">
+            {tr("Your Essential Statutory Rights & Protections", "आपके प्रमुख कानूनी अधिकार", "ਤੁਹਾਡੇ ਕਾਨੂੰਨੀ ਅਧਿਕਾਰ")}
+          </h4>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {activeGuide.rights.map((r, i) => (
+              <div key={i} className="p-4 rounded-xl bg-surface/60 border border-line space-y-1.5">
+                <div className="flex items-center gap-2 text-xs font-bold text-ink">
+                  <CheckCircle2 size={15} className="text-emerald-500 shrink-0" />
+                  <span>{r.title}</span>
+                </div>
+                <p className="text-xs text-muted leading-relaxed pl-5">
+                  {r.desc}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* What NOT to do */}
+        <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/30 space-y-2">
+          <div className="flex items-center gap-2 text-xs font-bold text-red-600 dark:text-red-400 uppercase tracking-wider">
+            <AlertTriangle size={15} />
+            <span>{tr("Common Mistakes to Avoid (What NOT to do):", "बचने योग्य सामान्य गलतियाँ:", "ਬਚਣ ਯੋਗ ਗਲਤੀਆਂ:")}</span>
+          </div>
+          <ul className="space-y-1 text-xs text-red-950 dark:text-red-200 list-disc pl-5">
+            {activeGuide.donts.map((d, i) => (
+              <li key={i}>{d}</li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Emergency Helpline Banner */}
+        <div className="flex items-center justify-between p-4 rounded-xl bg-surface/60 border border-line flex-wrap gap-3">
+          <div className="flex items-center gap-2 text-xs">
+            <PhoneCall size={16} className="text-accent" />
+            <span className="font-bold text-ink">{activeGuide.helpline.label}:</span>
+            <span className="text-muted">Dial toll-free {activeGuide.helpline.number}</span>
+          </div>
+          <a
+            href={`tel:${activeGuide.helpline.tel}`}
+            className="btn btn-sm btn-ghost text-xs font-bold border border-line flex items-center gap-1.5 text-accent"
+          >
+            <span>Call {activeGuide.helpline.number}</span>
+            <ArrowRight size={13} />
+          </a>
         </div>
       </div>
     </div>
