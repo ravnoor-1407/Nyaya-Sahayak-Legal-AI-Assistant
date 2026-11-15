@@ -1,0 +1,68 @@
+================================================================================
+     07 — NALSA SECTION 12 FREE LEGAL AID CALCULATOR (/legal-aid)
+================================================================================
+
+HOW TO TEST:
+1. Open the Legal Aid page: https://nyaya-sahayak-legal-ai-assistant.vercel.app/legal-aid
+2. Test the demographic and income scenarios below.
+3. Observe how statutory exemptions (Section 12(a)-(g)) bypass income limits.
+
+--------------------------------------------------------------------------------
+TEST CASE 7.1: AUTOMATIC QUALIFICATION — WOMAN / CHILD (INCOME-EXEMPT)
+--------------------------------------------------------------------------------
+INPUTS:
+- Category: "Woman" (or "Child under 18")
+- Annual Family Income: ₹10,00,000 (High income entered intentionally)
+- State: Delhi
+
+EXPECTED OUTCOME:
+- VERDICT: "ELIGIBLE FOR FREE LEGAL AID" (Green Badge)
+- STATUTORY PROVISION: Section 12(c) of Legal Services Authorities Act, 1987.
+- EXPLANATION: Women and children qualify automatically for free representation regardless of financial status.
+- ACTION STEPS: Instructions on how to approach DLSA or call 15100.
+
+--------------------------------------------------------------------------------
+TEST CASE 7.2: AUTOMATIC QUALIFICATION — SC / ST CITIZEN
+--------------------------------------------------------------------------------
+INPUTS:
+- Category: "Member of Scheduled Caste (SC)" or "Scheduled Tribe (ST)"
+- Annual Income: Any amount
+
+EXPECTED OUTCOME:
+- VERDICT: "ELIGIBLE FOR FREE LEGAL AID"
+- STATUTORY PROVISION: Section 12(a) of Legal Services Authorities Act, 1987.
+
+--------------------------------------------------------------------------------
+TEST CASE 7.3: PERSON IN CUSTODY / UNDERTRIAL
+--------------------------------------------------------------------------------
+INPUTS:
+- Category: "Person in Custody / Jail Detention"
+
+EXPECTED OUTCOME:
+- VERDICT: "ELIGIBLE FOR FREE LEGAL AID"
+- STATUTORY PROVISION: Section 12(g) of Legal Services Authorities Act, 1987.
+
+--------------------------------------------------------------------------------
+TEST CASE 7.4: GENERAL CATEGORY BELOW STATE CEILING (DELHI)
+--------------------------------------------------------------------------------
+INPUTS:
+- Category: "General Citizen"
+- State: Delhi (State Legal Services Authority ceiling: ₹3,00,000)
+- Annual Family Income: ₹1,80,000
+
+EXPECTED OUTCOME:
+- VERDICT: "ELIGIBLE FOR FREE LEGAL AID"
+- REASON: Annual income of ₹1,80,000 is below the ₹3,00,000 statutory limit for Delhi.
+
+--------------------------------------------------------------------------------
+TEST CASE 7.5: GENERAL CATEGORY EXCEEDING STATE CEILING
+--------------------------------------------------------------------------------
+INPUTS:
+- Category: "General Citizen"
+- State: Delhi
+- Annual Family Income: ₹6,50,000
+
+EXPECTED OUTCOME:
+- VERDICT: "NOT ELIGIBLE UNDER INCOME CRITERIA" (Amber Warning)
+- ALTERNATIVE GUIDANCE: Mentions Lok Adalat mediation and DLSA legal advice clinics.
+================================================================================

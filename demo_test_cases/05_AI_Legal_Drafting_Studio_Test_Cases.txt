@@ -1,0 +1,58 @@
+================================================================================
+             05 — AI LEGAL DRAFTING STUDIO TEST CASES (/drafting)
+================================================================================
+
+HOW TO TEST:
+1. Open the Drafting Studio: https://nyaya-sahayak-legal-ai-assistant.vercel.app/drafting
+2. Use the quick presets or choose a document type.
+3. Click "Generate Formal Legal Draft".
+4. Test the ISOLATED PRINT feature by clicking "Print / Save as PDF".
+
+--------------------------------------------------------------------------------
+TEST CASE 5.1: ZERO-FIR POLICE COMPLAINT (SECTION 173 BNSS)
+--------------------------------------------------------------------------------
+HOW TO EXECUTE:
+1. Click the quick test button: "Theft FIR"
+2. Form fields will populate:
+   - Document Type: Zero-FIR / Police Complaint (Sec 173 BNSS)
+   - Complainant Name: Rahul Verma
+   - Phone: +91 9876543210
+   - Address: Flat 204, Preet Vihar, Delhi
+   - Police Station: Concerned SHO, Preet Vihar Police Station
+   - Date & Time: Recent timestamp
+   - Location: Sector 18 Market, Metro Pillar 42
+   - Incident Details: Theft of laptop bag containing HP Spectre and official documents from parked car.
+3. Click "Generate Formal Legal Draft".
+4. Generated draft contains:
+   - Proper formal legal structure addressed to SHO.
+   - Reference to Section 173 BNSS (Zero-FIR statutory obligation).
+   - Structured facts and formal verification oath.
+
+--------------------------------------------------------------------------------
+TEST CASE 5.2: ISOLATED WORD-LIKE PRINT TEST (CRITICAL UI VERIFICATION)
+--------------------------------------------------------------------------------
+HOW TO EXECUTE:
+1. On the generated draft from Test Case 5.1, click "Print / Save as PDF".
+2. OBSERVE THE PRINT PREVIEW DIALOG:
+   - It prints ONLY the clean, formatted legal draft (like an exported Word document).
+   - The top website navbar, header, buttons, sidebar, and footer are completely stripped out!
+   - This verifies the dedicated print style fix requested.
+
+--------------------------------------------------------------------------------
+TEST CASE 5.3: CHEQUE BOUNCE STATUTORY NOTICE (SECTION 138 NI ACT)
+--------------------------------------------------------------------------------
+HOW TO EXECUTE:
+1. Click the quick test button: "Cheque Bounce"
+2. Click "Generate Formal Legal Draft".
+3. Formats a statutory 15-day notice with:
+   - Cheque number, date, bank name, memo return reason ("Funds Insufficient").
+   - 15-day payment demand countdown clause before filing criminal case.
+
+--------------------------------------------------------------------------------
+TEST CASE 5.4: CONSUMER DEFICIENCY NOTICE (CONSUMER PROTECTION ACT 2019)
+--------------------------------------------------------------------------------
+HOW TO EXECUTE:
+1. Click the quick test button: "Consumer Notice"
+2. Click "Generate Formal Legal Draft".
+3. Formats formal legal notice to vendor demanding replacement or refund under CPA 2019.
+================================================================================

@@ -1,0 +1,69 @@
+================================================================================
+           08 — CONTACT & CITIZEN GRIEVANCE DESK TEST CASES (/contact)
+================================================================================
+
+HOW TO TEST:
+1. Open Contact page: https://nyaya-sahayak-legal-ai-assistant.vercel.app/contact
+2. Follow the test scenarios below to test live ticket generation and form validation.
+
+--------------------------------------------------------------------------------
+TEST CASE 8.1: SUCCESSFUL SUBMISSION VIA QUICK PRESET (LIVE TICKET GENERATION)
+--------------------------------------------------------------------------------
+STEPS:
+1. Click the quick preset button: "Legal Aid".
+2. Fields auto-fill:
+   - Name: Sunita Verma
+   - Email: sunita.verma@example.com
+   - Phone: +91 98765 43210
+   - Topic: Free legal aid (NALSA / DLSA)
+   - Message: Inquiring about free legal representation under Section 12 NALSA.
+3. Click "Submit Inquiry & Generate Ticket".
+
+EXPECTED RESULT:
+- Loading spinner: "Registering Inquiry...".
+- Transitions to SUCCESS CARD:
+  - "Inquiry Successfully Registered" (Green Checkmark).
+  - OFFICIAL GRIEVANCE TICKET NUMBER: e.g. #NYA-2026-F8A2.
+  - Summary breakdown of complainant name, email, topic, and registration timestamp.
+  - 24–48 hour response SLA notice.
+  - Action buttons: "Copy Ticket", "Open in Gmail Web", "Open Email Client", "New Inquiry".
+
+--------------------------------------------------------------------------------
+TEST CASE 8.2: 1-CLICK GMAIL WEB DRAFT VERIFICATION
+--------------------------------------------------------------------------------
+STEPS:
+1. On the success screen from Test Case 8.1, click "Open in Gmail Web".
+EXPECTED RESULT:
+- Opens a new tab with Gmail Web composer pre-filled with:
+  - To: nyayaSahayakLegal@gmail.com
+  - Subject: [NYA-2026-XXXX] NyayaSahayak: Free legal aid (NALSA / DLSA)
+  - Body: Complete details including Ticket ID, Name, Email, and message.
+
+--------------------------------------------------------------------------------
+TEST CASE 8.3: FORM VALIDATION TEST (PREVENTS INVALID DATA)
+--------------------------------------------------------------------------------
+STEPS:
+1. Click "New Inquiry" to reset the form.
+2. Enter Name: "A" (less than 2 characters).
+3. Enter Email: "not-an-email" (invalid email pattern).
+4. Enter Message: "test" (less than 10 characters).
+5. Click "Submit Inquiry & Generate Ticket".
+
+EXPECTED RESULT:
+- Form submission is blocked.
+- Red warning borders appear on Name, Email, and Message.
+- Clear error messages display under each field.
+
+--------------------------------------------------------------------------------
+TEST CASE 8.4: 24×7 CITIZEN HELPLINE CLICK-TO-CALL
+--------------------------------------------------------------------------------
+STEPS:
+1. In the right column, verify the government hotlines:
+   - 15100: National Legal Aid Helpline (NALSA)
+   - 1915: National Consumer Helpline
+   - 1930: Cyber Crime & Financial Fraud
+   - 181: Women in Distress (24×7)
+   - 1098: Childline
+2. Click on the "15100" button -> verifies `tel:15100` link.
+3. Click on the "1930" button -> verifies `tel:1930` link.
+================================================================================

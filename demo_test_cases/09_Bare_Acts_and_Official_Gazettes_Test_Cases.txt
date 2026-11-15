@@ -1,0 +1,32 @@
+================================================================================
+       09 — BARE ACTS EXPLORER & OFFICIAL GAZETTES TEST CASES (/acts, /official)
+================================================================================
+
+HOW TO TEST:
+1. Open Bare Acts: https://nyaya-sahayak-legal-ai-assistant.vercel.app/acts
+2. Open Gazette Verification: https://nyaya-sahayak-legal-ai-assistant.vercel.app/official
+
+--------------------------------------------------------------------------------
+TEST CASE 9.1: BROWSE ACTS & SECTIONS
+--------------------------------------------------------------------------------
+STEPS:
+1. Open `/acts`.
+2. Observe the Core Statutes:
+   - Bharatiya Nyaya Sanhita, 2023 (Act No. 45 of 2023)
+   - Bharatiya Nagarik Suraksha Sanhita, 2023 (Act No. 46 of 2023)
+   - Bharatiya Sakshya Adhiniyam, 2023 (Act No. 47 of 2023)
+   - Constitution of India
+   - POCSO Act, 2012
+3. Select "Bharatiya Nyaya Sanhita, 2023".
+4. In the filter box, type: "defamation".
+5. Click on Section 356 -> Full statutory text, explanations, and community service provisions display.
+
+--------------------------------------------------------------------------------
+TEST CASE 9.2: OFFICIAL GAZETTE VERIFICATION BADGE (/official)
+--------------------------------------------------------------------------------
+STEPS:
+1. Open `/official`.
+2. Verify the "Official Acts and Official Gazette Corpus" card.
+3. Shows the statutory audit badge confirming all texts match the official Gazette of India published by the Ministry of Law and Justice.
+4. Outbound links connect directly to egazette.gov.in and indiacode.nic.in.
+================================================================================

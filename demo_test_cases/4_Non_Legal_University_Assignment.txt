@@ -1,0 +1,32 @@
+LOVELY PROFESSIONAL UNIVERSITY
+
+Department of Computer Science and Engineering | Course: CSE 276 (AI Foundations)
+
+COURSE CODE: CSE 276 -- ARTIFICIAL INTELLIGENCE FOUNDATIONS
+
+ACADEMIC YEAR: 2026-2027 | SEMESTER: 5 | GROUP: ZJ14
+
+PROJECT REPORT: APPLICATION OF REINFORCEMENT LEARNING IN QUADCOPTER NAVIGATION
+
+SUBMITTED BY:
+Student Name: Rahul Sharma
+Registration / UID: 12509999
+Roll Number: K3P25ZJA99
+Program: B.Tech Computer Science and Engineering (AI & ML)
+
+FACULTY SUPERVISOR:
+Dr. Arvind K. Swaminathan, Associate Professor,
+School of Computer Science and Engineering, Lovely Professional University, Punjab - 144411.
+
+ABSTRACT:
+Autonomous quadcopter navigation in indoor obstacle-dense environments poses substantial control challenges. In this project, we formulate the path-planning objective as a Markov Decision Process (MDP) and implement Deep Q-Networks (DQN) with Proximal Policy Optimization (PPO). The simulation results demonstrate a 94.2% obstacle-avoidance success rate across 500 stochastic maze configurations.
+
+TABLE OF CONTENTS:
+1. Introduction & Problem Statement
+2. Literature Review & Prior Implementations
+3. Mathematical Formulation (MDP & Bellman Optimality)
+4. Neural Network Architecture & Hyperparameters
+5. Experimental Results, Loss Curves & Quantitative Evaluation
+6. Conclusion and Future Directions
+
+Declaration: I hereby declare that this assignment project is my original work and has been completed under the guidance of my faculty supervisor at LPU.

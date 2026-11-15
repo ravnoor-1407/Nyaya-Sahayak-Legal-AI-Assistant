@@ -1,0 +1,87 @@
+================================================================================
+             02 — SEMANTIC LAW SEARCH TEST CASES (ROUTE: /search)
+================================================================================
+
+HOW TO TEST:
+1. Open the Semantic Law Search page: https://nyaya-sahayak-legal-ai-assistant.vercel.app/search
+   (Or from the top navbar: "Citizen Hub and Acts" dropdown -> "Law search").
+2. Copy and paste any of the test queries below into the search bar.
+3. Observe how the hybrid semantic retrieval returns the exact provision with official gazette text.
+
+--------------------------------------------------------------------------------
+TEST CASE 2.1: EXACT PROVISION LOOKUP (BNSS)
+--------------------------------------------------------------------------------
+QUERY:
+Section 105 BNSS
+
+EXPECTED TOP RESULT:
+BNSS Section 105 — "Recording of search and seizure through audio-video electronic means."
+KEY TEXT: Mandates audio-video electronic recording of search of place or seizure of property.
+
+--------------------------------------------------------------------------------
+TEST CASE 2.2: CROSS-WALK FROM OLD IPC TO NEW BNS (MURDER)
+--------------------------------------------------------------------------------
+QUERY:
+Murder definition and punishment
+
+EXPECTED TOP RESULT:
+BNS Section 101 (Murder definition) & BNS Section 103 (Punishment for murder).
+NOTE: Proves the search maps the old Section 302 IPC concept directly to the new 2023 code.
+
+--------------------------------------------------------------------------------
+TEST CASE 2.3: ADMISSIBILITY OF ELECTRONIC EVIDENCE (REPLACING 65B IEA)
+--------------------------------------------------------------------------------
+QUERY:
+admissibility of electronic record certificate
+
+EXPECTED TOP RESULT:
+BSA Section 63 — "Admissibility of electronic records."
+NOTE: Directly returns the successor to Section 65B of the repealed Indian Evidence Act.
+
+--------------------------------------------------------------------------------
+TEST CASE 2.4: ZERO-FIR JURISDICTIONAL MANDATE
+--------------------------------------------------------------------------------
+QUERY:
+zero fir registration at any police station
+
+EXPECTED TOP RESULT:
+BNSS Section 173 — "Information in cognizable cases."
+NOTE: Sub-section (1) explicitly requires police to record information irrespective of the area.
+
+--------------------------------------------------------------------------------
+TEST CASE 2.5: MANDATORY UNDERTRIAL BAIL PROVISION
+--------------------------------------------------------------------------------
+QUERY:
+undertrial prisoner maximum period for which can be detained
+
+EXPECTED TOP RESULT:
+BNSS Section 479 — "Maximum period for which undertrial prisoner can be detained."
+NOTE: Highlights 1/3rd sentence release for first-time offenders.
+
+--------------------------------------------------------------------------------
+TEST CASE 2.6: CONSTITUTIONAL RIGHT TO SPEEDY JUSTICE & LEGAL AID
+--------------------------------------------------------------------------------
+QUERY:
+Article 21 speedy trial right and legal aid
+
+EXPECTED TOP RESULT:
+Constitution of India, Article 21 & Article 39A.
+
+--------------------------------------------------------------------------------
+TEST CASE 2.7: CYBER HARASSMENT & STALKING OF WOMEN
+--------------------------------------------------------------------------------
+QUERY:
+stalking of woman through electronic communication
+
+EXPECTED TOP RESULT:
+BNS Section 78 — "Stalking."
+
+--------------------------------------------------------------------------------
+TEST CASE 2.8: COMMUNITY SERVICE AS A NEW FORM OF PUNISHMENT
+--------------------------------------------------------------------------------
+QUERY:
+community service punishment for petty offences
+
+EXPECTED TOP RESULT:
+BNS Section 4(f) — Community service introduced as an official alternative penalty.
+================================================================================

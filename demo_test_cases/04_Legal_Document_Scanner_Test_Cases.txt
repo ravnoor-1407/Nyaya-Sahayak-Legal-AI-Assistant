@@ -1,0 +1,90 @@
+================================================================================
+     04 — LEGAL DOCUMENT SCANNER & RISK ANALYZER TEST CASES (/scanner)
+================================================================================
+
+HOW TO TEST:
+1. Open the Scanner: https://nyaya-sahayak-legal-ai-assistant.vercel.app/scanner
+2. You can either:
+   a) DRAG AND DROP any of the sample Word documents (.docx) from this folder into the upload box.
+   b) OR copy the text from the corresponding .txt files and paste it into the "Paste Document Text" box.
+3. Click "Analyze & Detect Risks".
+
+--------------------------------------------------------------------------------
+TEST CASE 4.1: URGENT POLICE SUMMONS NOTICE (DANGER / HIGH RISK)
+--------------------------------------------------------------------------------
+FILE TO UPLOAD:
+1_Police_Summons_Notice_Sec35_BNSS.docx
+(Or copy text from: 1_Police_Summons_Notice_Sec35_BNSS.txt)
+
+EXPECTED OUTPUT:
+- TRAFFIC LIGHT STATUS: RED DANGER BADGE
+  "DANGER / HIGH RISK — URGENT ACTION REQUIRED"
+- DETECTED DEADLINE:
+  "Appearance ordered within 48 Hours before Investigating Officer at Cyber Crime Police Station"
+- IDENTIFIED SECTIONS:
+  BNSS Section 35(3), BNS Section 318(4), IT Act Section 66D
+- PLAIN LANGUAGE BREAKDOWN:
+  1. This is a formal criminal summons under new procedural law.
+  2. Failure to comply can result in non-bailable arrest warrant under Section 35(6) BNSS.
+  3. You have the right to consult legal counsel under Article 22(1).
+
+--------------------------------------------------------------------------------
+TEST CASE 4.2: CHEQUE BOUNCE STATUTORY DEMAND NOTICE (DANGER / HIGH RISK)
+--------------------------------------------------------------------------------
+FILE TO UPLOAD:
+2_Cheque_Bounce_Notice_Sec138_NI_Act.docx
+(Or copy text from: 2_Cheque_Bounce_Notice_Sec138_NI_Act.txt)
+
+EXPECTED OUTPUT:
+- TRAFFIC LIGHT STATUS: RED DANGER BADGE
+  "DANGER / HIGH RISK — STATUTORY TIMELINE RUNNING"
+- DETECTED DEADLINE:
+  "Mandatory 15-day payment period from receipt of notice"
+- IDENTIFIED SECTIONS:
+  Negotiable Instruments Act Section 138, BNS Section 318
+- PLAIN LANGUAGE BREAKDOWN:
+  1. Failure to pay ₹4,50,000 within 15 days allows the complainant to file a criminal complaint in court within the next 30 days.
+
+--------------------------------------------------------------------------------
+TEST CASE 4.3: RESIDENTIAL LEASE AGREEMENT (MEDIUM RISK / ATTENTION REQUIRED)
+--------------------------------------------------------------------------------
+FILE TO UPLOAD:
+3_Residential_Tenancy_Lease_Agreement.docx
+(Or copy text from: 3_Residential_Tenancy_Lease_Agreement.txt)
+
+EXPECTED OUTPUT:
+- TRAFFIC LIGHT STATUS: AMBER BADGE
+  "MEDIUM RISK / ATTENTION REQUIRED"
+- KEY CLAUSES EXTRACTED:
+  1. 11-Month Tenancy Period.
+  2. Refundable Security Deposit of ₹1,05,000 to be returned within 15 days of vacation.
+  3. One month notice period for termination.
+
+--------------------------------------------------------------------------------
+TEST CASE 4.4: MUTUAL SETTLEMENT & FULL NOC RECEIPT (SAFE / GREEN TICK)
+--------------------------------------------------------------------------------
+FILE TO UPLOAD:
+5_Mutual_Settlement_and_NOC_Receipt.docx
+(Or copy text from: 5_Mutual_Settlement_and_NOC_Receipt.txt)
+
+EXPECTED OUTPUT:
+- TRAFFIC LIGHT STATUS: GREEN SAFE BADGE
+  "SAFE / LOW RISK — DISCHARGED OBLIGATIONS"
+- KEY ASSESSMENT:
+  1. Full and final payment acknowledged.
+  2. Zero pending liabilities, no active litigation risk detected.
+
+--------------------------------------------------------------------------------
+TEST CASE 4.5: NON-LEGAL UNIVERSITY ASSIGNMENT (REJECTION GUARDRAIL TEST)
+--------------------------------------------------------------------------------
+FILE TO UPLOAD:
+4_Non_Legal_University_Assignment.docx
+(Or copy text from: 4_Non_Legal_University_Assignment.txt)
+
+EXPECTED OUTPUT:
+- SPECIAL WARNING BANNER (NON-LEGAL DOCUMENT DETECTED):
+  "Non-Legal Document Detected: This uploaded file appears to be an academic paper, 
+  engineering report, or non-legal text rather than a formal legal notice, court summons, 
+  or contract. The Legal Risk Analyzer only processes formal legal instruments."
+- VERIFICATION POINT: Proves the system does NOT falsely flag academic/computer science homework as criminal threats!
+================================================================================

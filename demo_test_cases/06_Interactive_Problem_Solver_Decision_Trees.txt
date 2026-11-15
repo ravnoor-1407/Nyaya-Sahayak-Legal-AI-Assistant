@@ -1,0 +1,39 @@
+================================================================================
+     06 — INTERACTIVE LEGAL PROBLEM SOLVER DECISION TREES (/flowcharts)
+================================================================================
+
+HOW TO TEST:
+1. Open Decision Trees: https://nyaya-sahayak-legal-ai-assistant.vercel.app/flowcharts
+2. Select any of the interactive legal flows below.
+3. Click through the step-by-step decision options to see the guided legal path.
+
+--------------------------------------------------------------------------------
+DECISION FLOW 1: WHAT TO DO IF POLICE ARREST YOU (BNSS PROCEDURAL RIGHTS)
+--------------------------------------------------------------------------------
+STEP 1: Select "What to do if Police Arrest You".
+STEP 2: Node 1 asks: "Did the police officer show a warrant?"
+   - Click "NO (Arrest without warrant)".
+   - System explains Section 35 BNSS: arrest without warrant is only permissible for cognizable offences punishable with over 3 years, or with special DSP permission for elderly persons under Sec 35(7).
+STEP 3: Node 2 asks: "Have you been informed of grounds of arrest and bail entitlement?"
+   - System highlights mandatory duty under Section 47 BNSS.
+STEP 4: Node 3: "Right to inform relative / advocate under Section 48 BNSS."
+STEP 5: Final Step: "Mandatory Magistrate production within 24 hours under Section 58 BNSS."
+   - Helpline card shows 15100 for immediate legal aid advocate.
+
+--------------------------------------------------------------------------------
+DECISION FLOW 2: REMEDIES IF POLICE REFUSE TO REGISTER FIR
+--------------------------------------------------------------------------------
+STEP 1: Select "What to do if Police Station Refuses your FIR".
+STEP 2: Node 1: "Request a Zero-FIR under Section 173(1) BNSS."
+STEP 3: Node 2: "If station still refuses, send written substance to Superintendent of Police (SP) under Section 173(4) BNSS."
+STEP 4: Node 3: "If SP does not act, file an application before Judicial Magistrate under Section 175(3) BNSS for court-monitored investigation."
+
+--------------------------------------------------------------------------------
+DECISION FLOW 3: CHEQUE BOUNCE RECOVERY & CRIMINAL COMPLAINT
+--------------------------------------------------------------------------------
+STEP 1: Select "Cheque Dishonour Legal Flowchart (Section 138 NI Act)".
+STEP 2: Stage 1: Obtain Bank Return Memo ("Funds Insufficient").
+STEP 3: Stage 2: Send formal statutory demand notice within 30 days.
+STEP 4: Stage 3: Wait 15 days for payment.
+STEP 5: Stage 4: If unpaid, file criminal complaint before Magistrate within 30 days.
+================================================================================

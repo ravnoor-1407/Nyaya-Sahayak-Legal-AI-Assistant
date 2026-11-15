@@ -1,0 +1,80 @@
+================================================================================
+         03 — SECTION 479 BNSS BAIL CALCULATOR TEST CASES (/bail-calculator)
+================================================================================
+
+BACKGROUND:
+Section 479 of the Bharatiya Nagarik Suraksha Sanhita, 2023 (BNSS) replaced old Section 436A CrPC.
+It introduced a landmark reform for undertrials:
+1. First-time offenders: Mandatory release on bail after serving 1/3rd of the maximum sentence.
+2. Other offenders: Mandatory release on bail after serving 1/2 of the maximum sentence.
+3. Excluded: Offences punishable by death or life imprisonment.
+
+HOW TO TEST:
+1. Open: https://nyaya-sahayak-legal-ai-assistant.vercel.app/bail-calculator
+2. Input the values from any of the scenarios below.
+3. Click "Calculate Undertrial Bail Entitlement".
+
+--------------------------------------------------------------------------------
+SCENARIO 1: FIRST-TIME OFFENDER ENTITLED UNDER 1/3RD RULE (SUCCESS / ELIGIBLE)
+--------------------------------------------------------------------------------
+INPUTS:
+- 1. Select Alleged Offence: "Theft - Section 303(2) BNS" (Max: 3 Years / 36 Months)
+- 2. Is the Undertrial a First-Time Offender?: YES (First-Timer)
+- 3. Date of First Police Remand / Judicial Custody: Set date to 14 MONTHS AGO 
+     (e.g., if today is November 2026, set to September 2025).
+
+EXPECTED OUTPUT:
+- Maximum Sentence: 36 Months
+- Mandatory Threshold: 12 Months (1/3rd)
+- Time Served: ~14 Months
+- VERDICT BANNER: 
+  "MANDATORY BAIL APPLICABLE — IMMEDIATE RELEASE ENTITLEMENT" (Green Banner)
+- PREVIEW BAIL APPLICATION:
+  Pre-populates an application under Section 479 BNSS addressed to the Chief Judicial Magistrate / Sessions Judge.
+
+--------------------------------------------------------------------------------
+SCENARIO 2: REPEAT OFFENDER ENTITLED UNDER 1/2 RULE (SUCCESS / ELIGIBLE)
+--------------------------------------------------------------------------------
+INPUTS:
+- 1. Select Alleged Offence: "Cheating & Dishonestly Inducing Delivery - Section 318(4) BNS" (Max: 7 Years / 84 Months)
+- 2. Is the Undertrial a First-Time Offender?: NO (Previous Conviction or Repeat Undertrial)
+- 3. Date of First Police Remand / Judicial Custody: Set date to 45 MONTHS AGO
+     (e.g. February 2023).
+
+EXPECTED OUTPUT:
+- Maximum Sentence: 84 Months
+- Mandatory Threshold: 42 Months (1/2)
+- Time Served: ~45 Months
+- VERDICT BANNER:
+  "MANDATORY BAIL APPLICABLE — IMMEDIATE RELEASE ENTITLEMENT" (Green Banner)
+
+--------------------------------------------------------------------------------
+SCENARIO 3: CAPITAL OFFENCE / LIFE IMPRISONMENT (EXCLUDED BY STATUTE)
+--------------------------------------------------------------------------------
+INPUTS:
+- 1. Select Alleged Offence: "Murder - Section 103(1) BNS" (Penalty: Death / Life Imprisonment)
+- 2. Is the Undertrial a First-Time Offender?: YES
+- 3. Date of Custody: Any date (e.g. 5 years ago)
+
+EXPECTED OUTPUT:
+- VERDICT:
+  "NOT APPLICABLE — STATUTORY EXCLUSION" (Red Banner)
+- STATUTORY REASON:
+  Section 479(1) of BNSS explicitly excludes offences punishable with death or life imprisonment. 
+  Bail can only be sought under regular discretionary grounds under Section 480 or 483 BNSS.
+
+--------------------------------------------------------------------------------
+SCENARIO 4: PENDING THRESHOLD (NOT YET ELIGIBLE)
+--------------------------------------------------------------------------------
+INPUTS:
+- 1. Select Alleged Offence: "Criminal Breach of Trust - Section 316 BNS" (Max: 5 Years / 60 Months)
+- 2. Is the Undertrial a First-Time Offender?: YES (Threshold: 20 Months)
+- 3. Date of Custody: Set date to 8 MONTHS AGO.
+
+EXPECTED OUTPUT:
+- Time Served: 8 Months
+- Required: 20 Months
+- VERDICT:
+  "MANDATORY BAIL NOT YET REACHED" (Amber Banner)
+- COUNTDOWN: "12 Months remaining until mandatory bail eligibility under Section 479 BNSS."
+================================================================================

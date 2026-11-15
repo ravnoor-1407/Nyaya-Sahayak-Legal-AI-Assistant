@@ -1,0 +1,130 @@
+================================================================================
+             01 — AI LEGAL ASSISTANT TEST CASES (ROUTE: /assistant)
+================================================================================
+
+HOW TO TEST:
+1. Open the AI Legal Assistant page: https://nyaya-sahayak-legal-ai-assistant.vercel.app/assistant
+   (Or from the top navbar, click "AI Legal Assistant").
+2. Copy any of the test prompts below and paste into the message box.
+3. Click "Consult" or press Enter.
+4. Verify the statutory citations, the Statutory Audit pill, and click "Listen" for voice readout.
+
+--------------------------------------------------------------------------------
+TEST CASE 1.1: POLICE ARREST RIGHTS & 24-HOUR MAGISTRATE PRODUCTION
+--------------------------------------------------------------------------------
+PROMPT TO COPY:
+Can police arrest without a warrant in India, and what are my rights at the time of arrest?
+
+EXPECTED CITATIONS:
+- BNSS Section 35 (Arrest without warrant)
+- BNSS Section 47 (Right to be informed of grounds of arrest & bail entitlement)
+- BNSS Section 48 (Right to have family member or relative informed)
+- BNSS Section 58 (Mandatory production before Judicial Magistrate within 24 hours)
+- Constitution of India Article 22
+
+VERIFICATION POINTS:
+- Assistant clearly distinguishes between cognizable and non-cognizable offences.
+- Explains mandatory 24-hour presentation before the nearest Magistrate.
+- Shows clickable source pills.
+- Statutory Audit pill shows 80%+ verified citations.
+
+--------------------------------------------------------------------------------
+TEST CASE 1.2: NEW SAFEGUARD FOR SENIOR CITIZENS & PETTY OFFENCES (BNSS 2024)
+--------------------------------------------------------------------------------
+PROMPT TO COPY:
+Can police arrest an elderly person or a woman for an offence punishable with less than 3 years?
+
+EXPECTED CITATIONS:
+- BNSS Section 35(7)
+
+VERIFICATION POINTS:
+- Assistant highlights that under Section 35(7) BNSS, no arrest of a person who is infirm or over 60 years of age can be made without prior permission of an officer not below the rank of Deputy Superintendent of Police (DSP).
+- Explains preliminary inquiry safeguard for offences punishable with 3 to 7 years.
+
+--------------------------------------------------------------------------------
+TEST CASE 1.3: ADMISSIBILITY OF WHATSAPP CHATS & DIGITAL EVIDENCE (BSA 2023)
+--------------------------------------------------------------------------------
+PROMPT TO COPY:
+What is required to submit a WhatsApp chat or phone recording as evidence in court under the new Bharatiya Sakshya Adhiniyam?
+
+EXPECTED CITATIONS:
+- BSA Section 61 (Admissibility of electronic records)
+- BSA Section 63 (Certificate requirement replacing former Section 65B of Indian Evidence Act)
+
+VERIFICATION POINTS:
+- Identifies Section 63 BSA as the statutory successor to former Section 65B IEA.
+- Details the mandatory certificate signed by the person in lawful management/charge of the computer system or mobile device.
+
+--------------------------------------------------------------------------------
+TEST CASE 1.4: REMEDY IF POLICE STATION REFUSES TO REGISTER FIR (ZERO-FIR)
+--------------------------------------------------------------------------------
+PROMPT TO COPY:
+What legal remedies are available if a police station refuses to lodge my FIR for theft or assault?
+
+EXPECTED CITATIONS:
+- BNSS Section 173(1) (Mandatory Zero-FIR registration irrespective of territorial jurisdiction)
+- BNSS Section 173(4) (Sending written complaint by post to Superintendent of Police)
+- BNSS Section 175(3) / 175(4) (Application to Judicial Magistrate)
+
+VERIFICATION POINTS:
+- Details Zero-FIR: Police cannot turn a citizen away citing lack of jurisdiction.
+- Explains postal complaint to SP and subsequent 156(3)/175(3) court application.
+
+--------------------------------------------------------------------------------
+TEST CASE 1.5: TRILINGUAL HINDI LEGAL CONSULTATION (हिन्दी)
+--------------------------------------------------------------------------------
+PROMPT TO COPY:
+यदि कोई चेक बाउंस हो जाए तो कानूनी नोटिस भेजने के लिए कितना समय मिलता है?
+
+EXPECTED CITATIONS:
+- Negotiable Instruments Act, 1881, Section 138
+
+VERIFICATION POINTS:
+- Assistant automatically responds in clear, legal Devanagari Hindi.
+- Mentions the 30-day window from receipt of bank return memo to send statutory demand notice.
+- Mentions the 15-day payment grace period before filing a criminal complaint.
+
+--------------------------------------------------------------------------------
+TEST CASE 1.6: TRILINGUAL PUNJABI LEGAL CONSULTATION (ਪੰਜਾਬੀ)
+--------------------------------------------------------------------------------
+PROMPT TO COPY:
+ਮੁਫ਼ਤ ਸਰਕਾਰੀ ਵਕੀਲ ਲੈਣ ਲਈ ਕਾਨੂੰਨੀ ਸੇਵਾਵਾਂ ਅਥਾਰਟੀ ਐਕਟ ਦੀ ਧਾਰਾ 12 ਅਧੀਨ ਕੌਣ ਯੋਗ ਹੈ?
+
+EXPECTED CITATIONS:
+- Legal Services Authorities Act, 1987, Section 12
+- Constitution of India, Article 39A
+
+VERIFICATION POINTS:
+- Assistant automatically responds in natural legal Gurmukhi Punjabi.
+- Lists women, children, SC/ST, and undertrials as automatically eligible.
+- Cites national legal aid helpline 15100.
+
+--------------------------------------------------------------------------------
+TEST CASE 1.7: HIT AND RUN PENALTY UNDER NEW PENAL CODE (BNS 2023)
+--------------------------------------------------------------------------------
+PROMPT TO COPY:
+What is the punishment for hit and run under Section 106(2) of the Bharatiya Nyaya Sanhita?
+
+EXPECTED CITATIONS:
+- BNS Section 106(1) (Standard rash/negligent driving death: up to 5 years)
+- BNS Section 106(2) (Escaping without reporting to police/magistrate: up to 10 years and fine)
+
+VERIFICATION POINTS:
+- Explains the critical distinction: escaping without reporting immediately attracts up to 10 years imprisonment.
+
+--------------------------------------------------------------------------------
+TEST CASE 1.8: IMMEDIATE ACTION FOR ONLINE FINANCIAL PHISHING / UPI FRAUD
+--------------------------------------------------------------------------------
+PROMPT TO COPY:
+My bank account was debited ₹50,000 in an unauthorized UPI phishing transaction. What should I do immediately?
+
+EXPECTED CITATIONS & HOTLINES:
+- Information Technology Act, 2000, Section 66D
+- BNS Section 318 (Cheating)
+- National Cyber Crime Helpline: 1930
+- Portal: cybercrime.gov.in
+
+VERIFICATION POINTS:
+- Emphasizes the "Golden Hour" rule: dial 1930 immediately to freeze funds at the receiving bank/merchant.
+- Mentions notifying the bank branch in writing within 72 hours for zero liability protection.
+================================================================================
