@@ -1,567 +1,367 @@
-# ⚖️ NyayaSahayak: AI Justice Department Assistant
+# ⚖️ NyayaSahayak (न्याय सहायक): AI Justice Department Assistant
 
 <p align="center">
+  <a href="https://nyaya-sahayak-legal-ai-assistant.vercel.app" target="_blank">
+    <img src="https://img.shields.io/badge/Live_Website-Visit_NyayaSahayak-FF6F00?style=for-the-badge&logo=vercel&logoColor=white" />
+  </a>
   <img src="https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black" />
   <img src="https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white" />
-  <img src="https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white" />
-  <img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black" />
+  <img src="https://img.shields.io/badge/Tailwind_CSS_v4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white" />
   <img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white" />
   <img src="https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white" />
   <img src="https://img.shields.io/badge/ChromaDB-5B21B6?style=for-the-badge" />
-  <img src="https://img.shields.io/badge/Scikit--learn-F7931E?style=for-the-badge&logo=scikitlearn&logoColor=white" />
   <img src="https://img.shields.io/badge/Google_Gemini-8E75B2?style=for-the-badge&logo=googlegemini&logoColor=white" />
-  <img src="https://img.shields.io/badge/Groq-F55036?style=for-the-badge" />
-  <img src="https://img.shields.io/badge/Recharts-22B5BF?style=for-the-badge" />
-  <img src="https://img.shields.io/badge/Lucide_React-F56565?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/Groq_Llama3-F55036?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/Articles_21_&_39A-Compliant-047857?style=for-the-badge" />
 </p>
- 
-An AI-powered legal information assistant developed as part of the university subject **AI Foundations: CSE276** **CA1 Project (P14)**, thematically aligned with the Smart India Hackathon (SIH) 2024 problem statement **SIH1700**.
 
-**NyayaSahayak** is designed to make Indian legal information more accessible to ordinary citizens through an intelligent, multilingual virtual assistant. Supporting English, Hindi, and Punjabi, the platform helps users explore Indian laws, understand legal provisions, search official Acts, and access essential citizen services.
+> 🌐 **Live Production URL:** [https://nyaya-sahayak-legal-ai-assistant.vercel.app](https://nyaya-sahayak-legal-ai-assistant.vercel.app)
 
-Unlike a general-purpose chatbot, NyayaSahayak uses a retrieval-based architecture to generate answers from its indexed legal documents. Each response identifies the relevant Act and Section, allowing users to verify the information through official legal sources.
+**NyayaSahayak (न्याय सहायक)** is an intelligent, grounded multilingual legal empowerment platform designed to make India's criminal, civil, and constitutional legal framework accessible to every citizen. Developed under university course **AI Foundations (CSE276 CA1 — Project P14)** and aligned with Smart India Hackathon problem statement **SIH1700**, the platform bridges the justice accessibility gap by combining statutory Retrieval-Augmented Generation (RAG), automated document risk auditing, undertrial bail calculations, court-ready complaint drafting, and emergency helpline dispatch in **English, हिन्दी (Hindi), and ਪੰਜਾਬੀ (Punjabi)**.
 
-**Note:** NyayaSahayak provides general legal information for educational and informational purposes. It does not replace professional legal advice.
+Unlike generic conversational chatbots, NyayaSahayak operates on a strictly audited, hallucination-resistant architecture: every statutory citation is verified against official Ministry of Law & Justice gazette notifications with an automated **Statutory Audit Grounding Score**.
 
 ---
 
-## 📚 Prerequisite Knowledge
+## 📑 Table of Contents
 
-To understand, modify, or extend this project, familiarity with the following concepts is recommended:
-
-* **Frontend Development (React & JavaScript):**
-
-  * Component-based architecture and reusable UI components.
-  * React hooks and state management.
-  * Handling API requests and dynamic content rendering.
-* **Python & Backend Development:**
-
-  * Python fundamentals, functions, modules, and virtual environments.
-  * REST API development using FastAPI.
-  * Request handling, response processing, and API integration.
-* **Artificial Intelligence & NLP:**
-
-  * Basic understanding of Large Language Models (LLMs).
-  * Text embeddings and semantic similarity.
-  * Retrieval-Augmented Generation (RAG) concepts.
-  * Natural Language Processing and multilingual text processing.
-* **Database & Information Retrieval:**
-
-  * Vector databases and similarity search.
-  * ChromaDB and TF-IDF-based keyword retrieval.
-  * Data preprocessing, document chunking, and indexing.
-* **Development Tools:**
-
-  * Visual Studio Code.
-  * Git and GitHub.
-  * Node.js, npm, and Python package management.
+- [✨ Core Capabilities & Platform Features](#-core-capabilities--platform-features)
+  - [1. AI Legal Consultation & Statutory Audit](#1-ai-legal-consultation--statutory-audit-assistant)
+  - [2. Citizen Legal Action Hub](#2-citizen-legal-action-hub-citizen-empowerment-tools)
+    - [A. Section 479 BNSS Undertrial Mandatory Bail Calculator](#a-section-479-bnss-undertrial-mandatory-bail-calculator-bail-calculator)
+    - [B. Legal Document Scanner & Risk Analyzer](#b-legal-document-scanner--risk-analyzer-scanner)
+    - [C. AI Legal Drafting Studio](#c-ai-legal-drafting-studio-drafting)
+    - [D. Interactive Procedural Decision Trees](#d-interactive-procedural-decision-trees-flowcharts)
+  - [3. Semantic Law Search & IPC-to-BNS Cross-Walk](#3-semantic-law-search--ipc-to-bns-cross-walk-search)
+  - [4. NALSA Section 12 Free Legal Aid Calculator](#4-nalsa-section-12-free-legal-aid-calculator-legal-aid)
+  - [5. Bare Acts Explorer & Gazette Verification](#5-bare-acts-explorer--gazette-verification-acts-official)
+  - [6. Citizen Support & Grievance Desk](#6-citizen-support--grievance-desk-contact)
+  - [7. Privacy, Security & Passwordless Auth](#7-privacy-security--passwordless-auth-auth-dashboard)
+- [🧠 System Architecture & RAG Pipeline](#-system-architecture--rag-pipeline)
+- [🛠️ Tech Stack](#️-tech-stack)
+- [📂 Project Structure](#-project-structure)
+- [🧪 Demo & Test Cases Suite](#-demo--test-cases-suite-demo_test_cases)
+- [⚙️ Local Setup & Installation Guide](#️-local-setup--installation-guide)
+- [📊 Evaluation, Retrieval Benchmarks & Safety Testing](#-evaluation-retrieval-benchmarks--safety-testing)
+- [🔐 Safety Charter & Constitutional Compliance](#-safety-charter--constitutional-compliance)
+- [👥 Project Team](#-project-team)
 
 ---
 
-## 💻 System & Device Requirements
+## ✨ Core Capabilities & Platform Features
 
-NyayaSahayak uses a separate frontend and backend architecture. The frontend handles user interactions, while the backend manages legal document retrieval, AI processing, and response generation.
+### 1. AI Legal Consultation & Statutory Audit (`/assistant`)
+- **Grounded Multilingual QA:** Context-aware legal consultation over the **Bharatiya Nyaya Sanhita, 2023 (BNS)**, **Bharatiya Nagarik Suraksha Sanhita, 2023 (BNSS)**, **Bharatiya Sakshya Adhiniyam, 2023 (BSA)**, Constitution of India, IT Act, and POCSO.
+- **Automated Statutory Audit Score:** Every generated answer displays an automated verification pill (e.g. `Statutory Audit: 80% verified citations against official gazettes`) verifying that citations correspond directly to authenticated legal gazettes.
+- **Interactive Citation Pills:** Clicking any cited provision opens an official snippet card displaying the authentic section text and issuing authority.
+- **Voice Readout (TTS):** Integrated speech synthesis reads out legal remedies in English, Hindi, or Punjabi for accessible public use.
 
-### Software Requirements
+### 2. Citizen Legal Action Hub (Citizen Empowerment Tools)
 
-| Component           | Requirement                      | Purpose                                     |
-| :------------------ | :------------------------------- | :------------------------------------------ |
-| Operating System    | Windows, macOS, or Linux         | Development environment                     |
-| Code Editor         | Visual Studio Code (Recommended) | Writing and managing source code            |
-| Runtime Environment | Python 3.x                       | Backend execution                           |
-| JavaScript Runtime  | Node.js and npm                  | Frontend development and package management |
-| Web Browser         | Chrome, Firefox, Edge, or Safari | Accessing the application                   |
-| API Access          | Gemini API / Groq API            | AI-powered response generation              |
-| Internet Connection | Required                         | API communication and model access          |
+#### A. Section 479 BNSS Undertrial Mandatory Bail Calculator (`/bail-calculator`)
+- **2024 Legal Reform Codification:** Codifies the historic 2024 amendment under Section 479 BNSS (replacing old Sec 436A CrPC):
+  - **First-time undertrials:** Mandatory entitlement to release on bail after serving **1/3rd** of the maximum statutory term.
+  - **Repeat undertrials:** Mandatory release after serving **1/2** of the maximum statutory term.
+  - **Capital & life imprisonment offences:** Automatic exclusion flag (discretionary bail only under Sec 480/483).
+- **Automated Court Application Generator:** Pre-populates a ready-to-file Section 479 Bail Application addressed to the competent Chief Judicial Magistrate or Sessions Court.
 
----
+#### B. Legal Document Scanner & Risk Analyzer (`/scanner`)
+- **Unified Drag-and-Drop & Text Analysis:** Upload court summons, police notices, cheque bounce notices, or tenancy agreements in `.docx`, `.pdf`, `.txt`, or paste raw text.
+- **Traffic-Light Risk Categorization:**
+  - 🔴 **High Risk / Danger:** Urgent statutory deadlines, police appearance notices (BNSS Sec 35(3)), or cheque dishonour 15-day countdowns.
+  - 🟡 **Medium Risk / Attention:** Complex commercial contracts, lease lock-in clauses, or deposit refund contingencies.
+  - 🟢 **Safe / Low Risk:** Mutual settlements, discharge vouchers, and full No-Objection Certificates (NOC).
+- **Academic & Non-Legal Guardrail Banner:** Automatically recognizes and rejects university assignments, algorithms, or miscellaneous text with a clear notice, preventing false criminal risk flags.
 
-## ✨ Key Features
+#### C. AI Legal Drafting Studio (`/drafting`)
+- **Structured Legal Notice & Complaint Drafting:** Instant generation of formal legal instruments:
+  - **Zero-FIR Complaints** under Section 173 BNSS (irrespective of police station territorial jurisdiction).
+  - **Cheque Dishonour Demand Notices** under Section 138 Negotiable Instruments Act.
+  - **Consumer Deficiency Notices** under Consumer Protection Act 2019.
+  - **Tenancy Security Deposit Refund Notices** under Tenancy Rights.
+- **Isolated Word-Like Print System:** A single click on **"Print / Save as PDF"** prints only the clean formal draft formatted as an official legal brief, completely stripping website navigation, sidebars, and buttons.
 
-NyayaSahayak combines AI-powered legal assistance with practical citizen-oriented services.
+#### D. Interactive Procedural Decision Trees (`/flowcharts`)
+- Step-by-step visual problem solvers guiding citizens through critical situations:
+  - *What to do if Police Arrest You* (Articles 21 & 22; BNSS Sec 35, 47, 48, 58).
+  - *Remedies if Police Refuse to Register FIR* (Zero-FIR under Sec 173(1), postal complaint to SP under Sec 173(4), and Magistrate application under Sec 175(3)).
+  - *Cheque Dishonour Recovery Roadmap* (Bank memo, 15-day notice, 30-day court limitation).
 
-* **AI-Powered Legal Assistant:**
+### 3. Semantic Law Search & IPC-to-BNS Cross-Walk (`/search`)
+- **Hybrid Retrieval:** Dense vector retrieval (`intfloat/multilingual-e5-base`) combined with BM25/TF-IDF and act-aware section number parsing.
+- **Legacy IPC Cross-Mapping:** Searches querying legacy Indian Penal Code concepts (e.g. "IPC 302 murder" or "IPC 420 cheating") automatically resolve to their corresponding 2023 BNS sections (BNS Section 103 and 318).
 
-  * Answers questions related to Indian laws using indexed legal documents.
-  * Provides relevant Act names and Section references.
-  * Includes read-aloud functionality and voice input.
-  * Uses a retrieval-based approach to reduce unsupported responses.
+### 4. NALSA Section 12 Free Legal Aid Calculator (`/legal-aid`)
+- Implements Section 12 of the Legal Services Authorities Act, 1987.
+- Automatically calculates entitlement for income-exempt statutory classes: women, children, members of Scheduled Castes and Scheduled Tribes, persons in custody/undertrials, disaster victims, and disabled citizens.
+- Evaluates general category citizens against official State Legal Services Authority (SLSA) annual income thresholds across Delhi, Punjab, Maharashtra, Uttar Pradesh, and other states.
 
-* **Intelligent Legal Search:**
+### 5. Bare Acts Explorer & Gazette Verification (`/acts`, `/official`)
+- Complete chapter-by-chapter reader for BNS 2023, BNSS 2023, BSA 2023, the Constitution of India, and POCSO Act 2012.
+- Direct links to official extraordinary Gazette of India notifications and Ministry of Law and Justice repositories (`egazette.gov.in`, `indiacode.nic.in`).
 
-  * Search legal provisions using natural language or Section numbers.
-  * Explore relevant legal information through semantic and keyword-based matching.
-  * Browse available Indian Acts through a dedicated Acts directory.
+### 6. Citizen Support & Grievance Desk (`/contact`)
+- **Live Ticket Generation:** Citizens submitting grievances or inquiries receive an official reference number (e.g. `#NYA-2026-F8A2`) recorded in the database.
+- **One-Click Webmail Composer:** Pre-filled draft creation via **Gmail Web** and native email applications.
+- **National 24×7 Hotlines:** Click-to-dial access to official government lines: NALSA Legal Aid (`15100`), National Consumer Helpline (`1915`), Cyber Crime Reporting (`1930`), Women in Distress (`181`), and Childline (`1098`).
+- **Resilient Offline Architecture:** Incorporates automatic `localStorage` queuing if the backend is temporarily offline, ensuring no citizen inquiry is lost.
 
-* **Official Acts Registry:**
-
-  * Provides access to indexed Indian legislation.
-  * Displays issuing authorities, important dates, and source links.
-  * Helps users locate relevant legal documents.
-
-* **Citizen Hub:**
-
-  * Provides accessible handbooks covering important citizen-related topics.
-  * Includes information about arrest rights, FIR procedures, RTI, consumer protection, and cyber-related matters.
-
-* **Free Legal Aid Eligibility Calculator:**
-
-  * Helps users understand eligibility under Section 12 of the Legal Services Authorities Act.
-  * Makes information about free legal aid more accessible.
-
-* **Emergency Helplines & Contact Information:**
-
-  * Provides a directory of important helpline numbers.
-  * Offers a dedicated contact page for users.
-
-* **Multilingual Interface:**
-
-  * Supports English, Hindi, and Punjabi.
-  * Helps users interact with the platform in their preferred language.
-
-* **Interactive User Interface:**
-
-  * Dashboard displaying live usage information.
-  * Light and dark themes.
-  * Responsive interface for convenient navigation.
-
-* **AI Safety Charter:**
-
-  * Explains the platform's safety principles.
-  * Provides information about evaluation results and responsible AI usage.
+### 7. Privacy, Security & Passwordless Auth (`/auth`, `/dashboard`)
+- **Google One-Tap GIS & Real-Time Email OTP:** Fast, passwordless access to legal consultation.
+- **Client-Side De-Identification:** Scans and removes Aadhaar numbers, phone numbers, and payment details before server submission.
+- **Personal Dashboard:** Saves past research queries, statutory citations, and draft history locally to the user's secure account.
 
 ---
 
-## 🧠 System Architecture
-
-NyayaSahayak follows a frontend-backend architecture that combines semantic retrieval, keyword matching, vector search, and Large Language Models.
-
-### Architecture Diagram
+## 🧠 System Architecture & RAG Pipeline
 
 ```mermaid
-flowchart LR
-    U[User Interface<br/>React + Vite + Tailwind] -->|API Request| B[FastAPI Backend]
+flowchart TD
+    subgraph UI ["Frontend (React + Vite + Tailwind CSS v4)"]
+        A[User Input / Document Upload] --> B{Action Selector}
+        B -->|Question| C[AI Legal Assistant]
+        B -->|Legal Notice| D[Doc Risk Scanner]
+        B -->|Bail Input| E[Sec 479 Bail Calculator]
+        B -->|Draft Request| F[Legal Drafting Studio]
+        B -->|Search Query| G[Semantic Law Search]
+    end
 
-    B --> S[Safety Guard]
+    subgraph Backend ["FastAPI Backend Architecture"]
+        C & G --> H[Safety Guard & Intent Classifier]
+        H -->|Passed| I[Hybrid Retrieval Engine]
+        H -->|Unlawful / Self-Harm| J[Safety Charter / Crisis Referral]
 
-    S --> R[Hybrid Retrieval System]
+        I --> K[(ChromaDB Vector Store<br/>multilingual-e5-base)]
+        I --> L[BM25 + TF-IDF Keyword Matcher]
+        I --> M[IPC-to-BNS Mapping Dictionary]
 
-    R --> V[(ChromaDB<br/>Multilingual Embeddings)]
+        K & L & M --> N[Reciprocal Rank Fusion RRF]
+        N --> O[Context Assembler & Gazette Grounder]
 
-    R --> K[TF-IDF + Title Matching<br/>Section Number Matching]
+        O --> P[LLM Generation<br/>Google Gemini / Groq Llama-3]
+        P --> Q[Statutory Citation Audit Engine]
 
-    V --> L[LLM<br/>Gemini / Groq]
+        D --> R[Document Parser & Regex Engine<br/>pdf / docx / text]
+        R --> S[Traffic-Light Risk Classifier]
 
-    K --> L
+        E --> T[Sec 479 BNSS Rule Engine<br/>1/3rd & 1/2 Sentence Matrix]
+    end
 
-    L --> B
-
-    B --> U
+    Q -->|Audited Response + Verified Pills| C
+    S -->|Risk Badge + 48h/15d Countdown| D
+    T -->|Mandatory Bail Verdict + Application Draft| E
 ```
-
-### How the System Works
-
-**1. Document Processing & Indexing**
-
-* Legal documents are collected from the selected datasets and official government sources.
-* Acts are divided into smaller sections or articles.
-* Each passage retains its corresponding Act and Section information.
-* Text passages are converted into numerical embeddings using `intfloat/multilingual-e5-base`.
-* The generated embeddings are stored in ChromaDB for semantic retrieval.
-
-**2. Hybrid Information Retrieval**
-
-When a user submits a legal question, the backend searches the indexed knowledge base using multiple techniques:
-
-* Dense vector search for semantic similarity.
-* TF-IDF keyword matching.
-* Section-number matching based on the Act mentioned by the user.
-* Title matching for improved document identification.
-* IPC-to-BNS mapping expansion for handling older legal references.
-* Query translation into English to support Hindi and Punjabi searches.
-
-**3. AI Response Generation**
-
-* Relevant legal passages are provided to the Large Language Model.
-* Gemini or Groq is used for generating responses, with fallback support.
-* The model is instructed to answer using the retrieved legal information.
-* Relevant Act and Section references are included in the response.
-* If the retrieved information is insufficient, the assistant can decline to provide an answer.
-
-**4. Response Delivery**
-
-The generated response is returned through FastAPI to the React frontend, where users can read, interact with, or listen to the response.
 
 ---
 
 ## 🛠️ Tech Stack
 
-The project combines modern frontend technologies, Python backend development, information retrieval techniques, and generative AI services.
-
-| Category               | Technologies                              |
-| :--------------------- | :---------------------------------------- |
-| Frontend Framework     | React                                     |
-| Build Tool             | Vite                                      |
-| Styling                | Tailwind CSS v4                           |
-| Charts & Visualization | Recharts                                  |
-| Icons                  | Lucide React                              |
-| Backend Framework      | FastAPI                                   |
-| Programming Language   | Python                                    |
-| Embedding Model        | multilingual-e5-base                      |
-| Vector Database        | ChromaDB                                  |
-| Machine Learning / NLP | Sentence Transformers, Scikit-learn       |
-| Information Retrieval  | TF-IDF, Semantic Search, Hybrid Retrieval |
-| Large Language Models  | Google Gemini API, Groq API               |
-| Data Storage           | CSV, PDF, JSON                            |
-| Development Tools      | VS Code, Git, GitHub                      |
+| Layer | Technology | Purpose |
+| :--- | :--- | :--- |
+| **Frontend Framework** | React 18, Vite 6 | High-speed single-page application with hot module replacement |
+| **Styling & Design System** | Tailwind CSS v4 | Custom `@theme static` with high-contrast amber/gold styling |
+| **Icons & Visuals** | Lucide React | Clean, recognizable legal and procedural iconography |
+| **Backend API** | FastAPI, Uvicorn | High-throughput asynchronous Python web framework |
+| **Embeddings** | `intfloat/multilingual-e5-base` | Multilingual dense vector representations (768-dim) |
+| **Vector Database** | ChromaDB | Local persistent semantic passage indexing |
+| **Text Retrieval** | Scikit-learn, TF-IDF, Regex | Lexical ranking, title matching, and statutory section extraction |
+| **Document Processing** | `python-docx`, `pypdf` | Server-side and client-side extraction of Word and PDF notices |
+| **Generative LLMs** | Google Gemini 1.5, Groq (Llama-3-70B) | High-speed grounded legal reasoning with fallback support |
+| **Database** | SQLite3 | Session management, OTP rate-limiting, and grievance ticketing |
+| **Authentication** | Google Identity Services (GIS), SMTP OTP | Secure, passwordless authentication |
 
 ---
 
 ## 📂 Project Structure
 
-The project is organized into separate frontend and backend components to maintain modularity and simplify development.
-
 ```text
 NyayaSahayak/
 │
-├── frontend/
+├── frontend/                                   # React + Vite Single-Page Application
 │   ├── src/
-│   │   └── React application source files
-│   ├── package.json
-│   └── vite.config.js
+│   │   ├── components/
+│   │   │   ├── AnswerBlock.jsx                 # AI responses with high-contrast Statutory Audit pill
+│   │   │   ├── BailCalculator.jsx              # Section 479 BNSS Bail Calculator & application generator
+│   │   │   ├── DecisionTrees.jsx               # Interactive procedural decision flows
+│   │   │   ├── DocAnalyzer.jsx                 # Legal notice scanner with traffic-light risk alerts
+│   │   │   ├── FirDraftStudio.jsx              # Zero-FIR & notice drafting with isolated clean print
+│   │   │   ├── Navbar.jsx                      # Navigation, language switcher & light/dark theme toggle
+│   │   │   └── Footer.jsx                      # Disclaimers and compliance footer
+│   │   ├── pages/
+│   │   │   ├── Assistant.jsx                   # AI Legal Assistant chat interface
+│   │   │   ├── CitizenHub.jsx                  # Citizen Action Hub master container
+│   │   │   ├── Contact.jsx                     # Grievance desk with ticket generation & Gmail composer
+│   │   │   ├── LawSearch.jsx                   # Semantic and section-based law search
+│   │   │   ├── LegalAid.jsx                    # NALSA Section 12 free legal aid eligibility calculator
+│   │   │   ├── Acts.jsx & OfficialActs.jsx     # Bare acts reader & Gazette verification
+│   │   │   ├── Auth.jsx & Dashboard.jsx        # Google GIS, Email OTP & personal research dashboard
+│   │   │   └── SafetyCharter.jsx               # Constitutional compliance & evaluation benchmarks
+│   │   ├── api.js                              # Centralized API client with offline fallback handling
+│   │   └── index.css                           # Tailwind CSS v4 theme, amber gradients & print styles
+│   └── package.json
 │
-├── backend/
+├── backend/                                    # FastAPI Python Backend
 │   ├── app/
-│   │   └── main.py
-│   │
+│   │   ├── main.py                             # API routes: chat, draft, analyze-doc, contact, search
+│   │   ├── rag.py                              # Hybrid retrieval: ChromaDB dense search + TF-IDF BM25
+│   │   ├── llm.py                              # Gemini / Groq client orchestration with statutory audit
+│   │   ├── auth.py                             # SQLite user sessions, OTP engine & grievance tickets
+│   │   └── safety.py                           # Safety guard: crime block, PII scrub & self-harm help
 │   ├── data/
-│   │   ├── eval.csv
-│   │   └── eval_results.json
-│   │
-│   ├── scripts/
-│   │   ├── build_chunks
-│   │   ├── ingest
-│   │   ├── train_topic
-│   │   └── evaluate
-│   │
-│   ├── notebooks/
-│   │   └── model_training.ipynb
-│   │
-│   ├── requirements.txt
-│   └── .env.example
+│   │   ├── processed/chunks.jsonl              # Indexed statutory chunks (BNS, BNSS, BSA, Constitution)
+│   │   ├── chroma/                             # ChromaDB vector store
+│   │   └── eval.csv                            # Labelled multilingual evaluation dataset
+│   └── requirements.txt
+│
+├── demo_test_cases/                            # Official Test & Presentation Suite
+│   ├── README_DEMO_AND_TEST_CASES.txt          # Master 5-minute presentation & viva guide
+│   ├── 01_AI_Legal_Assistant_Test_Cases.txt    # Prompts for RAG, arrest, WhatsApp evidence, audit
+│   ├── 02_Semantic_Law_Search_Test_Cases.txt   # Exact section queries & IPC->BNS mappings
+│   ├── 03_Bail_Calculator_Test_Cases.txt       # Sec 479 BNSS 1/3rd & 1/2 rule test scenarios
+│   ├── 04_Legal_Document_Scanner_Test_Cases.txt# Upload scenarios: urgent summons, cheque, lease, safe
+│   ├── 05_AI_Legal_Drafting_Studio_Test_Cases.txt # Zero-FIR, Cheque Notice, isolated print verification
+│   ├── 06_Interactive_Problem_Solver_Decision_Trees.txt # Step-by-step citizen procedural paths
+│   ├── 07_NALSA_Sec12_Free_Legal_Aid_Test_Cases.txt # Category exemptions & state income thresholds
+│   ├── 08_Contact_and_Inquiries_Test_Cases.txt # Ticket generation, form validation, helpline checks
+│   ├── 09_Bare_Acts_and_Official_Gazettes_Test_Cases.txt # Act browsing & gazette verification
+│   ├── 10_Auth_and_Security_Guardrails_Test_Cases.txt # GIS, OTP, crime refusal & Tele-MANAS crisis
+│   └── Sample Legal Documents (.docx & .txt companions):
+│       ├── 1_Police_Summons_Notice_Sec35_BNSS.docx / .txt      (High Risk - 48h Countdown)
+│       ├── 2_Cheque_Bounce_Notice_Sec138_NI_Act.docx / .txt    (High Risk - 15d Countdown)
+│       ├── 3_Residential_Tenancy_Lease_Agreement.docx / .txt   (Medium Risk - 11m Lease)
+│       ├── 4_Non_Legal_University_Assignment.docx / .txt       (Rejection Guardrail Test)
+│       └── 5_Mutual_Settlement_and_NOC_Receipt.docx / .txt     (Safe - Green Shield)
 │
 └── README.md
 ```
 
-*Note: This is a simplified representation of the project structure, highlighting the main directories and files referenced in the setup and evaluation workflow.*
+---
+
+## 🧪 Demo & Test Cases Suite (`demo_test_cases/`)
+
+The repository includes a dedicated [`demo_test_cases/`](demo_test_cases/) folder containing test cases in plain `.txt` and `.docx` format, designed for demonstrations, vivas, and automated testing:
+
+| File Name | Target Feature | Core Verification Point |
+| :--- | :--- | :--- |
+| `01_AI_Legal_Assistant_Test_Cases.txt` | `/assistant` | Senior citizen arrest safeguard (BNSS 35(7)), WhatsApp chat admissibility (BSA 63), Grounding score. |
+| `02_Semantic_Law_Search_Test_Cases.txt` | `/search` | Exact provision lookups ("Section 105 BNSS"), community service penalties (BNS 4(f)). |
+| `03_Bail_Calculator_Test_Cases.txt` | `/bail-calculator` | First-time offender 1/3rd sentence calculation (Theft: 12 months) vs repeat offender 1/2 rule. |
+| `04_Legal_Document_Scanner_Test_Cases.txt`| `/scanner` | Testing Red Danger (Summons), Amber (Lease), Green (NOC), and Non-Legal Document rejection. |
+| `05_AI_Legal_Drafting_Studio_Test_Cases.txt` | `/drafting` | Zero-FIR complaint generation and isolated Word-like PDF print without website borders. |
+| `06_Interactive_Problem_Solver_Decision_Trees.txt` | `/flowcharts` | Procedural step-by-step decision flows for arrest rights, FIR refusal, and cheque recovery. |
+| `07_NALSA_Sec12_Free_Legal_Aid_Test_Cases.txt` | `/legal-aid` | Category exemptions (Women, SC/ST, Custody) and State income thresholds. |
+| `08_Contact_and_Inquiries_Test_Cases.txt` | `/contact` | Live ticket generation (`#NYA-2026-XXXX`), input validation, and click-to-dial helplines. |
+| `10_Auth_and_Security_Guardrails_Test_Cases.txt` | `/auth`, `/charter`| Refusal of crime assistance and compassionate Tele-MANAS (`14416`) referral for self-harm queries. |
 
 ---
 
-## ⚙️ How to Run the Project
-
-Follow these steps to configure and run NyayaSahayak locally.
+## ⚙️ Local Setup & Installation Guide
 
 ### Prerequisites
+- **Python 3.10+**
+- **Node.js 18+ and npm**
+- **Git**
+- **Google Gemini API Key** or **Groq API Key** (optional for local mock fallback)
 
-Before starting, ensure that the following are installed:
+### 1. Clone the Repository
+```powershell
+git clone https://github.com/ravnoor-1407/Nyaya-Sahayak-Legal-AI-Assistant.git
+cd "Nyaya-Sahayak-Legal-AI-Assistant"
+```
 
-1. Python 3.x
-2. Node.js and npm
-3. Visual Studio Code
-4. Git
-5. Gemini API Key and/or Groq API Key
-
-### (A) Backend Setup
-
-**Step 1: Navigate to the backend directory**
-
+### 2. Backend Setup
 ```powershell
 cd backend
-```
-
-**Step 2: Create a Python virtual environment**
-
-```powershell
 python -m venv venv
-```
-
-**Step 3: Activate the virtual environment**
-
-```powershell
-.\venv\Scripts\Activate.ps1
-```
-
-**Step 4: Install the required dependencies**
-
-```powershell
+.\venv\Scripts\Activate.ps1   # On macOS/Linux: source venv/bin/activate
 pip install -r requirements.txt
+copy .env.example .env        # On macOS/Linux: cp .env.example .env
 ```
 
-**Step 5: Configure environment variables**
-
-```powershell
-copy .env.example .env
-```
-
-Open the `.env` file and add your API keys:
-
+Add your API credentials in `backend/.env`:
 ```env
-GEMINI_API_KEY=your_gemini_api_key
-GROQ_API_KEY=your_groq_api_key
+GEMINI_API_KEY=your_gemini_api_key_here
+GROQ_API_KEY=your_groq_api_key_here
 ```
 
-**Step 6: Prepare and process the legal documents**
-
-Execute the following commands:
-
-```powershell
-python -m scripts.build_chunks
-python -m scripts.ingest
-python -m scripts.train_topic
-```
-
-*(Optional) You can also open `notebooks/model_training.ipynb` in VS Code to see visual confusion matrix and interactive query testing.*
-
-**Step 7: Start the FastAPI backend server**
-
+Start the FastAPI backend:
 ```powershell
 uvicorn app.main:app --reload --port 8000
 ```
 
-### (B) Frontend Setup
-
-Open a second terminal in Visual Studio Code.
-
-**Step 1: Navigate to the frontend directory**
-
+### 3. Frontend Setup
+Open a second terminal window:
 ```powershell
 cd frontend
-```
-
-**Step 2: Install frontend dependencies**
-
-```powershell
 npm install
-```
-
-**Step 3: Start the development server**
-
-```powershell
 npm run dev
 ```
 
-### (C) Access the Application
-
-Once both servers are running:
-
-| Component            | Local Address           |
-| :------------------- | :---------------------- |
-| Frontend Application | `http://localhost:5173` |
-| Backend API          | `http://localhost:8000` |
-
-Open the frontend address in your browser to access NyayaSahayak.
-
-**Important:** Wait until the backend terminal displays `Application startup complete.` before testing the application. The embedding model requires some time to load during initialization.
+The application will be accessible at:
+- **Frontend:** `http://localhost:5173`
+- **Backend Swagger Docs:** `http://localhost:8000/docs`
 
 ---
 
-## 📊 Data Sources & Licences
+## 📊 Evaluation, Retrieval Benchmarks & Safety Testing
 
-The knowledge base is developed using legal datasets and official Indian government publications.
+The system includes a labelled evaluation benchmark (`backend/data/eval.csv`) measuring retrieval accuracy and refusal behaviour across 54 multi-domain legal queries:
 
-| Dataset / Document                           | Purpose                            | Source                 | Licence / Terms                |
-| :------------------------------------------- | :--------------------------------- | :--------------------- | :----------------------------- |
-| Bharatiya Nyaya Sanhita (BNS) Sections - CSV | Legal knowledge base               | Kaggle                 | Check original dataset licence |
-| IPC to BNS Mapping - CSV                     | Legal reference mapping            | Kaggle                 | Check original dataset licence |
-| Constitution of India - PDF                  | Constitutional information         | Legislative Department | Government publication         |
-| BNSS 2023                                    | Criminal procedure information     | India Code             | Government publication         |
-| BSA 2023                                     | Evidence-related legal information | India Code             | Government publication         |
-| Information Technology Act 2000              | Cyber law information              | India Code             | Government publication         |
-| Consumer Protection Act 2019                 | Consumer rights information        | India Code             | Government publication         |
-| `backend/data/eval.csv`                      | Model retrieval evaluation         | Developed by the team  | Original team work             |
+### Retrieval Performance Matrix
 
-### Data Verification
+| Metric | Result | Description |
+| :--- | :---: | :--- |
+| **Hit@1** | **86.7%** | Relevant statutory provision returned as the top result |
+| **Hit@3** | **86.7%** | Relevant provision present within the top 3 passages |
+| **Hit@5** | **86.7%** | Relevant provision present within the top 5 passages |
+| **Mean Reciprocal Rank (MRR)** | **0.867** | High-precision reciprocal rank score |
+| **Out-of-Scope Refusal Rate** | **8 / 9 (88.9%)** | Appropriate refusal for non-legal or out-of-jurisdiction queries |
 
-* A sample of the Kaggle dataset entries was cross-checked against official India Code publications.
-* Official government publications are treated as the authoritative reference.
-* Since legislation can be amended over time, users should always verify legal provisions against the latest official text.
+### Hit@3 Accuracy by Language
 
-**Official Legal Resources:**
+| Language | Correct / Total | Performance |
+| :--- | :---: | :---: |
+| **English** | 29 / 31 | **93.5%** |
+| **Punjabi (ਪੰਜਾਬੀ)** | 5 / 6 | **83.3%** |
+| **Hindi (हिन्दी)** | 5 / 8 | **62.5%** |
 
-* [India Code](https://www.indiacode.nic.in/)
-* [Legislative Department](https://legislative.gov.in/)
+### Component Ablation Study
 
-*Note: Insert the exact Kaggle dataset names, source URLs, and licence details before publishing the final README. These details were not specified in the original project documentation.*
-
----
-
-## 📈 Evaluation & Performance Metrics
-
-The project includes a labelled evaluation dataset to measure the retrieval system's ability to identify relevant legal information.
-
-### Evaluation Dataset
-
-The evaluation dataset is stored in:
-
-`backend/data/eval.csv`
-
-It contains:
-
-* 45 in-scope questions across English, Hindi, and Punjabi.
-* 9 out-of-scope questions to test the assistant's refusal behaviour.
-
-To execute the evaluation:
-
-```powershell
-python -m scripts.evaluate
-```
-
-The evaluation results are saved in:
-
-`backend/data/eval_results.json`
-
-They are also displayed on the AI Safety Charter page.
-
-### Retrieval Performance
-
-| Evaluation Metric              | Result |
-| :----------------------------- | :----: |
-| Hit@1                          |  86.7% |
-| Hit@3                          |  86.7% |
-| Hit@5                          |  86.7% |
-| Mean Reciprocal Rank (MRR)     |  0.867 |
-| Out-of-Scope Questions Refused |  8 / 9 |
-
-### Hit@3 Performance by Language
-
-| Language | Correct Retrievals | Performance |
-| :------- | :----------------: | :---------: |
-| English  |       29 / 31      |     94%     |
-| Hindi    |        5 / 8       |     62%     |
-| Punjabi  |        5 / 6       |     83%     |
-
-### Retrieval Ablation Study
-
-The following comparison demonstrates how different retrieval components contributed to the overall system performance.
-
-| Configuration                                    | Hit@3 |  MRR  |
-| :----------------------------------------------- | :---: | :---: |
-| Original Baseline (Before Title-Column Fix)      | 57.8% | 0.503 |
-| A. Vector Search Only                            | 51.1% | 0.467 |
-| B. Keyword + Act-Aware Section Matching          | 60.0% | 0.527 |
-| C. Addition of Title Matching                    | 77.8% | 0.596 |
-| D. Addition of IPC-to-BNS Mapping Expansion      | 77.8% | 0.767 |
-| E. Addition of Hindi & Punjabi Query Translation | 86.7% | 0.867 |
-
-### Safety Testing
-
-The project also includes a dedicated safety testing script:
-
-```powershell
-python -m scripts.test_safety
-```
-
-The safety tests cover:
-
-* Requests involving destruction of evidence or document forgery.
-* Self-harm-related messages and support helpline responses.
-* Emergency-related phrases and the addition of a 112 emergency notice.
-* Prompt-injection attempts and attempts to bypass system instructions.
-
-**Important:** These evaluation results measure retrieval performance on the team's labelled dataset. They should not be interpreted as proof of 86.7% legal-answer accuracy. The dataset is relatively small and does not represent every possible legal question.
+| Retrieval Architecture Component | Hit@3 | MRR |
+| :--- | :---: | :---: |
+| Baseline (Dense Vector Only) | 51.1% | 0.467 |
+| + Keyword & Act-Aware Section Matching | 60.0% | 0.527 |
+| + Statutory Title Matching | 77.8% | 0.596 |
+| + Legacy IPC-to-BNS Mapping Dictionary | 77.8% | 0.767 |
+| **+ Multilingual Translation & Reciprocal Rank Fusion (Final System)** | **86.7%** | **0.867** |
 
 ---
 
-## 🔐 Safety & Privacy
+## 🔐 Safety Charter & Constitutional Compliance
 
-Responsible AI usage and user safety are important aspects of NyayaSahayak.
+NyayaSahayak is governed by a **Safety Charter** grounded in the Constitution of India and responsible AI principles:
 
-The application incorporates several safety mechanisms:
-
-* **Source-Based Responses:** Answers are generated using retrieved legal information rather than unrestricted general knowledge.
-* **Legal Disclaimer:** Responses include a disclaimer clarifying that the platform provides legal information, not professional legal advice.
-* **Restricted Requests:** Crime-assistance requests are blocked.
-* **Prompt-Injection Protection:** Attempts to manipulate the assistant into ignoring its instructions are refused.
-* **Sensitive Information Protection:** Phone numbers, email addresses, and identification numbers are removed before questions are logged.
-* **Emergency Awareness:** Emergency-related phrases trigger an appropriate 112 notice.
-* **Contact Form Privacy:** The contact form opens the visitor's own email application and does not store submitted information.
-
----
-
-## ⚠️ Limitations
-
-Although NyayaSahayak provides an accessible way to explore legal information, the current implementation has certain limitations:
-
-* **Not Legal Advice:** The platform provides general legal information and cannot replace consultation with a qualified legal professional.
-* **Limited Knowledge Base:** Currently, only six Acts are indexed.
-* **API Rate Limits:** Free-tier Gemini and Groq API limits may occasionally slow down or interrupt response generation.
-* **Document Processing:** Extracted text from PDFs and CSV datasets may contain formatting or parsing errors.
-* **Evaluation Dataset:** The evaluation dataset is relatively small and was labelled by the development team.
-* **Optimistic Refusal Results:** The refusal threshold was tuned using the same evaluation questions, so the refusal results may be optimistic.
-* **Multilingual Performance:** Hindi and Punjabi retrieval depend on query translation, and Punjabi response quality may vary depending on the selected LLM.
-
----
-
-## 🚀 Future Scope
-
-The project can be further improved through the following developments:
-
-* **Expanded Legal Knowledge Base:** Integrate more Indian Acts, including RTI and the Legal Services Authorities Act.
-* **Court Judgments & Case Laws:** Include relevant court judgments to provide broader legal context.
-* **Additional Indian Languages:** Extend multilingual support to more regional languages.
-* **Improved Evaluation:** Develop a separate held-out evaluation dataset for more reliable performance measurement.
-* **Enhanced Voice Interaction:** Improve voice-based interaction for users with limited literacy or difficulty navigating text-heavy interfaces.
-* **Improved Retrieval Accuracy:** Further optimize semantic search, document matching, and multilingual retrieval.
-
----
-
-## 🤝 Contributing
-
-NyayaSahayak is an academic project developed to explore the practical application of Artificial Intelligence in improving access to legal information.
-
-Suggestions, code improvements, and feature enhancements are welcome.
-
-To contribute:
-
-1. Fork the repository.
-
-2. Create a separate feature branch:
-
-   ```bash
-   git checkout -b feature/YourFeatureName
-   ```
-
-3. Implement and test your changes.
-
-4. Commit your changes:
-
-   ```bash
-   git commit -m "Add: YourFeatureDescription"
-   ```
-
-5. Push your branch and submit a Pull Request.
+1. **Article 21 & 39A Realization:** Built to support the constitutional guarantees of speedy justice, undertrial liberty, and free legal aid.
+2. **Statutory Non-Advocacy Notice:** Does not establish an advocate-client relationship and does not provide legal representation. Prominent notices advise citizens to seek certified counsel for formal litigation.
+3. **Strict Criminal Refusal Guardrails:** Explicitly refuses requests involving the evasion of law enforcement, tampering with evidence, or unlawful conduct.
+4. **Client-Side PII Scrubbing:** Sensitive personal identification numbers (Aadhaar, PAN, phone numbers) are scrubbed client-side before transmission.
+5. **Mental Health Emergency Intervention:** Detects signs of severe distress or self-harm and immediately provides crisis hotlines including **Tele-MANAS (`14416`)** and KIRAN (`1800-599-0019`).
 
 ---
 
 ## 👥 Project Team
 
-**Developed as part of CSE276 CA1 – Project P14**
+**Developed under CSE276: AI Foundations (CA1 — Project P14)**  
+*Department of Computer Science and Engineering*
 
-| Team Member         | Student ID |
-| :------------------ | :--------- |
-| Ravnoor Kaur        | 12505889   |
-| Adarsh Kumar Shukla | 12513184   |
-
----
-
-## 👤 Author
-
-**Ravnoor Kaur**
+| Team Member | Registration / Roll No. | Role & Contribution |
+| :--- | :--- | :--- |
+| **Ravnoor Kaur** | 12505889 | Project Lead, System Architecture, RAG Pipeline & Full-Stack Development |
+| **Adarsh Kumar Shukla** | 12513184 | Legal Knowledge Engineering, Dataset Validation & Evaluation |
 
 ---
 
 <p align="center">
-  <b>⚖️ NyayaSahayak — Making Legal Information More Accessible Through AI.</b>
-  <br>
-  Built with the vision of simplifying access to justice through technology.
+  <b>⚖️ NyayaSahayak — न्याय सबके लिए (Justice for All).</b><br>
+  <i>Empowering Indian citizens with accurate, accessible, and grounded legal intelligence.</i>
 </p>

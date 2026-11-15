@@ -15,11 +15,11 @@ TABLE OF CONTENTS & QUICK NAVIGATOR:
 --------------------------------------------------------------------------------
 
 1. Word (.docx) & Text (.txt) Sample Documents for Document Scanner:
-   - 1_Police_Summons_Notice_Sec35_BNSS.docx / .txt   (DANGER / HIGH RISK - 48h Countdown)
-   - 2_Cheque_Bounce_Notice_Sec138_NI_Act.docx / .txt (DANGER / HIGH RISK - 15-day Notice)
-   - 3_Residential_Tenancy_Lease_Agreement.docx / .txt (MEDIUM RISK - 11-month Lease)
-   - 4_Non_Legal_University_Assignment.docx / .txt     (REJECTED - Non-Legal Document Banner)
-   - 5_Mutual_Settlement_and_NOC_Receipt.docx / .txt   (SAFE / LOW RISK - Green Shield)
+   - 1_Police_Summons_Notice_Sec35_BNSS.docx   (DANGER / HIGH RISK - 48h Countdown)
+   - 2_Cheque_Bounce_Notice_Sec138_NI_Act.docx (DANGER / HIGH RISK - 15-day Notice)
+   - 3_Residential_Tenancy_Lease_Agreement.docx (MEDIUM RISK - 11-month Lease)
+   - 4_Non_Legal_University_Assignment.docx (REJECTED - Non-Legal Document Banner)
+   - 5_Mutual_Settlement_and_NOC_Receipt.docx (SAFE / LOW RISK - Green Shield)
 
 2. Feature Test Case Files:
    - 01_AI_Legal_Assistant_Test_Cases.txt    -> RAG queries, BNSS/BNS/BSA, Hindi/Punjabi, Audit
