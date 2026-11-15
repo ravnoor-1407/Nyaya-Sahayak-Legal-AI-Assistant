@@ -59,6 +59,9 @@ def db() -> sqlite3.Connection:
     c.execute("CREATE TABLE IF NOT EXISTS otps("
               "target TEXT PRIMARY KEY, code TEXT, type TEXT, "
               "name TEXT, created REAL, attempts INT)")
+    c.execute("CREATE TABLE IF NOT EXISTS contact_inquiries("
+              "id INTEGER PRIMARY KEY, ticket_id TEXT UNIQUE, ts REAL, "
+              "name TEXT, email TEXT, phone TEXT, topic TEXT, message TEXT, status TEXT)")
 
     cols = _cols(c, "users")
     if "phone" not in cols:

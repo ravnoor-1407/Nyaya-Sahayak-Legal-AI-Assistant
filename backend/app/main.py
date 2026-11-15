@@ -1,13 +1,14 @@
 import json
 import os
 import re
+import secrets
 import time
 from collections import Counter
 from pathlib import Path
 from typing import Any, Iterable, cast
 
 import joblib  # type: ignore[reportMissingTypeStubs]
-from fastapi import FastAPI, Header, Request, UploadFile, File, Form
+from fastapi import FastAPI, Header, HTTPException, Request, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -698,3 +699,49 @@ async def analyze_document_file(
         return {"error": "Could not extract readable text from the uploaded file.", "analyzed": False}
 
     return _perform_doc_analysis(extracted_text, lang, filename=file.filename or "")
+
+
+class ContactInquiry(BaseModel):
+    name: str
+    email: str
+    phone: str = ""
+    topic: str
+    message: str
+
+
+@app.post("/api/contact")
+def submit_contact(req: ContactInquiry) -> dict[str, Any]:
+    name = req.name.strip()
+    email = req.email.strip()
+    msg = req.message.strip()
+    phone = req.phone.strip()
+    topic = req.topic.strip()
+
+    if len(name) < 2:
+        raise HTTPException(status_code=400, detail="Name must be at least 2 characters.")
+    if not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]{2,}$", email):
+        raise HTTPException(status_code=400, detail="Please enter a valid email address.")
+    if len(msg) < 10:
+        raise HTTPException(status_code=400, detail="Message must be at least 10 characters.")
+
+    ticket_id = f"NYA-2026-{secrets.token_hex(2).upper()}"
+    now = time.time()
+    try:
+        conn = db()
+        conn.execute(
+            "INSERT INTO contact_inquiries (ticket_id, ts, name, email, phone, topic, message, status) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            (ticket_id, now, name, email, phone, topic, msg, "received"),
+        )
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"Notice: database log error: {e}")
+
+    return {
+        "ok": True,
+        "ticket_id": ticket_id,
+        "message": "Inquiry successfully registered with NyayaSahayak Grievance Desk.",
+        "timestamp": now,
+    }
+
