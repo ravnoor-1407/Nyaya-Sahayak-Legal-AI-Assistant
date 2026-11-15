@@ -456,21 +456,73 @@ Signature / Thumb Impression of Complainant
     return {"draft": draft_text.strip(), "doc_type": dt, "status": "template_fallback", "lang": lang}
 
 
+def _validate_legal_document(text: str, filename: str = "") -> tuple[bool, str]:
+    """Verify if the uploaded or pasted content is a legitimate legal document (notice, summons, contract, etc.)."""
+    text_clean = text.strip()
+    combined = f"{filename} {text_clean}"
+    if len(text_clean) < 35:
+        return False, "The document text is too brief to constitute an official legal notice, court summons, or contract."
+
+    # Explicit exclusion for academic papers, university assignments, curriculum, resumes, code
+    is_academic_or_misc = bool(re.search(
+        r"\b(assignment|curriculum|syllabus|semester|b\.tech|m\.tech|roll\s*no|uid\s*:\s*\d+|"
+        r"lovely professional university|course code|submitted by|supervision of|faculty supervisor|"
+        r"invention disclosure form|patent application title|annexure 3b|resume|curriculum vitae|"
+        r"homework|class test|midterm exam|practical file)\b",
+        combined, re.I
+    ))
+
+    # Core legal instrument keywords
+    has_legal_heading = bool(re.search(
+        r"\b(notice of appearance|statutory legal notice|legal notice|demand notice|show cause notice|"
+        r"eviction notice|summons to appear|summons to accused|warrant of arrest|bailable warrant|"
+        r"court summons|lease agreement|tenancy agreement|rental agreement|indemnity bond|"
+        r"power of attorney|affidavit|memorandum of understanding|consumer complaint|cheque dishonour notice|"
+        r"first information report|zero fir|quashing petition|bail application)\b",
+        combined, re.I
+    ))
+
+    has_procedural_terms = bool(re.search(
+        r"\b(under instructions from our client|under instructions from my client|hereby call upon you to|"
+        r"failing which legal proceedings|take notice that|whereas,? an inquiry|whereas,? an investigation|"
+        r"directed to appear in person|in the court of|judicial magistrate|police station|station house officer|"
+        r"investigating officer|return memo dated|dishonoured on presentation|forfeiture of.*deposit|"
+        r"without prejudice to rights|hereby serve you with this notice)\b",
+        text_clean, re.I
+    ))
+
+    has_statutory_and_roles = (
+        bool(re.search(r"\b(section\s+\d+|sec\.?\s*\d+|article\s+\d+|bnss|bns|ipc|crpc|negotiable instruments act|consumer protection act|contract act)\b", text_clean, re.I))
+        and bool(re.search(r"\b(complainant|accused|petitioner|respondent|plaintiff|defendant|opposite party|landlord|tenant|noticee|advocate|counsel|sub-inspector)\b", text_clean, re.I))
+    )
+
+    if is_academic_or_misc and not (has_legal_heading and has_procedural_terms):
+        return False, "Academic paper, university assignment, or non-legal educational document detected."
+
+    if not (has_legal_heading or has_procedural_terms or has_statutory_and_roles):
+        return False, "No formal legal notice, police summons, court warrant, or agreement structure detected."
+
+    return True, "Valid legal document."
+
+
 def _perform_doc_analysis(text: str, lang: str = "en", filename: str = "") -> dict[str, Any]:
     """Helper to perform automated legal risk assessment and plain-language breakdown."""
     text_clean = text.strip()
     if not text_clean:
         return {"error": "Document text cannot be empty.", "analyzed": False}
 
-    combined_text = f"{filename} {text_clean}"
-
-    # Check for Academic / Patent / University / Research documents
-    is_academic = bool(re.search(
-        r"\b(patent|invention disclosure|lovely professional university|project report|assignment|"
-        r"thesis|dissertation|research paper|novelty|cse 276|curriculum|b\.tech|supervised by|"
-        r"roll no|uid|annexure 3b|inventor|abstract|prior art|claims|system architecture)\b",
-        combined_text, re.I
-    ))
+    # Step 1: Validate that the document is a legitimate legal document
+    is_legal, reason = _validate_legal_document(text_clean, filename)
+    if not is_legal:
+        return {
+            "analyzed": False,
+            "is_legal_document": False,
+            "error": "NON_LEGAL_DOCUMENT",
+            "error_title": "Non-Legal Document Detected",
+            "reason": reason,
+            "filename": filename,
+            "lang": lang,
+        }
 
     # Deterministic heuristics for baseline safety/danger classification
     is_benign = bool(re.search(r"\b(receipt|no objection certificate|noc|clearance|satisfaction|full and final|settlement agreement|consent)\b", text_clean, re.I))
@@ -478,12 +530,8 @@ def _perform_doc_analysis(text: str, lang: str = "en", filename: str = "") -> di
 
     # LLM Prompt with structured output format
     prompt = f"""You are a senior Indian legal analyst assessing a document for an ordinary citizen.
-Analyze the following document text:
+Analyze the following formal legal document / notice / summons / agreement:
 \"\"\"{text_clean[:4000]}\"\"\"
-
-CRITICAL CLASSIFICATION RULE:
-- If this document is an Academic Paper, Patent Application, Project Report, Assignment, University Document, Informational Article, or Business Proposal without any adverse police/court action, classify as STATUS: SAFE and RISK_LEVEL: LOW.
-- Only classify as STATUS: DANGER if it is an actual coercive legal notice, police summons, arrest warrant, cheque dishonour demand, or eviction notice demanding compliance under threat of criminal/civil penalty.
 
 Respond strictly in the following format:
 STATUS: [SAFE or DANGER]
@@ -498,7 +546,7 @@ What is this document and why did the citizen receive it? (Explain simply withou
 - Risk Severity: (Explain why this is safe or dangerous)
 
 ### 3. Key Statutory Safeguards & Citizen Rights
-What rights protect the citizen under Indian law (e.g. Constitution Articles 21/22, Patents Act 1970, BNSS Section 35, Consumer Protection Act, NI Act Section 138, etc.)?
+What rights protect the citizen under Indian law (e.g. Constitution Articles 21/22, BNSS Section 35, Consumer Protection Act, NI Act Section 138, etc.)?
 
 ### 4. Recommended Action Checklist
 Clear, numbered step-by-step instructions on what the citizen should do right now.
@@ -509,8 +557,8 @@ Provide the text in {lang} language."""
         raw_output = llm.generate(prompt)
         if raw_output and len(raw_output.strip()) > 80:
             lines = raw_output.strip().splitlines()
-            status_val = "SAFE" if is_academic else "DANGER"
-            risk_val = "LOW" if is_academic else "HIGH"
+            status_val = "DANGER" if is_danger else "SAFE"
+            risk_val = "HIGH" if is_danger else "LOW"
             content_start_idx = 0
 
             for i, line in enumerate(lines[:6]):
@@ -530,16 +578,11 @@ Provide the text in {lang} language."""
                     content_start_idx = max(content_start_idx, i + 1)
 
             cleaned_markdown = "\n".join(lines[content_start_idx:]).strip()
-            
-            # Academic override
-            if is_academic:
-                status_val = "SAFE"
-                risk_val = "LOW"
-
-            is_safe = (status_val == "SAFE" or risk_val == "LOW") and not (is_danger and not is_academic)
+            is_safe = (status_val == "SAFE" or risk_val == "LOW") and not is_danger
 
             return {
                 "analyzed": True,
+                "is_legal_document": True,
                 "is_safe": is_safe,
                 "risk_status": "safe" if is_safe else "danger",
                 "risk_level": "LOW" if is_safe else risk_val,
@@ -555,14 +598,7 @@ Provide the text in {lang} language."""
     has_138 = bool(re.search(r"138|cheque.*dishonour|dishonour.*cheque", text_clean, re.I))
     has_bnss_notice = bool(re.search(r"notice of appearance|directed to appear|summons.*police|35\(3\)", text_clean, re.I))
     
-    if is_academic:
-        is_safe = True
-        risk_level = "LOW"
-        summary = "This document is an Academic Project Report, Patent Invention Disclosure, or University Assignment. It contains technical, algorithmic, and statutory research information for intellectual property filing or course evaluation. It is NOT a coercive legal notice, court summons, or police complaint."
-        risks = "- Danger / Red Flags Detected: None. This is an academic research and intellectual property disclosure with no adverse criminal or civil liability.\n- Critical Deadlines: None. No court appearance or statutory limitation period.\n- Risk Severity: LOW (SAFE). No coercive legal action exists."
-        rights = "Protected under the Patents Act, 1970 and Copyright Act, 1957. Academic freedom, authorship recognition, and student invention rights apply."
-        steps = "1. Verify that all project/patent sections, inventor names, and UID details are properly formatted.\n2. Submit to the concerned University evaluation committee or Patent Attorney.\n3. No police, court, or legal dispute response is required."
-    elif is_benign and not is_danger:
+    if is_benign and not is_danger:
         is_safe = True
         risk_level = "LOW"
         summary = "This document appears to be a standard acknowledgment, receipt, or no-objection certificate. It serves as legitimate proof of transaction or clearance without punitive threats."
@@ -586,10 +622,10 @@ Provide the text in {lang} language."""
     else:
         is_safe = True
         risk_level = "LOW"
-        summary = "This document appears to be general legal text, informational correspondence, or standard draft terms. No explicit coercive arrest summons, criminal dishonour, or immediate court penalty was detected."
-        risks = "- Danger / Red Flags Detected: No imminent threat of police detention or criminal prosecution identified.\n- Critical Deadlines: None identified.\n- Risk Severity: LOW (INFORMATIONAL)."
-        rights = "Standard civil rights and constitutional protections apply."
-        steps = "1. Review the document carefully for your own reference.\n2. If this relates to an ongoing dispute, consult free legal aid at 15100.\n3. No emergency legal action required."
+        summary = "This document represents standard legal agreement terms, settlement, or formal correspondence. No coercive arrest summons, criminal complaint, or emergency court deadline was detected."
+        risks = "- Danger / Red Flags Detected: No imminent threat of police detention or criminal prosecution identified.\n- Critical Deadlines: Review any standard contractual notice periods.\n- Risk Severity: LOW / STANDARD."
+        rights = "Standard civil rights, contract law, and constitutional protections apply."
+        steps = "1. Review all terms carefully for your personal records.\n2. If this relates to an ongoing dispute, consult free legal aid at 15100.\n3. No emergency legal action required."
 
     fallback_analysis = f"""### 1. Executive Summary (In Plain Words)
 {summary}
@@ -605,6 +641,7 @@ Provide the text in {lang} language."""
 
     return {
         "analyzed": True,
+        "is_legal_document": True,
         "is_safe": is_safe,
         "risk_status": "safe" if is_safe else "danger",
         "risk_level": risk_level,

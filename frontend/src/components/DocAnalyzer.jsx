@@ -38,27 +38,17 @@ You had issued Cheque No. 901245 dated 25/10/2026 for an amount of Rs. 4,50,000/
 
 We hereby call upon you to make the payment of Rs. 4,50,000/- within 15 (FIFTEEN) DAYS of the receipt of this notice, failing which criminal proceedings under Section 138 of the Negotiable Instruments Act, 1881 shall be initiated against you before the Judicial Magistrate.`,
   },
-  patent_sample: {
-    title: "Patent Assignment (University)",
-    type: "safe",
-    tag: "Academic / Safe",
-    text: `Annexure 3b – Complete Filing
-INVENTION DISCLOSURE FORM
-Lovely Professional University, Punjab
+  rent: {
+    title: "Unfair Rent Agreement",
+    type: "danger",
+    tag: "Medium Danger",
+    text: `RESIDENTIAL TENANCY LEASE AGREEMENT (EXTRACT)
 
-1. TITLE: A HYBRID RETRIEVAL-AUGMENTED SYSTEM AND METHOD FOR GROUNDED MULTILINGUAL STATUTORY LEGAL QUESTION-ANSWERING AND STATUTE CONCORDANCE MAPPING
-
-2. INVENTORS:
-Lead AI/ML Architect: Ravnoor Kaur (UID: 12505889, Roll: K3P25ZJB63)
-Frontend Architect: Adarsh Kumar Shukla (UID: 12513184, Roll: K3P25ZJA05)
-Faculty Supervisor: Mr. Ravneet Singh Bhalla
-Department of Computer Science and Engineering, Lovely Professional University, Punjab - 144411.
-
-3. DESCRIPTION OF THE INVENTION:
-The legal domain in statutory civil law jurisdictions, particularly India, is experiencing an unprecedented structural transition. On July 1, 2024, the Indian Penal Code (IPC 1860) and Code of Criminal Procedure (CrPC 1973) were superseded by the Bharatiya Nyaya Sanhita (BNS 2023) and Bharatiya Nagarik Suraksha Sanhita (BNSS 2023). This invention integrates an exact-section booster, reciprocal rank fusion, and cross-lingual transformer embeddings to prevent hallucinations.`,
+Clause 8 (Security Deposit & Forfeiture):
+The Tenant has paid a refundable security deposit of Rs. 1,00,000/-. However, if the Tenant terminates the tenancy before the lock-in period of 24 months, the entire security deposit of Rs. 1,00,000/- shall be forfeited by the Landlord without any refund, and the Landlord shall have the immediate right to disconnect electricity and water supply without court orders.`,
   },
   safe_noc: {
-    title: "Clean NOC / Rent Receipt",
+    title: "Clean NOC / Settlement",
     type: "safe",
     tag: "Safe / Low Risk",
     text: `NO OBJECTION CERTIFICATE & FULL AND FINAL SETTLEMENT RECEIPT
@@ -106,6 +96,57 @@ async function extractTextFromDocx(file) {
   }
 }
 
+// Validation function: Ensure uploaded text is a genuine legal notice, summons, or contract
+function validateLegalDocument(text, filename = "") {
+  const clean = (text || "").trim();
+  const combined = `${filename || ""} ${clean}`;
+
+  if (clean.length < 35) {
+    return {
+      isValid: false,
+      reason: "The document text is too brief to constitute an official legal notice, court summons, or contract.",
+    };
+  }
+
+  // Explicit non-legal / academic / student assignment check
+  const isAcademicOrMisc = /\b(assignment|curriculum|syllabus|semester|b\.tech|m\.tech|roll\s*no|uid\s*:\s*\d+|lovely professional university|course code|submitted by|supervision of|faculty supervisor|invention disclosure form|patent application title|annexure 3b|resume|curriculum vitae|homework|class test|practical file)\b/i.test(
+    combined
+  );
+
+  // Core legal instrument keywords
+  const hasLegalHeading = /\b(notice of appearance|statutory legal notice|legal notice|demand notice|show cause notice|eviction notice|summons to appear|summons to accused|warrant of arrest|bailable warrant|court summons|lease agreement|tenancy agreement|rental agreement|indemnity bond|power of attorney|affidavit|memorandum of understanding|consumer complaint|cheque dishonour notice|first information report|zero fir|quashing petition|bail application)\b/i.test(
+    combined
+  );
+
+  const hasProceduralTerms = /\b(under instructions from our client|under instructions from my client|hereby call upon you to|failing which legal proceedings|take notice that|whereas,? an inquiry|whereas,? an investigation|directed to appear in person|in the court of|judicial magistrate|police station|station house officer|investigating officer|return memo dated|dishonoured on presentation|forfeiture of.*deposit|without prejudice to rights|hereby serve you with this notice)\b/i.test(
+    clean
+  );
+
+  const hasStatutoryAndRoles =
+    /\b(section\s+\d+|sec\.?\s*\d+|article\s+\d+|bnss|bns|ipc|crpc|negotiable instruments act|consumer protection act|contract act)\b/i.test(
+      clean
+    ) &&
+    /\b(complainant|accused|petitioner|respondent|plaintiff|defendant|opposite party|landlord|tenant|noticee|advocate|counsel|sub-inspector)\b/i.test(
+      clean
+    );
+
+  if (isAcademicOrMisc && !(hasLegalHeading && hasProceduralTerms)) {
+    return {
+      isValid: false,
+      reason: "Academic paper, university assignment, or non-legal educational document detected.",
+    };
+  }
+
+  if (!hasLegalHeading && !hasProceduralTerms && !hasStatutoryAndRoles) {
+    return {
+      isValid: false,
+      reason: "No formal legal notice, police summons, court warrant, or agreement structure detected.",
+    };
+  }
+
+  return { isValid: true, reason: "Valid legal document." };
+}
+
 export default function DocAnalyzer() {
   const { tr, lang } = useLang();
   const [docText, setDocText] = useState(SAMPLES.bnss35.text);
@@ -113,6 +154,7 @@ export default function DocAnalyzer() {
   const [isDragging, setIsDragging] = useState(false);
   const [extracting, setExtracting] = useState(false);
   const [extractionMsg, setExtractionMsg] = useState("");
+  const [invalidDoc, setInvalidDoc] = useState(null);
   const [result, setResult] = useState(null);
   const [busy, setBusy] = useState(false);
   const fileInputRef = useRef(null);
@@ -123,6 +165,7 @@ export default function DocAnalyzer() {
       setDocText(s.text);
       setUploadedFile(null);
       setExtractionMsg("");
+      setInvalidDoc(null);
       setResult(null);
     }
   };
@@ -130,6 +173,7 @@ export default function DocAnalyzer() {
   const handleProcessFile = async (file) => {
     if (!file) return;
     setUploadedFile(file);
+    setInvalidDoc(null);
     setResult(null);
     setExtracting(true);
     setExtractionMsg(tr("Reading document contents...", "दस्तावेज़ की सामग्री पढ़ी जा रही है...", "ਦਸਤਾਵੇਜ਼ ਪੜ੍ਹਿਆ ਜਾ ਰਿਹਾ ਹੈ..."));
@@ -197,6 +241,7 @@ export default function DocAnalyzer() {
     setDocText("");
     setUploadedFile(null);
     setExtractionMsg("");
+    setInvalidDoc(null);
     setResult(null);
   };
 
@@ -204,79 +249,59 @@ export default function DocAnalyzer() {
     if (e) e.preventDefault();
     if (!docText.trim() && !uploadedFile) return;
 
-    setBusy(true);
+    setInvalidDoc(null);
     setResult(null);
+
+    // Client-side pre-validation: Is this a legal document?
+    const validation = validateLegalDocument(docText, uploadedFile?.name);
+    if (!validation.isValid) {
+      setInvalidDoc({
+        isInvalid: true,
+        reason: validation.reason,
+      });
+      return;
+    }
+
+    setBusy(true);
 
     try {
       if (uploadedFile && (!docText.trim() || uploadedFile.name.toLowerCase().endsWith(".pdf"))) {
         const res = await analyzeDocumentFile(uploadedFile, lang);
-        setResult(res);
-        if (res.extracted_text && !docText.trim()) {
-          setDocText(res.extracted_text);
+        if (res.is_legal_document === false || res.error === "NON_LEGAL_DOCUMENT") {
+          setInvalidDoc({
+            isInvalid: true,
+            reason: res.reason || "Non-legal document detected.",
+          });
+        } else {
+          setResult(res);
+          if (res.extracted_text && !docText.trim()) {
+            setDocText(res.extracted_text);
+          }
         }
       } else {
         const res = await analyzeDocument(docText, lang);
-        setResult(res);
+        if (res.is_legal_document === false || res.error === "NON_LEGAL_DOCUMENT") {
+          setInvalidDoc({
+            isInvalid: true,
+            reason: res.reason || "Non-legal document detected.",
+          });
+        } else {
+          setResult(res);
+        }
       }
     } catch (err) {
-      // Deterministic fallback with Academic/Patent Awareness
+      // Offline fallback for genuine legal documents
       const combined = `${uploadedFile?.name || ""} ${docText}`;
-      const isAcademic = /patent|invention disclosure|lovely professional university|project report|assignment|thesis|dissertation|research paper|novelty|cse 276|curriculum|b\.tech|supervised by|roll no|uid|annexure 3b|inventor|abstract/i.test(
-        combined
-      );
-      const isBenign = /receipt|noc|clearance|settlement|safe|no objection/i.test(combined);
       const is138 = /138|cheque.*dishonour|dishonour.*cheque/i.test(combined);
       const isPoliceNotice = /35\(3\)|notice of appearance|police station|summons to appear|failure to attend/i.test(
         combined
       );
+      const isBenign = /receipt|noc|clearance|settlement|safe|no objection/i.test(combined);
 
-      if (isAcademic) {
+      if (is138) {
         setResult({
           analyzed: true,
-          is_safe: true,
-          risk_status: "safe",
-          risk_level: "LOW",
-          analysis: `### 1. Executive Summary (In Plain Words)
-This document is an Academic Project Report, Patent Invention Disclosure, or University Assignment. It contains technical, algorithmic, and statutory research descriptions for intellectual property filing or educational evaluation. It is NOT a coercive legal notice, court summons, or police complaint.
-
-### 2. Automated Legal Risk Assessment
-- Danger / Red Flags Detected: None. This is an educational or intellectual property document with no adverse legal liability.
-- Critical Deadlines: None. No court appearance or statutory limitation period.
-- Risk Severity: LOW (SAFE). No coercive action exists.
-
-### 3. Key Statutory Safeguards & Citizen Rights
-Protected under the Patents Act, 1970 and Copyright Act, 1957. Academic freedom, authorship recognition, and student invention rights apply.
-
-### 4. Recommended Action Checklist
-1. Review patent claims and technical descriptions before submitting to the University evaluation portal or Patent Attorney.
-2. Ensure proper signatures and inventor declarations are completed.
-3. No police, court, or legal dispute response is required.`,
-        });
-      } else if (isBenign && !is138 && !isPoliceNotice) {
-        setResult({
-          analyzed: true,
-          is_safe: true,
-          risk_status: "safe",
-          risk_level: "LOW",
-          analysis: `### 1. Executive Summary (In Plain Words)
-This document is a standard acknowledgment, receipt, or no-objection certificate. It serves as legitimate proof of transaction or mutual clearance.
-
-### 2. Automated Legal Risk Assessment
-- Danger / Red Flags Detected: None. No threats of arrest, prosecution, or financial forfeiture.
-- Critical Deadlines: None. No legal limitation clock is running.
-- Risk Severity: LOW. Safe informational document.
-
-### 3. Key Statutory Safeguards & Citizen Rights
-Standard civil law protections apply. You are entitled to keep this document as valid legal proof of payment or mutual agreement.
-
-### 4. Recommended Action Checklist
-1. Verify that personal details and figures are accurate.
-2. Store a digital and physical copy for your records.
-3. No urgent legal action or court appearance required.`,
-        });
-      } else if (is138) {
-        setResult({
-          analyzed: true,
+          is_legal_document: true,
           is_safe: false,
           risk_status: "danger",
           risk_level: "CRITICAL",
@@ -299,6 +324,7 @@ You have the right to inspect bank return memos, verify if a legally enforceable
       } else if (isPoliceNotice) {
         setResult({
           analyzed: true,
+          is_legal_document: true,
           is_safe: false,
           risk_status: "danger",
           risk_level: "HIGH",
@@ -319,27 +345,51 @@ Under Section 35(3) & 35(4) BNSS, as long as you comply with the notice and appe
 3. Take a copy of the notice and get your attendance marked/signed by the investigating officer.
 4. Call 15100 for free legal aid if you cannot afford an advocate.`,
         });
-      } else {
+      } else if (isBenign) {
         setResult({
           analyzed: true,
+          is_legal_document: true,
           is_safe: true,
           risk_status: "safe",
           risk_level: "LOW",
           analysis: `### 1. Executive Summary (In Plain Words)
-This document appears to be general legal correspondence, informational text, or contractual terms. No explicit coercive arrest summons, criminal complaint, or emergency court deadline was detected.
+This document is a standard acknowledgment, receipt, or no-objection certificate. It serves as legitimate proof of transaction or mutual clearance.
 
 ### 2. Automated Legal Risk Assessment
-- Danger / Red Flags Detected: No imminent threat of police arrest, criminal charges, or penalty found.
-- Critical Deadlines: None identified.
-- Risk Severity: LOW (INFORMATIONAL).
+- Danger / Red Flags Detected: None. No threats of arrest, prosecution, or financial forfeiture.
+- Critical Deadlines: None. No legal limitation clock is running.
+- Risk Severity: LOW. Safe informational document.
 
 ### 3. Key Statutory Safeguards & Citizen Rights
-Standard constitutional and civil law protections apply.
+Standard civil law protections apply. You are entitled to keep this document as valid legal proof of payment or mutual agreement.
 
 ### 4. Recommended Action Checklist
-1. Review the document carefully for your own reference.
+1. Verify that personal details and figures are accurate.
+2. Store a digital and physical copy for your records.
+3. No urgent legal action or court appearance required.`,
+        });
+      } else {
+        setResult({
+          analyzed: true,
+          is_legal_document: true,
+          is_safe: true,
+          risk_status: "safe",
+          risk_level: "LOW",
+          analysis: `### 1. Executive Summary (In Plain Words)
+This document represents legal terms or contractual correspondence between parties. No immediate threat of police arrest, criminal charges, or penalty was detected.
+
+### 2. Automated Legal Risk Assessment
+- Danger / Red Flags Detected: No imminent threat of police detention or criminal prosecution identified.
+- Critical Deadlines: Review any specified contractual notice periods.
+- Risk Severity: LOW / STANDARD.
+
+### 3. Key Statutory Safeguards & Citizen Rights
+Standard civil rights and contract law protections apply.
+
+### 4. Recommended Action Checklist
+1. Review the document carefully for your personal records.
 2. If this relates to an ongoing dispute, consult free legal aid via NALSA helpline 15100.
-3. No emergency response required.`,
+3. No emergency legal action required.`,
         });
       }
     } finally {
@@ -366,9 +416,9 @@ Standard constitutional and civil law protections apply.
               </h2>
               <p className="text-xs text-muted mt-0.5">
                 {tr(
-                  "Upload any file (PDF, Word, TXT) or paste legal text below to scan for risks, deadlines, and rights.",
-                  "पीडीएफ, वर्ड (.docx) या टेक्स्ट फ़ाइल अपलोड करें अथवा नीचे टेक्स्ट चिपकाकर जोखिम पहचानें।",
-                  "ਪੀਡੀਐਫ, ਵਰਡ ਜਾਂ ਟੈਕਸਟ ਫਾਈਲ ਅਪਲੋਡ ਕਰੋ ਜਾਂ ਹੇਠਾਂ ਟੈਕਸਟ ਪੇਸਟ ਕਰਕੇ ਜੋਖਮ ਪਛਾਣੋ।"
+                  "Upload any legal notice, court summons, or contract to scan for risks, deadlines, and statutory rights.",
+                  "केवल कानूनी नोटिस, अदालती समन या अनुबंध अपलोड या पेस्ट करें और तत्काल जोखिम पहचानें।",
+                  "ਸਿਰਫ਼ ਕਾਨੂੰਨੀ ਨੋਟਿਸ, ਅਦਾਲਤੀ ਸਮਨ ਜਾਂ ਇਕਰਾਰਨਾਮਾ ਅਪਲੋਡ ਜਾਂ ਪੇਸਟ ਕਰਕੇ ਜੋਖਮ ਪਛਾਣੋ।"
                 )}
               </p>
             </div>
@@ -395,17 +445,17 @@ Standard constitutional and civil law protections apply.
             </button>
             <button
               type="button"
-              onClick={() => handleSelectSample("patent_sample")}
-              className="btn btn-sm btn-ghost text-xs text-emerald-600 dark:text-emerald-400 font-semibold"
+              onClick={() => handleSelectSample("rent")}
+              className="btn btn-sm btn-ghost text-xs text-amber-600 dark:text-amber-400 font-semibold"
             >
-              🟢 {tr("Patent / Assignment", "पेटेंट / असाइनमेंट", "ਪੇਟੈਂਟ / ਅਸਾਈਨਮੈਂਟ")}
+              🟡 {tr("Rent Agreement", "किराया अनुबंध", "ਕਿਰਾਇਆ ਇਕਰਾਰਨਾਮਾ")}
             </button>
             <button
               type="button"
               onClick={() => handleSelectSample("safe_noc")}
               className="btn btn-sm btn-ghost text-xs text-emerald-600 dark:text-emerald-400 font-semibold"
             >
-              🟢 {tr("Rent Receipt", "किराया रसीद", "ਕਿਰਾਇਆ ਰਸੀਦ")}
+              🟢 {tr("Clean NOC", "एनओसी रसीद", "ਐਨਓਸੀ ਰਸੀਦ")}
             </button>
           </div>
         </div>
@@ -446,7 +496,9 @@ Standard constitutional and civil law protections apply.
                   <div className="text-sm font-bold text-ink">{uploadedFile.name}</div>
                   <div className="text-xs text-muted">
                     {(uploadedFile.size / 1024).toFixed(1)} KB &bull;{" "}
-                    {extracting ? tr("Extracting contents...", "सामग्री निकाली जा रही है...", "ਸਮੱਗਰੀ ਕੱਢੀ ਜਾ ਰਹੀ ਹੈ...") : tr("Loaded into text box below", "नीचे टेक्स्ट बॉक्स में लोड किया गया", "ਹੇਠਾਂ ਟੈਕਸਟ ਬਾਕਸ ਵਿੱਚ ਲੋਡ ਕੀਤਾ ਗਿਆ")}
+                    {extracting
+                      ? tr("Extracting contents...", "सामग्री निकाली जा रही है...", "ਸਮੱਗਰੀ ਕੱਢੀ ਜਾ ਰਹੀ ਹੈ...")
+                      : tr("Loaded into text box below", "नीचे टेक्स्ट बॉक्स में लोड किया गया", "ਹੇਠਾਂ ਟੈਕਸਟ ਬਾਕਸ ਵਿੱਚ ਲੋਡ ਕੀਤਾ ਗਿਆ")}
                   </div>
                 </div>
                 <button
@@ -468,7 +520,7 @@ Standard constitutional and civil law protections apply.
                   <UploadCloud size={22} />
                 </div>
                 <div className="text-sm font-bold text-ink">
-                  {tr("Drag & Drop your legal file here, or click to browse", "फ़ाइल यहाँ खींचकर छोड़ें या ब्राउज़ करें", "ਫਾਈਲ ਇੱਥੇ ਖਿੱਚ ਕੇ ਛੱਡੋ ਜਾਂ ਬ੍ਰਾਊਜ਼ ਕਰੋ")}
+                  {tr("Drag & Drop your legal file here, or click to browse", "कानूनी दस्तावेज़ यहाँ खींचकर छोड़ें या ब्राउज़ करें", "ਕਾਨੂੰਨੀ ਫਾਈਲ ਇੱਥੇ ਖਿੱਚ ਕੇ ਛੱਡੋ ਜਾਂ ਬ੍ਰਾਊਜ਼ ਕਰੋ")}
                 </div>
                 <p className="text-xs text-muted max-w-md mx-auto">
                   {tr(
@@ -537,8 +589,11 @@ Standard constitutional and civil law protections apply.
               rows={8}
               className="input w-full font-mono text-xs sm:text-sm leading-relaxed"
               value={docText}
-              onChange={(e) => setDocText(e.target.value)}
-              placeholder="Paste or review the legal notice, police summons, contract, tenancy agreement, or patent text here..."
+              onChange={(e) => {
+                setDocText(e.target.value);
+                if (invalidDoc) setInvalidDoc(null);
+              }}
+              placeholder="Paste or review the legal notice, police summons, contract, or court paper here..."
             />
           </div>
 
@@ -547,9 +602,9 @@ Standard constitutional and civil law protections apply.
             <span className="text-[11px] text-muted flex items-center gap-1.5">
               <ShieldCheck size={14} className="text-emerald-500 shrink-0" />
               {tr(
-                "Client-side de-identification scrubs sensitive Aadhaar & phone numbers before processing.",
-                "संवेदनशील आधार व फोन नंबरों को पहले सुरक्षित किया जाता है।",
-                "ਸੰਵੇਦਨਸ਼ੀਲ ਵੇਰਵੇ ਪਹਿਲਾਂ ਸੁਰੱਖਿਅਤ ਕੀਤੇ ਜਾਂਦੇ ਹਨ।"
+                "Specialized exclusively for legal notices, court summons, and contracts.",
+                "विशेष रूप से कानूनी नोटिसों, समन और अनुबंधों के लिए तैयार।",
+                "ਸਿਰਫ਼ ਕਾਨੂੰਨੀ ਨੋਟਿਸਾਂ ਅਤੇ ਸਮਨਾਂ ਲਈ ਤਿਆਰ ਕੀਤਾ ਗਿਆ।"
               )}
             </span>
             <button
@@ -573,8 +628,96 @@ Standard constitutional and civil law protections apply.
         </form>
       </div>
 
+      {/* FANCY ERROR SCREEN: NON-LEGAL DOCUMENT DETECTED */}
+      {invalidDoc && invalidDoc.isInvalid && (
+        <div className="card p-6 sm:p-8 rounded-2xl bg-amber-500/10 border-2 border-amber-500/40 shadow-lg space-y-5">
+          <div className="flex items-start gap-4">
+            <div className="p-3.5 rounded-full bg-amber-500 text-white shadow-md shrink-0">
+              <AlertTriangle size={32} />
+            </div>
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="badge bg-amber-500/20 text-amber-900 dark:text-amber-200 border border-amber-500/40 font-bold text-xs uppercase px-2.5 py-0.5">
+                  {tr("NON-LEGAL DOCUMENT DETECTED", "अमान्य दस्तावेज़ — केवल कानूनी दस्तावेज़ समर्थित हैं", "ਗੈਰ-ਕਾਨੂੰਨੀ ਦਸਤਾਵੇਜ਼")}
+                </span>
+              </div>
+              <h3 className="text-lg sm:text-xl font-extrabold text-amber-950 dark:text-amber-100">
+                {tr("Not a Valid Legal Document — Analysis Paused", "अमान्य दस्तावेज़ — केवल कानूनी दस्तावेज़ विश्लेषित किए जाते हैं", "ਗੈਰ-ਕਾਨੂੰਨੀ ਦਸਤਾਵੇਜ਼ — ਵਿਸ਼ਲੇਸ਼ਣ ਰੋਕਿਆ ਗਿਆ")}
+              </h3>
+              <p className="text-xs sm:text-sm text-amber-900 dark:text-amber-200 leading-relaxed">
+                {tr(
+                  "NyayaSahayak's Scanner is engineered exclusively for official legal notices, police summons (BNSS/CrPC), court warrants, 15-day cheque dishonour demand letters (Sec 138 NI Act), and tenancy/commercial contracts. The document you submitted appears to be an academic assignment, resume, or general non-legal file.",
+                  "न्याय सहायक का स्कैनर केवल आधिकारिक कानूनी नोटिसों, पुलिस समन (बीएनएसएस), अदालती वारंट, चेक बाउंस नोटिस (धारा 138) और कानूनी अनुबंधों के विश्लेषण हेतु तैयार किया गया है। आपका दस्तावेज़ एक सामान्य असाइनमेंट या गैर-कानूनी फाइल प्रतीत होता है।",
+                  "ਨਿਆਂ ਸਹਾਇਕ ਦਾ ਸਕੈਨਰ ਸਿਰਫ਼ ਅਧਿਕਾਰਤ ਕਾਨੂੰਨੀ ਨੋਟਿਸਾਂ, ਪੁਲਿਸ ਸਮਨਾਂ ਅਤੇ ਅਦਾਲਤੀ ਦਸਤਾਵੇਜ਼ਾਂ ਦੇ ਵਿਸ਼ਲੇਸ਼ਣ ਲਈ ਤਿਆਰ ਕੀਤਾ ਗਿਆ ਹੈ। ਤੁਹਾਡਾ ਦਸਤਾਵੇਜ਼ ਇੱਕ ਆਮ ਅਸਾਈਨਮੈਂਟ ਜਾਂ ਗੈਰ-ਕਾਨੂੰਨੀ ਫਾਈਲ ਜਾਪਦਾ ਹੈ।"
+                )}
+              </p>
+            </div>
+          </div>
+
+          {/* Two Guidance Columns */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 pt-2 border-t border-amber-500/20">
+            <div className="p-3.5 rounded-xl bg-surface/70 border border-line">
+              <div className="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5 mb-1.5">
+                <CheckCircle2 size={15} />
+                {tr("Documents You CAN Scan Here:", "यहाँ समर्थित कानूनी दस्तावेज़:", "ਇੱਥੇ ਸਕੈਨ ਕਰਨ ਯੋਗ ਦਸਤਾਵੇਜ਼:")}
+              </div>
+              <ul className="text-[11px] text-muted space-y-1 list-disc list-inside">
+                <li>{tr("Police Notices & Appearance Orders (Sec 35 BNSS)", "पुलिस उपस्थिति समन व नोटिस (धारा 35 बीएनएसएस)", "ਪੁਲਿਸ ਨੋਟਿਸ (ਧਾਰਾ 35 ਬੀਐਨਐਸਐਸ)")}</li>
+                <li>{tr("Court Summons & Judicial Arrest Warrants", "अदालती समन एवं न्यायिक वारंट", "ਅਦਾਲਤੀ ਸਮਨ ਅਤੇ ਵਾਰੰਟ")}</li>
+                <li>{tr("15-Day Cheque Dishonour Notices (Sec 138 NI Act)", "15-दिवसीय चेक अनादर नोटिस (धारा 138)", "ਚੈੱਕ ਬਾਊਂਸ ਨੋਟਿਸ (ਧਾਰਾ 138)")}</li>
+                <li>{tr("Residential & Commercial Tenancy Lease Agreements", "किराया एवं लीज अनुबंध", "ਕਿਰਾਏਨਾਮਾ ਅਤੇ ਲੀਜ਼ ਇਕਰਾਰਨਾਮੇ")}</li>
+                <li>{tr("Deficiency in Service & Consumer Legal Notices", "उपभोक्ता शिकायत एवं सेवा में कमी नोटिस", "ਖਪਤਕਾਰ ਕਾਨੂੰਨੀ ਨੋਟਿਸ")}</li>
+              </ul>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-surface/70 border border-line">
+              <div className="text-xs font-bold text-red-600 dark:text-red-400 flex items-center gap-1.5 mb-1.5">
+                <AlertOctagon size={15} />
+                {tr("Documents NOT Supported:", "असमर्थित दस्तावेज़:", "ਅਸਮਰਥਿਤ ਦਸਤਾਵੇਜ਼:")}
+              </div>
+              <ul className="text-[11px] text-muted space-y-1 list-disc list-inside">
+                <li>{tr("University Assignments, Homework & Thesis Papers", "विश्वविद्यालय असाइनमेंट, गृहकार्य व थीसिस", "ਯੂਨੀਵਰਸਿਟੀ ਅਸਾਈਨਮੈਂਟ ਅਤੇ ਥੀਸਿਸ")}</li>
+                <li>{tr("Resumes, CVs, and Job Applications", "बायोडाटा एवं नौकरी आवेदन", "ਨੌਕਰੀ ਲਈ ਰਿਜ਼ਿਊਮ")}</li>
+                <li>{tr("Software Code, Technical Manuals & Articles", "सॉफ्टवेयर कोड, तकनीकी लेख व मैनुअल", "ਤਕਨੀਕੀ ਲੇਖ ਅਤੇ ਕੋਡ")}</li>
+                <li>{tr("General invoices without legal dispute clauses", "सामान्य रसीदें जिनमें कानूनी विवाद न हो", "ਆਮ ਰਸੀਦਾਂ")}</li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Quick Recovery Actions */}
+          <div className="flex items-center justify-between flex-wrap gap-2 pt-2 border-t border-amber-500/20">
+            <span className="text-xs font-semibold text-muted">
+              {tr("Try testing with a real legal sample:", "वास्तविक कानूनी नमूने के साथ परीक्षण करें:", "ਅਸਲ ਕਾਨੂੰਨੀ ਨਮੂਨੇ ਨਾਲ ਟੈਸਟ ਕਰੋ:")}
+            </span>
+            <div className="flex items-center gap-2 flex-wrap">
+              <button
+                type="button"
+                onClick={() => handleSelectSample("bnss35")}
+                className="btn btn-sm btn-ghost border border-line text-xs font-semibold text-red-600"
+              >
+                🔴 {tr("Load Police Summons", "पुलिस समन लोड करें", "ਪੁਲਿਸ ਸਮਨ")}
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSelectSample("ni138")}
+                className="btn btn-sm btn-ghost border border-line text-xs font-semibold text-red-600"
+              >
+                🔴 {tr("Load Cheque Bounce Notice", "चेक बाउंस नोटिस", "ਚੈੱਕ ਬਾਊਂਸ ਨੋਟਿਸ")}
+              </button>
+              <button
+                type="button"
+                onClick={handleClear}
+                className="btn btn-sm btn-ghost text-xs text-muted hover:text-ink ml-1"
+              >
+                {tr("Clear Form", "फ़ॉर्म साफ़ करें", "ਸਾਫ਼ ਕਰੋ")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* RESULTS DISPLAY: PROMINENT GREEN/RED STATUS BANNER FIRST, THEN STRUCTURED BREAKDOWN */}
-      {result && (
+      {result && result.is_legal_document && (
         <div className="space-y-4">
           {/* 1. FIRST: PROMINENT VISUAL STATUS INDICATOR */}
           {result.is_safe ? (
@@ -586,7 +729,7 @@ Standard constitutional and civil law protections apply.
                 <div>
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-lg sm:text-xl font-extrabold text-emerald-800 dark:text-emerald-200">
-                      {tr("SAFE — NO COERCIVE LEGAL THREAT DETECTED", "सुरक्षित — कोई दंडात्मक कानूनी जोखिम नहीं", "ਸੁਰੱਖਿਅਤ — ਕੋਈ ਕਾਨੂੰਨੀ ਖਤਰਾ ਨਹੀਂ")}
+                      {tr("SAFE — NO IMMEDIATE PUNITIVE THREAT DETECTED", "सुरक्षित — कोई दंडात्मक कानूनी जोखिम नहीं", "ਸੁਰੱਖਿਅਤ — ਕੋਈ ਕਾਨੂੰਨੀ ਖਤਰਾ ਨਹੀਂ")}
                     </span>
                     <span className="badge bg-emerald-500 text-white font-bold text-xs uppercase px-2 py-0.5">
                       {tr("Safe / Low Risk", "सुरक्षित / कम जोखिम", "ਸੁਰੱਖਿਅਤ / ਘੱਟ ਜੋਖਮ")}
@@ -594,9 +737,9 @@ Standard constitutional and civil law protections apply.
                   </div>
                   <p className="text-xs sm:text-sm text-emerald-900 dark:text-emerald-300 mt-1 leading-relaxed">
                     {tr(
-                      "This document does not contain any personal police summons, arrest warrants, criminal complaints, or forfeiture countdowns. It represents an academic paper, patent disclosure, standard receipt, or benign legal text.",
-                      "इस दस्तावेज़ में कोई पुलिस समन, अदालती वारंट, आपराधिक मुकदमा या जब्ती की समय सीमा नहीं है। यह एक शैक्षणिक प्रपत्र, पेटेंट या सामान्य दस्तावेज प्रतीत होता है।",
-                      "ਇਸ ਦਸਤਾਵੇਜ਼ ਵਿੱਚ ਕੋਈ ਪੁਲਿਸ ਸਮਨ ਜਾਂ ਅਦਾਲਤੀ ਵਾਰੰਟ ਨਹੀਂ ਹੈ। ਇਹ ਇੱਕ ਵਿਦਿਅਕ ਪੱਤਰ, ਪੇਟੈਂਟ ਜਾਂ ਆਮ ਦਸਤਾਵੇਜ਼ ਜਾਪਦਾ ਹੈ।"
+                      "This document does not contain any personal police summons, arrest warrants, criminal complaints, or forfeiture countdowns. It represents a standard receipt, benign clearance, or non-coercive legal communication.",
+                      "इस दस्तावेज़ में कोई पुलिस समन, अदालती वारंट, आपराधिक मुकदमा या जब्ती की समय सीमा नहीं है। यह एक वैध रसीद या सहमति पत्र प्रतीत होता है।",
+                      "ਇਸ ਦਸਤਾਵੇਜ਼ ਵਿੱਚ ਕੋਈ ਪੁਲਿਸ ਸਮਨ ਜਾਂ ਅਦਾਲਤੀ ਵਾਰੰਟ ਨਹੀਂ ਹੈ। ਇਹ ਇੱਕ ਜਾਇਜ਼ ਰਸੀਦ ਜਾਂ ਸਹਿਮਤੀ ਪੱਤਰ ਜਾਪਦਾ ਹੈ।"
                     )}
                   </p>
                 </div>
