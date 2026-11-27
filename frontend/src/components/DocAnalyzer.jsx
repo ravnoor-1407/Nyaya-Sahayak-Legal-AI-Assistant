@@ -66,6 +66,49 @@ S.K. Bansal`,
   },
 };
 
+const DEMO_DOC_PHOTOS = [
+  {
+    id: "bnss35",
+    name: "1_police_summons_bnss35.jpg",
+    title: "Police Notice (Sec 35 BNSS)",
+    badge: "High Danger",
+    badgeColor: "bg-red-500/20 text-red-700 dark:text-red-300 border-red-500/40",
+    desc: "Appearance summons under Section 35(3) BNSS with official police seal & arrest warning",
+  },
+  {
+    id: "ni138",
+    name: "2_cheque_bounce_notice_sec138.jpg",
+    title: "Cheque Bounce Notice (Sec 138 NI)",
+    badge: "Critical Danger",
+    badgeColor: "bg-red-500/20 text-red-700 dark:text-red-300 border-red-500/40",
+    desc: "15-day statutory demand with Speed Post dispatch stamp & criminal prosecution threat",
+  },
+  {
+    id: "rent",
+    name: "3_unfair_tenancy_agreement.jpg",
+    title: "Unfair Lease Agreement",
+    badge: "Medium Danger",
+    badgeColor: "bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/40",
+    desc: "Lease deed extract with illegal lock-in deposit forfeiture and power disconnection clauses",
+  },
+  {
+    id: "safe_noc",
+    name: "4_safe_settlement_noc.jpg",
+    title: "Mutual Settlement NOC Receipt",
+    badge: "Safe / Low Risk",
+    badgeColor: "bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-500/40",
+    desc: "Mutual discharge certificate with full security deposit refund verification",
+  },
+  {
+    id: "academic",
+    name: "5_non_legal_assignment.jpg",
+    title: "University Coursework Paper",
+    badge: "Guardrail Test",
+    badgeColor: "bg-slate-500/20 text-slate-700 dark:text-slate-300 border-slate-500/40",
+    desc: "Machine Learning coursework paper (tests AI non-legal document rejection guardrails)",
+  },
+];
+
 // Client-side DOCX text extractor via JSZip
 async function extractTextFromDocx(file) {
   try {
@@ -159,8 +202,54 @@ export default function DocAnalyzer() {
   const [scanError, setScanError] = useState("");
   const [result, setResult] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [showDemoPhotos, setShowDemoPhotos] = useState(false);
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
+
+  const handleLoadDemoPhoto = async (demo) => {
+    try {
+      setExtracting(true);
+      setExtractionMsg(
+        tr(
+          `Loading demo photo "${demo.title}"...`,
+          `डेमो फोटो लोड हो रही है: "${demo.title}"...`,
+          `ਡੈਮੋ ਫੋਟੋ ਲੋਡ ਹੋ ਰਹੀ ਹੈ...`
+        )
+      );
+      setInvalidDoc(null);
+      setScanError("");
+      setResult(null);
+
+      const res = await fetch(`/demo_docs/${demo.name}`);
+      if (!res.ok) throw new Error("Could not fetch demo photo.");
+      const blob = await res.blob();
+      const file = new window.File([blob], demo.name, { type: "image/jpeg" });
+
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      const objUrl = URL.createObjectURL(blob);
+      setUploadedFile(file);
+      setPreviewUrl(objUrl);
+      setDocText(""); // Clear text to ensure Vision OCR runs upon Analyze
+      setExtractionMsg(
+        tr(
+          `Demo photo attached: "${demo.title}". Click "Analyze & Detect Risks" below to test AI Vision OCR!`,
+          `डेमो फोटो संलग्न: "${demo.title}"। एआई विज़न ओसीआर जांचने हेतु नीचे "विश्लेषण करें" पर क्लिक करें!`,
+          `ਡੈਮੋ ਫੋਟੋ ਨੱਥੀ: "${demo.title}"। ਏਆਈ ਵਿਜ਼ਨ ਟੈਸਟ ਕਰਨ ਲਈ ਹੇਠਾਂ "ਵਿਸ਼ਲੇਸ਼ਣ ਕਰੋ" 'ਤੇ ਕਲਿੱਕ ਕਰੋ!`
+        )
+      );
+    } catch (err) {
+      console.error("Failed to load demo photo:", err);
+      setExtractionMsg(
+        tr(
+          `Failed to load demo photo: ${err.message}`,
+          `डेमो फोटो लोड नहीं हो सकी: ${err.message}`,
+          `ਡੈਮੋ ਫੋਟੋ ਲੋਡ ਨਹੀਂ ਹੋ ਸਕੀ`
+        )
+      );
+    } finally {
+      setExtracting(false);
+    }
+  };
 
   const handleSelectSample = (key) => {
     const s = SAMPLES[key];
@@ -505,8 +594,106 @@ Standard civil rights and contract law protections apply.
             >
               🟢 {tr("Clean NOC", "एनओसी रसीद", "ਐਨਓਸੀ ਰਸੀਦ")}
             </button>
+            <button
+              type="button"
+              onClick={() => setShowDemoPhotos(!showDemoPhotos)}
+              className={`btn btn-sm text-xs font-bold flex items-center gap-1.5 transition-all ml-1 ${
+                showDemoPhotos
+                  ? "bg-amber-500 text-slate-950 shadow-xs"
+                  : "btn-ghost border border-amber-500/50 text-accent hover:bg-amber-500/10"
+              }`}
+            >
+              <Camera size={13} />
+              <span>{tr("Demo Photos (5)", "डेमो फोटो (5)", "ਡੈਮੋ ਫੋਟੋਆਂ (5)")}</span>
+              <span className="text-[10px] opacity-80">{showDemoPhotos ? "▲" : "▼"}</span>
+            </button>
           </div>
         </div>
+
+        {/* DEMO PHOTOS ACCORDION / GALLERY */}
+        {showDemoPhotos && (
+          <div className="mt-4 p-4 sm:p-5 rounded-2xl bg-surface-2 border border-line shadow-inner space-y-3">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center gap-2">
+                <Camera size={16} className="text-accent" />
+                <span className="text-xs sm:text-sm font-black text-ink">
+                  {tr(
+                    "Realistic Demo Documents for Camera & Vision OCR Testing",
+                    "कैमरा और ओसीआर परीक्षण हेतु वास्तविक दस्तावेज़ फोटो",
+                    "ਕੈਮਰਾ ਅਤੇ ਓਸੀਆਰ ਟੈਸਟਿੰਗ ਲਈ ਅਸਲ ਦਸਤਾਵੇਜ਼ ਫੋਟੋਆਂ"
+                  )}
+                </span>
+              </div>
+              <span className="text-[11px] text-muted">
+                {tr(
+                  "Click any photo to load into scanner, or open full image to snap with your phone camera",
+                  "स्कैनर में लोड करने हेतु क्लिक करें या फोन से फोटो खींचने के लिए खोलें",
+                  "ਸਕੈਨਰ ਵਿੱਚ ਲੋਡ ਕਰਨ ਲਈ ਕਲਿੱਕ ਕਰੋ"
+                )}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {DEMO_DOC_PHOTOS.map((doc) => (
+                <div
+                  key={doc.id}
+                  className="card p-3 rounded-xl bg-surface border border-line hover:border-amber-500/60 transition-all flex flex-col justify-between shadow-xs group"
+                >
+                  <div className="space-y-2">
+                    <div className="relative rounded-lg overflow-hidden border border-line/60 bg-slate-900/5 aspect-[3/4] max-h-40 flex items-center justify-center">
+                      <img
+                        src={`/demo_docs/${doc.name}`}
+                        alt={doc.title}
+                        className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
+                        loading="lazy"
+                      />
+                      <a
+                        href={`/demo_docs/${doc.name}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="absolute bottom-2 right-2 px-2 py-1 rounded-md bg-slate-900/80 text-white text-[10px] font-bold flex items-center gap-1 hover:bg-slate-950 backdrop-blur-xs shadow-xs"
+                        onClick={(e) => e.stopPropagation()}
+                        title="Open full resolution photo in new tab"
+                      >
+                        <ImageIcon size={10} />
+                        <span>{tr("View Full", "बड़ी फोटो", "ਪੂਰੀ ਫੋਟੋ")}</span>
+                      </a>
+                    </div>
+
+                    <div>
+                      <div className="flex items-center justify-between gap-1 mb-1">
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${doc.badgeColor}`}>
+                          {doc.badge}
+                        </span>
+                      </div>
+                      <h4 className="text-xs font-bold text-ink leading-tight line-clamp-1">{doc.title}</h4>
+                      <p className="text-[11px] text-muted line-clamp-2 mt-0.5">{doc.desc}</p>
+                    </div>
+                  </div>
+
+                  <div className="pt-2 mt-2 border-t border-line/60 flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => handleLoadDemoPhoto(doc)}
+                      className="btn btn-xs btn-primary flex-1 text-[11px] font-bold shadow-xs py-1.5 flex items-center justify-center gap-1"
+                    >
+                      <span>⚡</span>
+                      <span>{tr("Test This Photo", "यह फोटो जांचें", "ਇਹ ਫੋਟੋ ਟੈਸਟ ਕਰੋ")}</span>
+                    </button>
+                    <a
+                      href={`/demo_docs/${doc.name}`}
+                      download={doc.name}
+                      className="btn btn-xs btn-ghost border border-line text-[11px] px-2 py-1.5 text-muted hover:text-ink shrink-0"
+                      title="Download Image to Phone / Computer"
+                    >
+                      ↓
+                    </a>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* UNIFIED INPUT: FIRST DRAG & DROP FILE UPLOAD, THEN "OR", THEN TEXTAREA */}
         <form onSubmit={handleAnalyze} className="mt-5 space-y-4">
