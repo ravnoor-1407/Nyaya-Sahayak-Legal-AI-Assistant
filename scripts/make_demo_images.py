@@ -2,7 +2,7 @@ import os
 import math
 from PIL import Image, ImageDraw, ImageFont
 
-OUTPUT_DIR = os.path.join("frontend", "public", "demo_docs")
+OUTPUT_DIR = "demo_test_cases"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 # Fonts

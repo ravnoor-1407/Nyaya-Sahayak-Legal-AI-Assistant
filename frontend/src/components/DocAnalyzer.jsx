@@ -6,6 +6,13 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import JSZip from "jszip";
 
+// Direct imports of realistic demo photos from root demo_test_cases
+import photoBnss35 from "../../../demo_test_cases/1_police_summons_bnss35.jpg";
+import photoNi138 from "../../../demo_test_cases/2_cheque_bounce_notice_sec138.jpg";
+import photoRent from "../../../demo_test_cases/3_unfair_tenancy_agreement.jpg";
+import photoNoc from "../../../demo_test_cases/4_safe_settlement_noc.jpg";
+import photoAcademic from "../../../demo_test_cases/5_non_legal_assignment.jpg";
+
 const SAMPLES = {
   bnss35: {
     title: "Police Summons (Sec 35 BNSS)",
@@ -70,6 +77,7 @@ const DEMO_DOC_PHOTOS = [
   {
     id: "bnss35",
     name: "1_police_summons_bnss35.jpg",
+    src: photoBnss35,
     title: "Police Notice (Sec 35 BNSS)",
     badge: "High Danger",
     badgeColor: "bg-red-500/20 text-red-700 dark:text-red-300 border-red-500/40",
@@ -78,6 +86,7 @@ const DEMO_DOC_PHOTOS = [
   {
     id: "ni138",
     name: "2_cheque_bounce_notice_sec138.jpg",
+    src: photoNi138,
     title: "Cheque Bounce Notice (Sec 138 NI)",
     badge: "Critical Danger",
     badgeColor: "bg-red-500/20 text-red-700 dark:text-red-300 border-red-500/40",
@@ -86,6 +95,7 @@ const DEMO_DOC_PHOTOS = [
   {
     id: "rent",
     name: "3_unfair_tenancy_agreement.jpg",
+    src: photoRent,
     title: "Unfair Lease Agreement",
     badge: "Medium Danger",
     badgeColor: "bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/40",
@@ -94,6 +104,7 @@ const DEMO_DOC_PHOTOS = [
   {
     id: "safe_noc",
     name: "4_safe_settlement_noc.jpg",
+    src: photoNoc,
     title: "Mutual Settlement NOC Receipt",
     badge: "Safe / Low Risk",
     badgeColor: "bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-500/40",
@@ -102,6 +113,7 @@ const DEMO_DOC_PHOTOS = [
   {
     id: "academic",
     name: "5_non_legal_assignment.jpg",
+    src: photoAcademic,
     title: "University Coursework Paper",
     badge: "Guardrail Test",
     badgeColor: "bg-slate-500/20 text-slate-700 dark:text-slate-300 border-slate-500/40",
@@ -220,7 +232,7 @@ export default function DocAnalyzer() {
       setScanError("");
       setResult(null);
 
-      const res = await fetch(`/demo_docs/${demo.name}`);
+      const res = await fetch(demo.src || `/demo_docs/${demo.name}`);
       if (!res.ok) throw new Error("Could not fetch demo photo.");
       const blob = await res.blob();
       const file = new window.File([blob], demo.name, { type: "image/jpeg" });
@@ -642,13 +654,13 @@ Standard civil rights and contract law protections apply.
                   <div className="space-y-2">
                     <div className="relative rounded-lg overflow-hidden border border-line/60 bg-slate-900/5 aspect-[3/4] max-h-40 flex items-center justify-center">
                       <img
-                        src={`/demo_docs/${doc.name}`}
+                        src={doc.src || `/demo_docs/${doc.name}`}
                         alt={doc.title}
                         className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
                         loading="lazy"
                       />
                       <a
-                        href={`/demo_docs/${doc.name}`}
+                        href={doc.src || `/demo_docs/${doc.name}`}
                         target="_blank"
                         rel="noreferrer"
                         className="absolute bottom-2 right-2 px-2 py-1 rounded-md bg-slate-900/80 text-white text-[10px] font-bold flex items-center gap-1 hover:bg-slate-950 backdrop-blur-xs shadow-xs"
@@ -681,7 +693,7 @@ Standard civil rights and contract law protections apply.
                       <span>{tr("Test This Photo", "यह फोटो जांचें", "ਇਹ ਫੋਟੋ ਟੈਸਟ ਕਰੋ")}</span>
                     </button>
                     <a
-                      href={`/demo_docs/${doc.name}`}
+                      href={doc.src || `/demo_docs/${doc.name}`}
                       download={doc.name}
                       className="btn btn-xs btn-ghost border border-line text-[11px] px-2 py-1.5 text-muted hover:text-ink shrink-0"
                       title="Download Image to Phone / Computer"
