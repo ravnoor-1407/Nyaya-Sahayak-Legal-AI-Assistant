@@ -27,14 +27,14 @@ export default function BailCalculator() {
   const [customYears, setCustomYears] = useState(3);
   const [isFirstTimer, setIsFirstTimer] = useState(true);
   const [isLifeOrDeath, setIsLifeOrDeath] = useState(false);
-  const [arrestDate, setArrestDate] = useState(defaultArrest);
+  const [arrestDate, setArrestDate] = useState("");
 
-  // Step 2: Application Memo Fields (Clearly Organized)
-  const [accusedName, setAccusedName] = useState("Anil Kumar");
-  const [parentName, setParentName] = useState("Shri Ramesh Kumar");
-  const [jailName, setJailName] = useState("Central Jail Patiala, Punjab");
-  const [firDetails, setFirDetails] = useState("FIR No. 104/2026, P.S. Civil Lines, Patiala");
-  const [courtName, setCourtName] = useState("Court of Chief Judicial Magistrate, Patiala");
+  // Step 2: Application Memo Fields (Clearly Organized with informative placeholders)
+  const [accusedName, setAccusedName] = useState("");
+  const [parentName, setParentName] = useState("");
+  const [jailName, setJailName] = useState("");
+  const [firDetails, setFirDetails] = useState("");
+  const [courtName, setCourtName] = useState("");
 
   const [showMemo, setShowMemo] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -49,18 +49,20 @@ export default function BailCalculator() {
   const maxDays = Math.round(maxSentenceYears * 365);
   const thresholdDays = Math.round(maxDays * fraction);
 
-  // Compute days served
+  // Compute days served safely
+  const hasArrestDate = Boolean(arrestDate);
   const today = new Date();
-  const arrestD = new Date(arrestDate);
-  const diffTime = Math.max(0, today - arrestD);
-  const daysServed = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  const arrestD = hasArrestDate ? new Date(arrestDate) : null;
+  const diffTime = arrestD ? Math.max(0, today - arrestD) : 0;
+  const daysServed = arrestD ? Math.floor(diffTime / (1000 * 60 * 60 * 24)) : 0;
 
-  const progressPercent = Math.min(100, Math.round((daysServed / (thresholdDays || 1)) * 100));
-  const isEligible = !isLifeOrDeath && daysServed >= thresholdDays;
-  const daysRemaining = Math.max(0, thresholdDays - daysServed);
+  const progressPercent = hasArrestDate ? Math.min(100, Math.round((daysServed / (thresholdDays || 1)) * 100)) : 0;
+  const isEligible = hasArrestDate && !isLifeOrDeath && daysServed >= thresholdDays;
+  const daysRemaining = hasArrestDate ? Math.max(0, thresholdDays - daysServed) : thresholdDays;
 
   // Projected eligibility date
   const eligibilityDate = useMemo(() => {
+    if (!arrestDate) return "--";
     const d = new Date(arrestDate);
     d.setDate(d.getDate() + thresholdDays);
     return d.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
@@ -347,7 +349,12 @@ export default function BailCalculator() {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center mb-5">
             <div className="p-3.5 rounded-xl bg-surface/60 border border-line">
               <div className="text-[11px] text-muted font-medium">{tr("Custody Undergone", "हिरासत के दिन", "ਹਿਰਾਸਤ ਦੇ ਦਿਨ")}</div>
-              <div className="text-2xl font-extrabold text-ink mt-0.5">{daysServed} <span className="text-xs font-normal text-muted">{tr("Days", "दिन", "ਦਿਨ")}</span></div>
+              <div className="text-2xl font-extrabold text-ink mt-0.5">
+                {hasArrestDate ? daysServed : "--"}{" "}
+                <span className="text-xs font-normal text-muted">
+                  {hasArrestDate ? tr("Days", "दिन", "ਦਿਨ") : tr("(Select date)", "(तारीख चुनें)", "(ਮਿਤੀ ਚੁਣੋ)")}
+                </span>
+              </div>
             </div>
             <div className="p-3.5 rounded-xl bg-surface/60 border border-line">
               <div className="text-[11px] text-muted font-medium">{tr("Mandatory Threshold", "अनिवार्य सीमा", "ਲਾਜ਼ਮੀ ਸੀਮਾ")}</div>
@@ -359,7 +366,9 @@ export default function BailCalculator() {
             </div>
             <div className="p-3.5 rounded-xl bg-surface/60 border border-line">
               <div className="text-[11px] text-muted font-medium">{tr("Statutory Eligibility Date", "पात्रता तिथि", "ਯੋਗਤਾ ਮਿਤੀ")}</div>
-              <div className="text-sm font-bold text-ink mt-1.5">{isEligible ? tr("Active Right Now", "अभी सक्रिय है", "ਹੁਣੇ ਸਰਗਰਮ") : eligibilityDate}</div>
+              <div className="text-sm font-bold text-ink mt-1.5">
+                {hasArrestDate ? (isEligible ? tr("Active Right Now", "अभी सक्रिय है", "ਹੁਣੇ ਸਰਗਰਮ") : eligibilityDate) : tr("Select arrest date", "तारीख चुनें", "ਮਿਤੀ ਚੁਣੋ")}
+              </div>
             </div>
           </div>
 
@@ -367,7 +376,7 @@ export default function BailCalculator() {
           <div className="mb-4">
             <div className="flex justify-between text-xs font-semibold mb-1.5 text-muted">
               <span>{tr("Custody Completed toward Mandatory Bail Threshold", "अनिवार्य जमानत सीमा की ओर पूरी की गई हिरासत", "ਲਾਜ਼ਮੀ ਜ਼ਮਾਨਤ ਸੀਮਾ ਵੱਲ ਪੂਰੀ ਕੀਤੀ ਹਿਰਾਸਤ")}</span>
-              <span className="font-bold text-ink">{progressPercent}%</span>
+              <span className="font-bold text-ink">{hasArrestDate ? `${progressPercent}%` : "--"}</span>
             </div>
             <div className="w-full bg-surface/80 rounded-full h-3 overflow-hidden border border-line">
               <div
@@ -392,6 +401,24 @@ export default function BailCalculator() {
                   "बीएनएसएस की धारा 479 मृत्युदंड या आजीवन कारावास वाले अपराधों पर लागू नहीं होती। इन मामलों में नियमित जमानत अदालत के विवेक पर निर्भर करती है।",
                   "ਮੌਤ ਜਾਂ ਉਮਰ ਕੈਦ ਵਾਲੇ ਮਾਮਲਿਆਂ ਵਿੱਚ ਇਹ ਧਾਰਾ ਲਾਗੂ ਨਹੀਂ ਹੁੰਦੀ। ਨਿਯਮਿਤ ਜ਼ਮਾਨਤ ਲਈ ਅਦਾਲਤ ਵਿੱਚ ਅਰਜ਼ੀ ਦੇਣੀ ਹੋਵੇਗੀ।"
                 )}
+              </div>
+            </div>
+          ) : !hasArrestDate ? (
+            <div className="p-4 sm:p-5 rounded-2xl bg-amber-500/15 border-2 border-amber-500/50 flex items-start gap-3.5 shadow-xs">
+              <div className="p-2.5 rounded-xl bg-amber-500 text-slate-950 shrink-0">
+                <Info size={20} />
+              </div>
+              <div className="text-xs space-y-1">
+                <span className="font-black text-slate-950 dark:text-amber-100 block text-sm tracking-tight">
+                  {tr("Select Date of Custody (Arrest Date) to Calculate", "गणना के लिए ऊपर गिरफ्तारी / हिरासत की तारीख चुनें", "ਗਣਨਾ ਲਈ ਉੱਪਰ ਗ੍ਰਿਫ਼ਤਾਰੀ ਦੀ ਮਿਤੀ ਚੁਣੋ")}
+                </span>
+                <p className="text-slate-800 dark:text-amber-200 font-medium leading-relaxed">
+                  {tr(
+                    "Enter the date the undertrial prisoner was first remanded to custody in field 2 above. The calculator will immediately determine custody days served, statutory release threshold, and generate the formal Section 479 court petition.",
+                    "फील्ड 2 में वह तारीख दर्ज करें जब कैदी को हिरासत में लिया गया था। न्याय सहायक तुरंत दिनों की गणना करेगा और औपचारिक धारा 479 जमानत अर्जी तैयार करेगा।",
+                    "ਫੀਲਡ 2 ਵਿੱਚ ਗ੍ਰਿਫ਼ਤਾਰੀ ਦੀ ਮਿਤੀ ਦਰਜ ਕਰੋ। ਨਿਆਂ ਸਹਾਇਕ ਤੁਰੰਤ ਹਿਰਾਸਤ ਦੇ ਦਿਨਾਂ ਦੀ ਗਣਨਾ ਕਰੇਗਾ ਅਤੇ ਅਦਾਲਤੀ ਅਰਜ਼ੀ ਤਿਆਰ ਕਰੇਗਾ।"
+                  )}
+                </p>
               </div>
             </div>
           ) : isEligible ? (
@@ -423,18 +450,20 @@ export default function BailCalculator() {
               </button>
             </div>
           ) : (
-            <div className="p-4 sm:p-5 rounded-2xl bg-amber-100 dark:bg-amber-950/70 border-2 border-amber-500 dark:border-amber-600 flex items-start justify-between gap-4 flex-wrap shadow-xs">
-              <div className="flex items-start gap-3">
-                <Info className="text-amber-800 dark:text-amber-300 shrink-0 mt-0.5" size={22} />
+            <div className="p-4 sm:p-5 rounded-2xl bg-amber-500/15 border-2 border-amber-500/50 flex items-start justify-between gap-4 flex-wrap shadow-xs">
+              <div className="flex items-start gap-3.5">
+                <div className="p-2.5 rounded-xl bg-amber-500 text-slate-950 shrink-0">
+                  <Info size={20} />
+                </div>
                 <div className="text-xs max-w-xl space-y-1">
-                  <span className="font-extrabold text-amber-950 dark:text-amber-100 block text-sm tracking-tight">
+                  <span className="font-black text-slate-950 dark:text-amber-100 block text-sm tracking-tight">
                     {tr(
                       `Custody in Progress (${daysRemaining} Days Remaining)`,
                       `हिरासत अवधि जारी (${daysRemaining} दिन शेष)`,
                       `ਹਿਰਾਸਤ ਜਾਰੀ (${daysRemaining} ਦਿਨ ਬਾਕੀ)`
                     )}
                   </span>
-                  <p className="text-amber-900 dark:text-amber-200 font-medium leading-relaxed">
+                  <p className="text-slate-800 dark:text-amber-200 font-medium leading-relaxed">
                     {tr(
                       `Mandatory statutory bail entitlement under Section 479 will activate on ${eligibilityDate} upon completing ${thresholdDays} days in custody.`,
                       `${thresholdDays} दिन पूरे होने पर ${eligibilityDate} को धारा 479 के तहत अनिवार्य जमानत का अधिकार सक्रिय होगा।`,
@@ -523,7 +552,11 @@ export default function BailCalculator() {
                   className="input w-full text-xs font-medium"
                   value={accusedName}
                   onChange={(e) => setAccusedName(e.target.value)}
-                  placeholder="e.g. Anil Kumar"
+                  placeholder={tr(
+                    "e.g. Anil Kumar (Full legal name of undertrial prisoner)",
+                    "उदा. अनिल कुमार (विचाराधीन कैदी का पूरा नाम)",
+                    "ਉਦਾ. ਅਨਿਲ ਕੁਮਾਰ (ਕੈਦੀ ਦਾ ਪੂਰਾ ਨਾਮ)"
+                  )}
                 />
               </div>
 
@@ -536,7 +569,11 @@ export default function BailCalculator() {
                   className="input w-full text-xs font-medium"
                   value={parentName}
                   onChange={(e) => setParentName(e.target.value)}
-                  placeholder="e.g. S/o Shri Ramesh Kumar"
+                  placeholder={tr(
+                    "e.g. S/o Shri Ramesh Kumar (Father / Mother / Spouse's name)",
+                    "उदा. आत्मज श्री रमेश कुमार (पिता / माता / अभिभावक)",
+                    "ਉਦਾ. ਸਪੁੱਤਰ ਸ਼੍ਰੀ ਰਮੇਸ਼ ਕੁਮਾਰ"
+                  )}
                 />
               </div>
 
@@ -549,7 +586,11 @@ export default function BailCalculator() {
                   className="input w-full text-xs font-medium"
                   value={jailName}
                   onChange={(e) => setJailName(e.target.value)}
-                  placeholder="e.g. Central Jail Patiala"
+                  placeholder={tr(
+                    "e.g. Central Jail Patiala, Punjab (Prison facility where detained)",
+                    "उदा. केंद्रीय जेल पटियाला (जेल का नाम व पता)",
+                    "ਉਦਾ. ਕੇਂਦਰੀ ਜੇਲ੍ਹ ਪਟਿਆਲਾ"
+                  )}
                 />
               </div>
 
@@ -562,7 +603,11 @@ export default function BailCalculator() {
                   className="input w-full text-xs font-medium"
                   value={firDetails}
                   onChange={(e) => setFirDetails(e.target.value)}
-                  placeholder="e.g. FIR No. 104/2026, P.S. Civil Lines"
+                  placeholder={tr(
+                    "e.g. FIR No. 104/2026, P.S. Civil Lines, Patiala",
+                    "उदा. प्राथमिकी संख्या 104/2026, थाना सिविल लाइन्स",
+                    "ਉਦਾ. ਐਫਆਈਆਰ ਨੰ. 104/2026, ਥਾਣਾ ਸਿਵਲ ਲਾਈਨਜ਼"
+                  )}
                 />
               </div>
 
@@ -575,7 +620,11 @@ export default function BailCalculator() {
                   className="input w-full text-xs font-medium"
                   value={courtName}
                   onChange={(e) => setCourtName(e.target.value)}
-                  placeholder="e.g. In the Court of Chief Judicial Magistrate, Patiala"
+                  placeholder={tr(
+                    "e.g. Court of Chief Judicial Magistrate, Patiala",
+                    "उदा. मुख्य न्यायिक मजिस्ट्रेट की अदालत, पटियाला",
+                    "ਉਦਾ. ਚੀਫ਼ ਜੁਡੀਸ਼ੀਅਲ ਮੈਜਿਸਟਰੇਟ ਦੀ ਅਦਾਲਤ"
+                  )}
                 />
               </div>
             </div>
@@ -584,27 +633,27 @@ export default function BailCalculator() {
           {/* Authentic Court Petition Preview */}
           <div
             id="bail-memo-text"
-            className="p-6 sm:p-8 border border-gray-300 dark:border-gray-700 bg-amber-500/[0.02] rounded-lg font-mono text-xs sm:text-sm text-gray-900 dark:text-gray-100 whitespace-pre-wrap leading-relaxed selection:bg-amber-500/20"
+            className="p-6 sm:p-8 border-2 border-line bg-surface rounded-xl font-mono text-xs sm:text-sm text-ink whitespace-pre-wrap leading-relaxed selection:bg-amber-500/20 shadow-xs"
           >
-{`IN THE COURT OF ${courtName.toUpperCase()}
+{`IN THE COURT OF ${(courtName || "[NAME OF COMPETENT COURT / CJM]").toUpperCase()}
 APPLICATION NO. ________ OF 2026
 
 IN THE MATTER OF:
 STATE
 VERSUS
-${accusedName.toUpperCase()} (${parentName.toUpperCase()})
-PRESENTLY CONFINED AT: ${jailName.toUpperCase()}
+${(accusedName || "[NAME OF APPLICANT / ACCUSED]").toUpperCase()} ${(parentName ? `(${parentName.toUpperCase()})` : "[S/O / D/O / W/O]")}
+PRESENTLY CONFINED AT: ${(jailName || "[NAME OF PRISON FACILITY]").toUpperCase()}
 ... APPLICANT / ACCUSED
 
 CASE DETAILS:
-${firDetails.toUpperCase()}
+${(firDetails || "[FIR NO. & POLICE STATION]").toUpperCase()}
 UNDER SECTION(S): ${activeOffence.bns.toUpperCase()}
 
 APPLICATION UNDER SECTION 479(1) OF THE BHARATIYA NAGARIK SURAKSHA SANHITA, 2023 (BNSS) FOR RELEASE OF THE APPLICANT ON MANDATORY STATUTORY BAIL ON PERSONAL BOND
 
 MOST RESPECTFULLY SHOWETH:
 
-1. That the Applicant / Accused ${accusedName} was arrested on ${arrestDate} and has undergone continuous detention in judicial custody since then, presently lodged in ${jailName}.
+1. That the Applicant / Accused ${accusedName || "[Name of Accused]"} was arrested on ${arrestDate || "[Date of Arrest]"} and has undergone continuous detention in judicial custody since then, presently lodged in ${jailName || "[Prison Facility]"}.
 
 2. That the Applicant is charged with offences under ${activeOffence.bns}, for which the maximum imprisonment prescribed by law is ${maxSentenceYears} years (${maxDays} days).
 

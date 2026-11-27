@@ -321,20 +321,22 @@ export default function Acts() {
                   key={cat.id}
                   type="button"
                   onClick={() => setSelectedCat(cat.id)}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs whitespace-nowrap transition-all border ${
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-full text-xs whitespace-nowrap transition-all border ${
                     isSel
-                      ? "bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 text-slate-950 border-amber-600 font-black shadow-md ring-2 ring-amber-400/40"
+                      ? "tab-active bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 text-slate-950 border-amber-600 font-black shadow-md ring-2 ring-amber-400/40"
                       : "bg-surface text-ink hover:text-ink hover:bg-surface-2 border-line font-bold"
                   }`}
+                  style={isSel ? { color: "#0f172a", backgroundColor: "#f59e0b" } : undefined}
                 >
-                  <Icon size={15} className={`shrink-0 ${isSel ? "text-slate-950" : "text-ink/70"}`} />
-                  <span className={isSel ? "text-slate-950 font-black tracking-tight" : "text-ink font-bold"}>
+                  <Icon size={15} className={`shrink-0 ${isSel ? "text-slate-950" : "text-accent"}`} style={isSel ? { color: "#0f172a" } : undefined} />
+                  <span className={isSel ? "font-black tracking-tight" : "text-ink font-bold"} style={isSel ? { color: "#0f172a" } : undefined}>
                     {tr(...cat.name)}
                   </span>
                   <span
-                    className={`ml-1 text-[10px] px-1.5 py-0.2 rounded-full font-extrabold ${
+                    className={`ml-1 text-[10px] px-2 py-0.5 rounded-full font-extrabold ${
                       isSel ? "bg-black/20 text-slate-950" : "bg-surface-2 text-muted border border-line"
                     }`}
+                    style={isSel ? { color: "#0f172a" } : undefined}
                   >
                     {count}
                   </span>
@@ -346,9 +348,9 @@ export default function Acts() {
           {/* Search Bar for Acts */}
           <div className="flex items-center gap-3">
             <div className="relative flex-1">
-              <Search size={16} className="absolute left-3.5 top-3.5 text-accent" />
+              <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-accent" />
               <input
-                className="input pl-10 text-xs sm:text-sm bg-surface border-line"
+                className="input pl-11 pr-10 py-3 rounded-full text-xs sm:text-sm bg-surface border-line shadow-xs focus:ring-2 focus:ring-amber-500/30 w-full"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={tr(
@@ -361,7 +363,7 @@ export default function Acts() {
                 <button
                   type="button"
                   onClick={() => setSearchQuery("")}
-                  className="absolute right-3 top-3 text-xs text-muted hover:text-ink font-bold"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-muted hover:text-ink font-bold"
                 >
                   ✕
                 </button>
@@ -372,7 +374,7 @@ export default function Acts() {
               <button
                 type="button"
                 onClick={() => setSelectedCat("all")}
-                className="btn btn-ghost border border-line text-xs font-bold text-ink shrink-0"
+                className="btn btn-ghost border border-line rounded-full text-xs font-bold text-ink shrink-0 px-4"
               >
                 <RotateCcw size={13} />
                 <span>{tr("Clear Filter", "फ़िल्टर हटाएं", "ਸਾਫ਼ ਕਰੋ")}</span>
@@ -463,25 +465,25 @@ export default function Acts() {
                           key={a.id}
                           type="button"
                           onClick={() => choose(a)}
-                          className="card card-accent card-raised p-5 text-left bg-surface border-2 border-line hover:border-amber-500/80 transition-all group flex flex-col justify-between shadow-xs hover:shadow-md"
+                          className="card card-accent card-raised p-6 text-left bg-surface border-2 border-line hover:border-amber-500 rounded-3xl transition-all duration-200 group flex flex-col justify-between shadow-xs hover:shadow-lg hover:-translate-y-0.5 relative overflow-hidden"
                         >
                           <div className="flex items-start justify-between gap-3">
                             <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                                <span className="badge text-[10px] font-extrabold uppercase px-2 py-0.5 bg-amber-100 dark:bg-amber-950/80 text-amber-950 dark:text-amber-200 border border-amber-500/60">
-                                  {tr(...group.name)}
-                                </span>
+                              <div className="flex items-center gap-2 mb-2 flex-wrap">
                                 {a.year && (
-                                  <span className="text-[11px] font-mono text-muted font-semibold">
+                                  <span className="px-3 py-0.5 rounded-full text-xs font-mono font-bold bg-amber-500/10 text-accent border border-amber-500/30">
                                     {a.year}
                                   </span>
                                 )}
+                                <span className="text-[11px] font-semibold text-muted">
+                                  {tr("Enacted Law", "अधिनियमित कानून", "ਲਾਗੂ ਕਾਨੂੰਨ")}
+                                </span>
                               </div>
                               <h3 className="text-base sm:text-lg font-black text-ink group-hover:text-amber-800 dark:group-hover:text-amber-300 transition-colors leading-snug">
                                 {a.name}
                               </h3>
                             </div>
-                            <div className="p-2 rounded-xl bg-surface-2 group-hover:bg-amber-500 group-hover:text-slate-950 transition-all border border-line shrink-0 text-muted">
+                            <div className="p-3 rounded-full bg-surface-2 group-hover:bg-amber-500 group-hover:text-slate-950 transition-all border border-line shrink-0 text-muted shadow-xs">
                               <ArrowRight size={16} />
                             </div>
                           </div>
@@ -516,21 +518,23 @@ export default function Acts() {
               <div className="grid gap-4 md:grid-cols-2">
                 {filteredActs.map((a) => {
                   const catDef = CATEGORIES.find((c) => c.id === a.catId) || CATEGORIES[1];
+                  const CatIcon = catDef.icon;
                   return (
                     <button
                       key={a.id}
                       type="button"
                       onClick={() => choose(a)}
-                      className="card card-accent card-raised p-5 text-left bg-surface border-2 border-line hover:border-amber-500/80 transition-all group flex flex-col justify-between shadow-xs hover:shadow-md"
+                      className="card card-accent card-raised p-6 text-left bg-surface border-2 border-line hover:border-amber-500 rounded-3xl transition-all duration-200 group flex flex-col justify-between shadow-xs hover:shadow-lg hover:-translate-y-0.5 relative overflow-hidden"
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                            <span className="badge text-[10px] font-extrabold uppercase px-2 py-0.5 bg-amber-100 dark:bg-amber-950/80 text-amber-950 dark:text-amber-200 border border-amber-500/60">
-                              {tr(...catDef.name)}
+                          <div className="flex items-center gap-2 mb-2 flex-wrap">
+                            <span className="px-3 py-1 rounded-full text-xs font-bold bg-amber-500/15 text-accent border border-amber-500/35 flex items-center gap-1.5 shadow-xs">
+                              <CatIcon size={13} className="shrink-0" />
+                              <span>{tr(...catDef.name)}</span>
                             </span>
                             {a.year && (
-                              <span className="text-[11px] font-mono text-muted font-semibold">
+                              <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-surface-2 text-muted border border-line">
                                 {a.year}
                               </span>
                             )}
@@ -539,7 +543,7 @@ export default function Acts() {
                             {a.name}
                           </h3>
                         </div>
-                        <div className="p-2 rounded-xl bg-surface-2 group-hover:bg-amber-500 group-hover:text-slate-950 transition-all border border-line shrink-0 text-muted">
+                        <div className="p-3 rounded-full bg-surface-2 group-hover:bg-amber-500 group-hover:text-slate-950 transition-all border border-line shrink-0 text-muted shadow-xs">
                           <ArrowRight size={16} />
                         </div>
                       </div>

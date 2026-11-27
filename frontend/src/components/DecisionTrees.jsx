@@ -443,7 +443,7 @@ export default function DecisionTrees() {
 
       {/* QUESTION OR RESULT DISPLAY */}
       {currentNode ? (
-        <div className="card card-accent card-raised p-6 sm:p-8 bg-surface border border-line space-y-6">
+        <div className="card card-accent card-raised p-6 sm:p-8 bg-surface border-2 border-line space-y-6 rounded-3xl">
           {/* Breadcrumb / Step tracker */}
           <div className="flex items-center justify-between text-xs text-muted pb-3 border-b border-line">
             <span className="font-extrabold text-accent uppercase tracking-wider text-xs">
@@ -461,10 +461,10 @@ export default function DecisionTrees() {
           </div>
 
           <div>
-            <h3 className="text-lg sm:text-xl font-black text-ink tracking-tight">
+            <h3 className="text-xl sm:text-2xl font-black text-ink tracking-tight">
               {currentNode.question}
             </h3>
-            <p className="text-xs sm:text-sm text-muted mt-1 font-medium leading-relaxed">
+            <p className="text-xs sm:text-sm text-muted mt-1.5 font-semibold leading-relaxed">
               {currentNode.subtitle}
             </p>
           </div>
@@ -476,19 +476,19 @@ export default function DecisionTrees() {
                 key={opt.id}
                 type="button"
                 onClick={() => handleSelectOption(opt)}
-                className="w-full text-left p-4 sm:p-5 rounded-2xl border-2 border-line hover:border-accent bg-surface/70 hover:bg-surface transition-all group flex items-start gap-4 shadow-xs"
+                className="w-full text-left p-4 sm:p-5 rounded-2xl border-2 border-line hover:border-amber-500 bg-surface-2/60 hover:bg-surface transition-all group flex items-start gap-4 shadow-xs"
               >
                 <div className="text-2xl shrink-0 mt-0.5">{opt.icon}</div>
                 <div className="flex-1">
-                  <div className="text-sm sm:text-base font-bold text-ink group-hover:text-amber-800 dark:group-hover:text-amber-300 transition-colors">
+                  <div className="text-sm sm:text-base font-extrabold text-ink group-hover:text-amber-800 dark:group-hover:text-amber-300 transition-colors">
                     {opt.title}
                   </div>
-                  <div className="text-xs text-muted mt-1 leading-relaxed font-medium">
+                  <div className="text-xs text-muted mt-1 leading-relaxed font-semibold">
                     {opt.detail}
                   </div>
                 </div>
-                <div className="p-2.5 rounded-full bg-surface-2 group-hover:bg-accent/20 transition-all shrink-0 mt-1 border border-line">
-                  <ArrowRight size={16} className="text-ink group-hover:text-accent" />
+                <div className="p-2.5 rounded-full bg-surface group-hover:bg-amber-500 group-hover:text-slate-950 transition-all shrink-0 mt-1 border border-line shadow-xs">
+                  <ArrowRight size={16} className="text-ink group-hover:text-slate-950" />
                 </div>
               </button>
             ))}

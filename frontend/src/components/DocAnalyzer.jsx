@@ -149,7 +149,7 @@ function validateLegalDocument(text, filename = "") {
 
 export default function DocAnalyzer() {
   const { tr, lang } = useLang();
-  const [docText, setDocText] = useState(SAMPLES.bnss35.text);
+  const [docText, setDocText] = useState("");
   const [uploadedFile, setUploadedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -680,7 +680,11 @@ Standard civil rights and contract law protections apply.
                 setDocText(e.target.value);
                 if (invalidDoc) setInvalidDoc(null);
               }}
-              placeholder="Paste or review the legal notice, police summons, contract, or court paper here..."
+              placeholder={tr(
+                "Paste, type, or upload your legal document here...\n\nExample notices supported:\n• Police Notice under Section 35(3) BNSS to appear at police station\n• Court Summons or Judicial Arrest Warrant\n• 15-Day Cheque Dishonour Demand Notice (Section 138 NI Act)\n• Residential / Commercial Tenancy Lease Agreement\n• Consumer Legal Notice for deficiency in service\n\nOr click 'Take Photo of Notice' above to snap a picture directly with your camera.",
+                "कानूनी नोटिस, पुलिस समन, अदालती वारंट या अनुबंध का टेक्स्ट यहाँ चिपकाएँ या लिखें...\n\nउदा. धारा 35 बीएनएसएस नोटिस, चेक अनादर नोटिस (धारा 138), किराया अनुबंध। या ऊपर 'Take Photo' पर क्लिक करके फोटो खींचें।",
+                "ਕਾਨੂੰਨੀ ਨੋਟਿਸ, ਪੁਲਿਸ ਸੰਮਨ ਜਾਂ ਇਕਰਾਰਨਾਮਾ ਇੱਥੇ ਪੇਸਟ ਕਰੋ...\n\nਉਦਾ. ਧਾਰਾ 35 ਬੀਐਨਐਸਐਸ ਨੋਟਿਸ, ਚੈੱਕ ਬਾਊਂਸ ਨੋਟਿਸ ਜਾਂ ਕਿਰਾਏਨਾਮਾ। ਜਾਂ ਫੋਟੋ ਖਿੱਚਣ ਲਈ ਉੱਪਰ ਕਲਿੱਕ ਕਰੋ।"
+              )}
             />
           </div>
 
@@ -717,21 +721,21 @@ Standard civil rights and contract law protections apply.
 
       {/* FANCY ERROR SCREEN: NON-LEGAL DOCUMENT DETECTED */}
       {invalidDoc && invalidDoc.isInvalid && (
-        <div className="card p-6 sm:p-8 rounded-2xl bg-amber-50 dark:bg-amber-950/80 border-2 border-amber-500 dark:border-amber-600 shadow-md space-y-5">
+        <div className="card p-6 sm:p-8 rounded-2xl bg-amber-500/15 border-2 border-amber-500 shadow-md space-y-5">
           <div className="flex items-start gap-4">
             <div className="p-3 rounded-2xl bg-amber-500 text-slate-950 shadow-md shrink-0">
               <AlertTriangle size={32} />
             </div>
             <div className="space-y-1.5">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="badge bg-amber-200 dark:bg-amber-900/80 text-amber-950 dark:text-amber-100 border border-amber-600 font-extrabold text-xs uppercase px-2.5 py-0.5">
+                <span className="badge bg-amber-400 text-slate-950 border border-amber-600 font-black text-xs uppercase px-2.5 py-0.5">
                   {tr("NON-LEGAL DOCUMENT DETECTED", "अमान्य दस्तावेज़ — केवल कानूनी दस्तावेज़ समर्थित हैं", "ਗੈਰ-ਕਾਨੂੰਨੀ ਦਸਤਾਵੇਜ਼")}
                 </span>
               </div>
-              <h3 className="text-xl sm:text-2xl font-black text-amber-950 dark:text-amber-100 tracking-tight">
+              <h3 className="text-xl sm:text-2xl font-black text-slate-950 dark:text-amber-100 tracking-tight">
                 {tr("Not a Valid Legal Document — Analysis Paused", "अमान्य दस्तावेज़ — केवल कानूनी दस्तावेज़ विश्लेषित किए जाते हैं", "ਗੈਰ-ਕਾਨੂੰਨੀ ਦਸਤਾਵੇਜ਼ — ਵਿਸ਼ਲੇਸ਼ਣ ਰੋਕਿਆ ਗਿਆ")}
               </h3>
-              <p className="text-xs sm:text-sm text-amber-950 dark:text-amber-100 font-medium leading-relaxed">
+              <p className="text-xs sm:text-sm text-slate-800 dark:text-amber-200 font-semibold leading-relaxed">
                 {tr(
                   "NyayaSahayak's Scanner is engineered exclusively for official legal notices, police summons (BNSS/CrPC), court warrants, 15-day cheque dishonour demand letters (Sec 138 NI Act), and tenancy/commercial contracts. The document you submitted appears to be an academic assignment, resume, or general non-legal file.",
                   "न्याय सहायक का स्कैनर केवल आधिकारिक कानूनी नोटिसों, पुलिस समन (बीएनएसएस), अदालती वारंट, चेक बाउंस नोटिस (धारा 138) और कानूनी अनुबंधों के विश्लेषण हेतु तैयार किया गया है। आपका दस्तावेज़ एक सामान्य असाइनमेंट या गैर-कानूनी फाइल प्रतीत होता है।",

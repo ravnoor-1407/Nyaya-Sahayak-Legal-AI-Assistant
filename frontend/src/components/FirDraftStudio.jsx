@@ -54,7 +54,7 @@ const PRESETS = {
 export default function FirDraftStudio() {
   const { tr, lang } = useLang();
   const [docType, setDocType] = useState("fir");
-  const [formData, setFormData] = useState(PRESETS.theft.data);
+  const [formData, setFormData] = useState({});
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -66,6 +66,11 @@ export default function FirDraftStudio() {
       setFormData(p.data);
       setDraft("");
     }
+  };
+
+  const handleClearForm = () => {
+    setFormData({});
+    setDraft("");
   };
 
   const handleField = (f, v) => {
@@ -241,6 +246,15 @@ export default function FirDraftStudio() {
             <button type="button" onClick={() => loadPreset("consumer")} className="btn btn-sm btn-ghost text-xs">
               {tr("Consumer Notice", "उपभोक्ता नोटिस", "ਖਪਤਕਾਰ ਨੋਟਿਸ")}
             </button>
+            {Object.keys(formData).length > 0 && (
+              <button
+                type="button"
+                onClick={handleClearForm}
+                className="btn btn-sm btn-ghost text-xs text-red-600 dark:text-red-400 font-bold border border-red-500/30"
+              >
+                ✕ {tr("Clear Form", "फ़ॉर्म साफ़ करें", "ਫਾਰਮ ਸਾਫ਼ ਕਰੋ")}
+              </button>
+            )}
           </div>
         </div>
 
@@ -284,7 +298,11 @@ export default function FirDraftStudio() {
                 className="input w-full text-sm"
                 value={formData.complainant_name || ""}
                 onChange={(e) => handleField("complainant_name", e.target.value)}
-                placeholder="e.g. Priya Sharma"
+                placeholder={tr(
+                  "e.g. Priya Sharma (Enter full legal name as per Aadhaar/PAN)",
+                  "उदा. प्रिया शर्मा (आईडी अनुसार पूरा नाम लिखें)",
+                  "ਉਦਾ. ਪ੍ਰਿਆ ਸ਼ਰਮਾ (ਆਈਡੀ ਅਨੁਸਾਰ ਪੂਰਾ ਨਾਮ)"
+                )}
               />
             </div>
             <div>
@@ -297,7 +315,11 @@ export default function FirDraftStudio() {
                 className="input w-full text-sm"
                 value={formData.contact || ""}
                 onChange={(e) => handleField("contact", e.target.value)}
-                placeholder="+91 9876543210"
+                placeholder={tr(
+                  "e.g. +91 98765 43210 (10-digit mobile number for communication)",
+                  "उदा. +91 98765 43210 (10 अंकों का मोबाइल नंबर)",
+                  "ਉਦਾ. +91 98765 43210 (10 ਅੰਕਾਂ ਦਾ ਮੋਬਾਈਲ ਨੰਬਰ)"
+                )}
               />
             </div>
           </div>
@@ -316,7 +338,19 @@ export default function FirDraftStudio() {
                 onChange={(e) =>
                   handleField(docType === "fir" ? "police_station" : "opposite_party", e.target.value)
                 }
-                placeholder={docType === "fir" ? "e.g. Police Station Sector 17, Chandigarh" : "e.g. M/s ABC Retail Ltd."}
+                placeholder={
+                  docType === "fir"
+                    ? tr(
+                        "e.g. Sector 17 Central Police Station, Chandigarh (Jurisdictional station)",
+                        "उदा. थाना सेक्टर 17, चंडीगढ़ (संबंधित पुलिस थाना)",
+                        "ਉਦਾ. ਥਾਣਾ ਸੈਕਟਰ 17, ਚੰਡੀਗੜ੍ਹ (ਸੰਬੰਧਿਤ ਪੁਲਿਸ ਥਾਣਾ)"
+                      )
+                    : tr(
+                        "e.g. M/s ABC Retail Pvt. Ltd. / Landlord Name (Full legal name)",
+                        "उदा. मेसर्स एबीसी रिटेल प्राइवेट लिमिटेड / मकान मालिक का नाम",
+                        "ਉਦਾ. ਮੈਸਰਜ਼ ਏਬੀਸੀ ਰਿਟੇਲ ਲਿਮਿਟੇਡ / ਮਕਾਨ ਮਾਲਕ ਦਾ ਨਾਮ"
+                      )
+                }
               />
             </div>
             <div>
@@ -328,7 +362,11 @@ export default function FirDraftStudio() {
                 className="input w-full text-sm"
                 value={formData.date || ""}
                 onChange={(e) => handleField("date", e.target.value)}
-                placeholder="e.g. 14/11/2026 at 07:30 PM"
+                placeholder={tr(
+                  "e.g. 15/11/2026 at 07:30 PM (When incident/transaction occurred)",
+                  "उदा. 15/11/2026 शाम 07:30 बजे (घटना का समय व तारीख)",
+                  "ਉਦਾ. 15/11/2026 ਸ਼ਾਮ 07:30 ਵਜੇ (ਘਟਨਾ ਦੀ ਮਿਤੀ ਅਤੇ ਸਮਾਂ)"
+                )}
               />
             </div>
           </div>
@@ -342,7 +380,7 @@ export default function FirDraftStudio() {
                   className="input w-full text-sm"
                   value={formData.cheque_number || ""}
                   onChange={(e) => handleField("cheque_number", e.target.value)}
-                  placeholder="e.g. 482019"
+                  placeholder="e.g. 482019 (6-digit cheque number from leaf)"
                 />
               </div>
               <div>
@@ -352,7 +390,7 @@ export default function FirDraftStudio() {
                   className="input w-full text-sm"
                   value={formData.bank_name || ""}
                   onChange={(e) => handleField("bank_name", e.target.value)}
-                  placeholder="e.g. HDFC Bank, Civil Lines"
+                  placeholder="e.g. HDFC Bank, Civil Lines Branch, Jalandhar"
                 />
               </div>
               <div>
@@ -362,7 +400,7 @@ export default function FirDraftStudio() {
                   className="input w-full text-sm"
                   value={formData.amount || ""}
                   onChange={(e) => handleField("amount", e.target.value)}
-                  placeholder="e.g. 2,50,000"
+                  placeholder="e.g. 2,50,000 (Exact cheque amount in Rs.)"
                 />
               </div>
             </div>
@@ -378,7 +416,11 @@ export default function FirDraftStudio() {
               className="input w-full text-sm leading-relaxed"
               value={formData.description || ""}
               onChange={(e) => handleField("description", e.target.value)}
-              placeholder="Describe clearly what happened, who was involved, stolen property, or deficiency in service..."
+              placeholder={tr(
+                "Describe clearly what happened, who was involved, stolen items or service deficiency, and the exact action demanded...\n\nExample for Police Complaint:\n'While walking near the market entrance, two unidentified persons on a black motorcycle snatched my mobile phone and fled. Kindly register an FIR under Section 173 BNSS and investigate.'",
+                "विस्तार से लिखें कि क्या हुआ, कौन शामिल था, क्या नुकसान हुआ और आप क्या कानूनी कार्रवाई चाहते हैं...",
+                "ਵੇਰਵੇ ਸਹਿਤ ਲਿਖੋ ਕਿ ਕੀ ਹੋਇਆ, ਕੌਣ ਸ਼ਾਮਲ ਸੀ, ਕੀ ਨੁਕਸਾਨ ਹੋਇਆ ਅਤੇ ਤੁਸੀਂ ਕੀ ਕਾਰਵਾਈ ਚਾਹੁੰਦੇ ਹੋ..."
+              )}
             />
           </div>
 

@@ -503,7 +503,7 @@ export default function OfficialActs() {
                   key={cat.id}
                   type="button"
                   onClick={() => setSelectedCat(cat.id)}
-                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs whitespace-nowrap transition-all border ${
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-full text-xs whitespace-nowrap transition-all border ${
                     isSel
                       ? "tab-active bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 text-slate-950 border-amber-600 font-black shadow-md ring-2 ring-amber-400/40"
                       : "bg-surface text-ink hover:text-ink hover:bg-surface-2 border-line font-bold"
@@ -589,7 +589,7 @@ export default function OfficialActs() {
 
             return (
               <Reveal key={a.tag} delay={(i % 2) * 70}>
-                <div className="card tone-card zoom-hover-sm p-5 sm:p-6 bg-surface border border-line" style={{ "--tone": a.tone }}>
+                <div className="card tone-card zoom-hover-sm p-6 sm:p-7 bg-surface border-2 border-line rounded-3xl shadow-xs hover:shadow-lg transition-all duration-200" style={{ "--tone": a.tone }}>
                   {/* Card Header: Tag, Category Badge, Official link badge, and Passages */}
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="tone-badge font-mono text-xs font-bold">{a.tag}</span>

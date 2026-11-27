@@ -402,17 +402,19 @@ export default function Auth() {
       {/* Right Column: Interactive Sign In / Sign Up Forms */}
       <section className="card card-accent card-raised p-6 sm:p-8">
         {location.state?.from === "/assistant" && (
-          <div className="mb-5 flex items-start gap-3 rounded-xl border-2 border-amber-500 bg-amber-50 dark:bg-amber-950/80 dark:border-amber-500 p-4 text-xs shadow-sm">
-            <Lock size={18} className="mt-0.5 shrink-0 text-amber-700 dark:text-amber-400" />
+          <div className="mb-5 flex items-start gap-3 rounded-2xl border-2 border-amber-500 bg-amber-500/15 p-4 text-xs shadow-xs">
+            <div className="p-2 rounded-xl bg-amber-500 text-slate-950 shrink-0">
+              <Lock size={16} />
+            </div>
             <div>
-              <div className="font-black text-sm text-amber-950 dark:text-amber-100 tracking-tight">
+              <div className="font-black text-sm text-slate-950 dark:text-amber-100 tracking-tight">
                 {tr(
                   "Sign in required to consult AI Assistant",
                   "एआई सहायक से पूछने के लिए साइन इन आवश्यक है",
                   "ਏਆਈ ਸਹਾਇਕ ਨੂੰ ਪੁੱਛਣ ਲਈ ਸਾਈਨ ਇਨ ਲਾਜ਼ਮੀ ਹੈ"
                 )}
               </div>
-              <div className="mt-1 text-xs font-semibold text-amber-950/90 dark:text-amber-200 leading-relaxed">
+              <div className="mt-1 text-xs font-semibold text-slate-800 dark:text-amber-200 leading-relaxed">
                 {tr(
                   "Please sign in with Google or Email code to continue to the AI Legal Assistant.",
                   "एआई कानूनी सहायक का उपयोग करने के लिए कृपया Google या ईमेल कोड से साइन इन करें।",
@@ -420,7 +422,7 @@ export default function Auth() {
                 )}
               </div>
               {location.state?.q && (
-                <div className="mt-2.5 rounded-lg bg-surface px-3 py-2 font-semibold text-ink italic border border-amber-300 dark:border-amber-800/60 text-xs">
+                <div className="mt-2.5 rounded-xl bg-surface px-3 py-2 font-bold text-ink italic border border-line text-xs shadow-xs">
                   "{location.state.q}"
                 </div>
               )}
