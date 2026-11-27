@@ -156,6 +156,7 @@ export default function DocAnalyzer() {
   const [extracting, setExtracting] = useState(false);
   const [extractionMsg, setExtractionMsg] = useState("");
   const [invalidDoc, setInvalidDoc] = useState(null);
+  const [scanError, setScanError] = useState("");
   const [result, setResult] = useState(null);
   const [busy, setBusy] = useState(false);
   const fileInputRef = useRef(null);
@@ -170,6 +171,7 @@ export default function DocAnalyzer() {
       setUploadedFile(null);
       setExtractionMsg("");
       setInvalidDoc(null);
+      setScanError("");
       setResult(null);
     }
   };
@@ -180,6 +182,7 @@ export default function DocAnalyzer() {
 
     setUploadedFile(file);
     setInvalidDoc(null);
+    setScanError("");
     setResult(null);
     setExtracting(true);
     setExtractionMsg(tr("Reading document contents...", "दस्तावेज़ की सामग्री पढ़ी जा रही है...", "ਦਸਤਾਵੇਜ਼ ਪੜ੍ਹਿਆ ਜਾ ਰਿਹਾ ਹੈ..."));
@@ -266,6 +269,7 @@ export default function DocAnalyzer() {
     setUploadedFile(null);
     setExtractionMsg("");
     setInvalidDoc(null);
+    setScanError("");
     setResult(null);
   };
 
@@ -274,6 +278,7 @@ export default function DocAnalyzer() {
     if (!docText.trim() && !uploadedFile) return;
 
     setInvalidDoc(null);
+    setScanError("");
     setResult(null);
 
     const isImageFile = uploadedFile && (uploadedFile.type?.startsWith("image/") || /\.(jpg|jpeg|png|webp|heic)$/i.test(uploadedFile.name));
@@ -301,6 +306,8 @@ export default function DocAnalyzer() {
             isInvalid: true,
             reason: res.reason || "Non-legal document detected.",
           });
+        } else if (res.error) {
+          setScanError(res.error);
         } else {
           setResult(res);
           if (res.extracted_text) {
@@ -314,11 +321,14 @@ export default function DocAnalyzer() {
             isInvalid: true,
             reason: res.reason || "Non-legal document detected.",
           });
+        } else if (res.error) {
+          setScanError(res.error);
         } else {
           setResult(res);
         }
       }
     } catch (err) {
+      console.warn("Analysis request failed, checking fallback:", err);
       // Offline fallback for genuine legal documents
       const combined = `${uploadedFile?.name || ""} ${docText}`;
       const is138 = /138|cheque.*dishonour|dishonour.*cheque/i.test(combined);
@@ -397,7 +407,7 @@ Standard civil law protections apply. You are entitled to keep this document as 
 2. Store a digital and physical copy for your records.
 3. No urgent legal action or court appearance required.`,
         });
-      } else {
+      } else if (docText.trim()) {
         setResult({
           analyzed: true,
           is_legal_document: true,
@@ -420,6 +430,15 @@ Standard civil rights and contract law protections apply.
 2. If this relates to an ongoing dispute, consult free legal aid via NALSA helpline 15100.
 3. No emergency legal action required.`,
         });
+      } else {
+        setScanError(
+          err?.message ||
+            tr(
+              "Could not extract readable text or process the document. Please ensure the photo is clear with good lighting, or paste the text directly.",
+              "दस्तावेज़ से स्पष्ट टेक्स्ट नहीं पढ़ा जा सका। कृपया सुनिश्चित करें कि फोटो स्पष्ट और अच्छी रोशनी में है, या टेक्स्ट सीधे पेस्ट करें।",
+              "ਦਸਤਾਵੇਜ਼ ਤੋਂ ਸਪਸ਼ਟ ਟੈਕਸਟ ਨਹੀਂ ਪੜ੍ਹਿਆ ਜਾ ਸਕਿਆ। ਕਿਰਪਾ ਕਰਕੇ ਯਕੀਨੀ ਬਣਾਓ ਕਿ ਫੋਟੋ ਸਾਫ਼ ਹੈ ਜਾਂ ਟੈਕਸਟ ਸਿੱਧਾ ਪੇਸਟ ਕਰੋ।"
+            )
+        );
       }
     } finally {
       setBusy(false);
@@ -718,6 +737,62 @@ Standard civil rights and contract law protections apply.
           </div>
         </form>
       </div>
+
+      {/* LIVE SCANNING BANNER */}
+      {busy && (
+        <div className="card p-5 sm:p-6 rounded-2xl bg-amber-500/15 border-2 border-amber-500/50 shadow-sm flex items-center gap-4 animate-pulse">
+          <div className="p-3 rounded-full bg-amber-500 text-slate-950 font-black shrink-0 shadow-xs">
+            <RefreshCw size={24} className="animate-spin" />
+          </div>
+          <div className="space-y-1">
+            <div className="text-sm sm:text-base font-black text-ink">
+              {tr(
+                "Analyzing Document with AI Vision & Legal Intelligence...",
+                "दस्तावेज़ का एआई विज़न और कानूनी बुद्धिमत्ता से विश्लेषण जारी...",
+                "ਦਸਤਾਵੇਜ਼ ਦਾ ਏਆਈ ਵਿਜ਼ਨ ਨਾਲ ਵਿਸ਼ਲੇਸ਼ਣ ਜਾਰੀ..."
+              )}
+            </div>
+            <p className="text-xs text-muted font-medium">
+              {tr(
+                "Extracting document text, identifying legal clauses, detecting hidden risks, and checking limitation periods.",
+                "धाराओं को पढ़ना, अदालती उद्धरण निकालना, गुप्त जोखिमों की पहचान और समय सीमा की जांच की जा रही है।",
+                "ਧਾਰਾਵਾਂ ਨੂੰ ਪੜ੍ਹਨਾ, ਅਦਾਲਤੀ ਹਵਾਲੇ ਕੱਢਣਾ ਅਤੇ ਗੁਪਤ ਜੋਖਮਾਂ ਦੀ ਜਾਂਚ ਕੀਤੀ ਜਾ ਰਹੀ ਹੈ।"
+              )}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* SCAN ERROR BANNER */}
+      {scanError && (
+        <div className="card p-6 sm:p-7 rounded-2xl bg-red-500/15 border-2 border-red-500/60 shadow-md space-y-4">
+          <div className="flex items-start gap-3.5">
+            <div className="p-2.5 rounded-xl bg-red-500 text-white shrink-0 shadow-xs">
+              <AlertTriangle size={24} />
+            </div>
+            <div className="space-y-1 flex-1">
+              <div className="text-base sm:text-lg font-black text-ink">
+                {tr("Document Scan Notice", "दस्तावेज़ स्कैन सूचना", "ਦਸਤਾਵੇਜ਼ ਸਕੈਨ ਸੂਚਨਾ")}
+              </div>
+              <p className="text-xs sm:text-sm text-ink/90 font-medium leading-relaxed">
+                {scanError}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center justify-between flex-wrap gap-2 pt-2 border-t border-red-300 dark:border-red-800/60 text-xs">
+            <span className="text-muted font-medium">
+              {tr("Tip: Ensure the document photo is well-lit, sharp, and not blurry.", "सुझाव: सुनिश्चित करें कि फोटो स्पष्ट, तेज और अच्छी रोशनी में हो।", "ਸੁਝਾਅ: ਯਕੀਨੀ ਬਣਾਓ ਕਿ ਫੋਟੋ ਸਾਫ਼ ਅਤੇ ਤੇਜ਼ ਰੋਸ਼ਨੀ ਵਿੱਚ ਹੋਵੇ।")}
+            </span>
+            <button
+              type="button"
+              onClick={() => setScanError("")}
+              className="btn btn-sm btn-ghost border border-line text-xs font-bold text-ink hover:bg-surface-2"
+            >
+              {tr("Dismiss", "खारिज करें", "ਰੱਦ ਕਰੋ")}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* FANCY ERROR SCREEN: NON-LEGAL DOCUMENT DETECTED */}
       {invalidDoc && invalidDoc.isInvalid && (

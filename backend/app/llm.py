@@ -47,7 +47,7 @@ def _groq(prompt, model):
 
 # Provider default models guaranteed to be available
 DEFAULT_GROQ_MODELS = ["openai/gpt-oss-120b", "qwen/qwen3.8-27b", "openai/gpt-oss-20b"]
-DEFAULT_GEMINI_MODELS = ["gemini-2.5-flash", "gemini-flash-latest", "gemini-2.5-flash-lite"]
+DEFAULT_GEMINI_MODELS = ["gemini-3.5-flash", "gemini-3.7-flash", "gemini-3.8-flash", "gemini-flash-latest"]
 
 # Prompt injection handling: keep user prompts as plain text and let each
 # provider decide how to interpret them. This layer does not execute user code.

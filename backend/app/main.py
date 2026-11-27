@@ -671,7 +671,11 @@ async def analyze_document_file(
     content_bytes = await file.read()
     extracted_text = ""
 
-    IMAGE_EXTS = (".jpg", ".jpeg", ".png", ".webp")
+    IMAGE_EXTS = (".jpg", ".jpeg", ".png", ".webp", ".heic", ".heif", ".jfif", ".bmp")
+    is_image = (
+        filename.endswith(IMAGE_EXTS)
+        or bool(file.content_type and file.content_type.startswith("image/"))
+    )
 
     if filename.endswith(".pdf"):
         import io
@@ -680,7 +684,7 @@ async def analyze_document_file(
             reader = pypdf.PdfReader(io.BytesIO(content_bytes))
             extracted_text = "\n".join([page.extract_text() or "" for page in reader.pages])
         except Exception as e:
-            return {"error": f"Failed to parse PDF document: {e}", "analyzed": False}
+            return {"error": f"Failed to parse PDF document: {e}", "analyzed": False, "is_legal_document": False}
     elif filename.endswith(".docx"):
         import io
         import docx
@@ -688,8 +692,8 @@ async def analyze_document_file(
             doc = docx.Document(io.BytesIO(content_bytes))
             extracted_text = "\n".join([p.text for p in doc.paragraphs if p.text])
         except Exception as e:
-            return {"error": f"Failed to parse Word (.docx) document: {e}", "analyzed": False}
-    elif filename.endswith(IMAGE_EXTS):
+            return {"error": f"Failed to parse Word (.docx) document: {e}", "analyzed": False, "is_legal_document": False}
+    elif is_image:
         # Multimodal Vision OCR using Google GenAI
         try:
             from google import genai
@@ -700,13 +704,16 @@ async def analyze_document_file(
                 return {
                     "error": "Gemini API key is not configured for image OCR.",
                     "analyzed": False,
+                    "is_legal_document": False,
                 }
 
-            mime_type = "image/jpeg"
+            mime_type = file.content_type or "image/jpeg"
             if filename.endswith(".png"):
                 mime_type = "image/png"
             elif filename.endswith(".webp"):
                 mime_type = "image/webp"
+            elif filename.endswith((".jpg", ".jpeg")):
+                mime_type = "image/jpeg"
 
             client = genai.Client(api_key=key, http_options=types.HttpOptions(timeout=45 * 1000))
             ocr_prompt = (
@@ -718,11 +725,26 @@ async def analyze_document_file(
                 "reply with exactly: NON_LEGAL_DOCUMENT_DETECTED"
             )
             part = types.Part.from_bytes(data=content_bytes, mime_type=mime_type)
-            resp = client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=[ocr_prompt, part],
-            )
-            raw_text = (resp.text or "").strip()
+
+            raw_text = ""
+            models_to_try = ["gemini-3.5-flash", "gemini-3.7-flash", "gemini-3.8-flash", "gemini-flash-latest"]
+            last_err = None
+            for m in models_to_try:
+                try:
+                    resp = client.models.generate_content(
+                        model=m,
+                        contents=[ocr_prompt, part],
+                    )
+                    raw_text = (resp.text or "").strip()
+                    if raw_text:
+                        break
+                except Exception as ex:
+                    last_err = ex
+                    continue
+
+            if not raw_text and last_err:
+                raise last_err
+
             if "NON_LEGAL_DOCUMENT_DETECTED" in raw_text:
                 return {
                     "analyzed": False,
@@ -732,7 +754,7 @@ async def analyze_document_file(
                 }
             extracted_text = raw_text
         except Exception as e:
-            return {"error": f"Failed to perform Vision OCR on image: {e}", "analyzed": False}
+            return {"error": f"Failed to perform Vision OCR on image: {e}", "analyzed": False, "is_legal_document": False}
     else:
         # text / txt / markdown
         try:
@@ -742,7 +764,7 @@ async def analyze_document_file(
 
     extracted_text = extracted_text.strip()
     if not extracted_text:
-        return {"error": "Could not extract readable text from the uploaded file.", "analyzed": False}
+        return {"error": "Could not extract readable text from the uploaded file.", "analyzed": False, "is_legal_document": False}
 
     return _perform_doc_analysis(extracted_text, lang, filename=file.filename or "")
 
