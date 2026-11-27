@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NyayaSahayak — Offline Emergency Legal Rights</title>
+  <style>
+    :root {
+      --bg: #fffdf5;
+      --card: #ffffff;
+      --text: #0b1b3a;
+      --muted: #475569;
+      --accent: #d97706;
+      --border: #fcd34d;
+      --red: #dc2626;
+      --green: #059669;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #030b1f;
+        --card: #081a3d;
+        --text: #f8fafc;
+        --muted: #94a3b8;
+        --accent: #fbbf24;
+        --border: #1e3a8a;
+      }
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      padding: 1.25rem;
+      max-width: 760px;
+      margin: 0 auto;
+    }
+    .header {
+      text-align: center;
+      padding: 1.5rem 0;
+      border-bottom: 2px solid var(--border);
+      margin-bottom: 1.5rem;
+    }
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      background: #fef3c7;
+      color: #92400e;
+      font-weight: 700;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.5rem;
+    }
+    h1 { font-size: 1.5rem; font-weight: 900; margin-bottom: 0.35rem; }
+    p.lead { color: var(--muted); font-size: 0.875rem; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.75rem; margin: 1.25rem 0; }
+    .helpline-box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 0.75rem;
+      padding: 0.85rem;
+      text-align: center;
+      text-decoration: none;
+      color: var(--text);
+    }
+    .helpline-box:hover { border-color: var(--accent); }
+    .helpline-num { font-size: 1.35rem; font-weight: 900; color: var(--accent); }
+    .helpline-lbl { font-size: 0.75rem; color: var(--muted); font-weight: 600; }
+    .section-title { font-size: 1.1rem; font-weight: 800; margin: 1.5rem 0 0.75rem; display: flex; align-items: center; gap: 0.5rem; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 0.875rem;
+      padding: 1rem;
+      margin-bottom: 0.85rem;
+    }
+    .card h3 { font-size: 0.95rem; font-weight: 800; margin-bottom: 0.25rem; color: var(--accent); }
+    .card p { font-size: 0.825rem; color: var(--muted); margin-bottom: 0.5rem; }
+    .card ul { font-size: 0.8rem; padding-left: 1.25rem; color: var(--text); }
+    .card li { margin-bottom: 0.25rem; }
+    .btn-retry {
+      display: block;
+      width: 100%;
+      text-align: center;
+      padding: 0.75rem;
+      background: var(--accent);
+      color: #000;
+      font-weight: 800;
+      font-size: 0.875rem;
+      border: none;
+      border-radius: 0.75rem;
+      cursor: pointer;
+      margin-top: 1.5rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="badge">Offline Emergency Mode</div>
+    <h1>NyayaSahayak (न्याय सहायक)</h1>
+    <p class="lead">You are currently offline. Essential civic rights and statutory helplines remain fully accessible on your device.</p>
+  </div>
+
+  <div class="section-title">Emergency Helpline Dialers (Click to Call)</div>
+  <div class="grid">
+    <a href="tel:112" class="helpline-box">
+      <div class="helpline-num">112</div>
+      <div class="helpline-lbl">National Police & Emergency</div>
+    </a>
+    <a href="tel:1930" class="helpline-box">
+      <div class="helpline-num">1930</div>
+      <div class="helpline-lbl">Cyber Financial Fraud (I4C)</div>
+    </a>
+    <a href="tel:1091" class="helpline-box">
+      <div class="helpline-num">1091</div>
+      <div class="helpline-lbl">Women in Distress (24/7)</div>
+    </a>
+    <a href="tel:15100" class="helpline-box">
+      <div class="helpline-num">15100</div>
+      <div class="helpline-lbl">NALSA Free Legal Aid</div>
+    </a>
+  </div>
+
+  <div class="section-title">Essential Citizen Legal Protections</div>
+
+  <div class="card">
+    <h3>1. Police Notice vs Arrest (Section 35 BNSS / Arnesh Kumar)</h3>
+    <p>For offences with punishment up to 7 years (theft, cheating, matrimonial disputes):</p>
+    <ul>
+      <li>Police CANNOT mechanically arrest. They must first issue a written Notice of Appearance under Section 35(3) BNSS.</li>
+      <li>As long as you comply and appear, police cannot arrest you without prior written reasons and Judicial Magistrate permission.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h3>2. Fundamental Arrestee Safeguards (D.K. Basu Guidelines)</h3>
+    <p>Mandatory constitutional rights under Articles 21 & 22 and Section 47 BNSS:</p>
+    <ul>
+      <li>Arrest memo must be signed by at least one independent family member or witness.</li>
+      <li>Right to have a family member informed of detention within 8 to 12 hours.</li>
+      <li>Must be produced before the nearest Judicial Magistrate within 24 hours.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h3>3. First-Time Undertrial Bail (Section 479 BNSS)</h3>
+    <p>Statutory mandatory bail right under the new 2023 criminal law:</p>
+    <ul>
+      <li>First-time offenders (never convicted previously) must be released on mandatory bail upon serving <b>one-third (1/3rd)</b> of the maximum sentence.</li>
+      <li>Superintendent of Jail must automatically apply to the Court on behalf of the prisoner.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h3>4. Online Bank Fraud Golden Hour (Call 1930)</h3>
+    <p>Immediate steps if money was transferred via UPI, net banking, or debit card fraud:</p>
+    <ul>
+      <li>Call 1930 immediately within the first 2 hours. Keep the 12-digit UTR number and recipient bank account ready.</li>
+      <li>Alert your bank nodal branch within 3 days for zero-liability protection under RBI guidelines.</li>
+    </ul>
+  </div>
+
+  <button class="btn-retry" onclick="window.location.reload()">Retry Internet Connection</button>
+</body>
+</html>

@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
+import InstallPwaBanner from "./components/InstallPwaBanner";
 import Home from "./pages/Home";
 import Dashboard from "./pages/Dashboard";
 import Assistant from "./pages/Assistant";
@@ -58,6 +59,7 @@ export default function App() {
         </div>
       </main>
       <Footer />
+      <InstallPwaBanner />
     </div>
   );
 }

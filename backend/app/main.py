@@ -666,10 +666,12 @@ async def analyze_document_file(
     file: UploadFile = File(...),
     lang: str = Form("en"),
 ) -> dict[str, Any]:
-    """Extract text from uploaded legal file (.pdf, .docx, .txt) and analyze risks."""
+    """Extract text from uploaded legal file (.pdf, .docx, .txt, .jpg, .jpeg, .png, .webp) and analyze risks."""
     filename = (file.filename or "").lower()
     content_bytes = await file.read()
     extracted_text = ""
+
+    IMAGE_EXTS = (".jpg", ".jpeg", ".png", ".webp")
 
     if filename.endswith(".pdf"):
         import io
@@ -687,6 +689,50 @@ async def analyze_document_file(
             extracted_text = "\n".join([p.text for p in doc.paragraphs if p.text])
         except Exception as e:
             return {"error": f"Failed to parse Word (.docx) document: {e}", "analyzed": False}
+    elif filename.endswith(IMAGE_EXTS):
+        # Multimodal Vision OCR using Google GenAI
+        try:
+            from google import genai
+            from google.genai import types
+
+            key = os.getenv("GEMINI_API_KEY")
+            if not key:
+                return {
+                    "error": "Gemini API key is not configured for image OCR.",
+                    "analyzed": False,
+                }
+
+            mime_type = "image/jpeg"
+            if filename.endswith(".png"):
+                mime_type = "image/png"
+            elif filename.endswith(".webp"):
+                mime_type = "image/webp"
+
+            client = genai.Client(api_key=key, http_options=types.HttpOptions(timeout=45 * 1000))
+            ocr_prompt = (
+                "You are an expert Indian Legal OCR Assistant. "
+                "Carefully transcribe all readable text from this legal document image, "
+                "court summons, police appearance notice (Section 35 BNSS), FIR, demand notice, or legal agreement accurately. "
+                "Preserve exact section numbers, party names, court dates, and official stamp/station details. "
+                "If the image is completely non-legal (such as a personal selfie, scenery, random non-legal item, or cartoon), "
+                "reply with exactly: NON_LEGAL_DOCUMENT_DETECTED"
+            )
+            part = types.Part.from_bytes(data=content_bytes, mime_type=mime_type)
+            resp = client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=[ocr_prompt, part],
+            )
+            raw_text = (resp.text or "").strip()
+            if "NON_LEGAL_DOCUMENT_DETECTED" in raw_text:
+                return {
+                    "analyzed": False,
+                    "is_legal_document": False,
+                    "error": "NON_LEGAL_DOCUMENT",
+                    "reason": "The captured photo or uploaded image does not appear to be an official legal notice, court document, summons, or contract.",
+                }
+            extracted_text = raw_text
+        except Exception as e:
+            return {"error": f"Failed to perform Vision OCR on image: {e}", "analyzed": False}
     else:
         # text / txt / markdown
         try:

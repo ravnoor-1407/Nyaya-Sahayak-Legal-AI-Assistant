@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Search, AlertTriangle, ShieldCheck, Clock, Check, RefreshCw, FileText, Sparkles, UploadCloud, File, X, AlertOctagon, CheckCircle2, Trash2 } from "lucide-react";
+import { Search, AlertTriangle, ShieldCheck, Clock, Check, RefreshCw, FileText, Sparkles, UploadCloud, File, X, AlertOctagon, CheckCircle2, Trash2, Camera, Image as ImageIcon } from "lucide-react";
 import { useLang } from "../LangContext";
 import { analyzeDocument, analyzeDocumentFile } from "../api";
 import ReactMarkdown from "react-markdown";
@@ -151,6 +151,7 @@ export default function DocAnalyzer() {
   const { tr, lang } = useLang();
   const [docText, setDocText] = useState(SAMPLES.bnss35.text);
   const [uploadedFile, setUploadedFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const [extracting, setExtracting] = useState(false);
   const [extractionMsg, setExtractionMsg] = useState("");
@@ -158,11 +159,14 @@ export default function DocAnalyzer() {
   const [result, setResult] = useState(null);
   const [busy, setBusy] = useState(false);
   const fileInputRef = useRef(null);
+  const cameraInputRef = useRef(null);
 
   const handleSelectSample = (key) => {
     const s = SAMPLES[key];
     if (s) {
       setDocText(s.text);
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      setPreviewUrl(null);
       setUploadedFile(null);
       setExtractionMsg("");
       setInvalidDoc(null);
@@ -172,6 +176,8 @@ export default function DocAnalyzer() {
 
   const handleProcessFile = async (file) => {
     if (!file) return;
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+
     setUploadedFile(file);
     setInvalidDoc(null);
     setResult(null);
@@ -180,7 +186,20 @@ export default function DocAnalyzer() {
 
     try {
       const lower = (file.name || "").toLowerCase();
-      if (lower.endsWith(".docx")) {
+      const isImage = file.type?.startsWith("image/") || /\.(jpg|jpeg|png|webp|heic)$/i.test(lower);
+
+      if (isImage) {
+        const objectUrl = URL.createObjectURL(file);
+        setPreviewUrl(objectUrl);
+        setExtractionMsg(
+          tr(
+            `Photo attached: "${file.name}" (${(file.size / 1024).toFixed(1)} KB). AI Vision will OCR the text & stamps upon clicking Analyze.`,
+            `फोटो संलग्न: "${file.name}"। विश्लेषण दबाने पर एआई विज़न ओसीआर से टेक्स्ट पढ़ेगा।`,
+            `ਫੋਟੋ ਨੱਥੀ: "${file.name}"। ਵਿਸ਼ਲੇਸ਼ਣ ਦਬਾਉਣ 'ਤੇ ਏਆਈ ਵਿਜ਼ਨ ਓਸੀਆਰ ਕਰੇਗਾ।`
+          )
+        );
+      } else if (lower.endsWith(".docx")) {
+        setPreviewUrl(null);
         const extracted = await extractTextFromDocx(file);
         if (extracted && extracted.trim()) {
           setDocText(extracted);
@@ -195,6 +214,7 @@ export default function DocAnalyzer() {
           setExtractionMsg(tr(`File ready for scan: "${file.name}"`, `स्कैन हेतु तैयार फ़ाइल: "${file.name}"`, `ਸਕੈਨ ਲਈ ਤਿਆਰ ਫਾਈਲ`));
         }
       } else if (lower.endsWith(".txt") || lower.endsWith(".md") || lower.endsWith(".json")) {
+        setPreviewUrl(null);
         const text = await file.text();
         if (text) {
           setDocText(text);
@@ -207,6 +227,7 @@ export default function DocAnalyzer() {
           );
         }
       } else if (lower.endsWith(".pdf")) {
+        setPreviewUrl(null);
         setExtractionMsg(
           tr(
             `PDF attached: "${file.name}" (${(file.size / 1024).toFixed(1)} KB). Text will be processed upon clicking Analyze.`,
@@ -215,6 +236,7 @@ export default function DocAnalyzer() {
           )
         );
       } else {
+        setPreviewUrl(null);
         setExtractionMsg(`Attached: "${file.name}"`);
       }
     } catch (e) {
@@ -239,6 +261,8 @@ export default function DocAnalyzer() {
 
   const handleClear = () => {
     setDocText("");
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    setPreviewUrl(null);
     setUploadedFile(null);
     setExtractionMsg("");
     setInvalidDoc(null);
@@ -252,20 +276,25 @@ export default function DocAnalyzer() {
     setInvalidDoc(null);
     setResult(null);
 
-    // Client-side pre-validation: Is this a legal document?
-    const validation = validateLegalDocument(docText, uploadedFile?.name);
-    if (!validation.isValid) {
-      setInvalidDoc({
-        isInvalid: true,
-        reason: validation.reason,
-      });
-      return;
+    const isImageFile = uploadedFile && (uploadedFile.type?.startsWith("image/") || /\.(jpg|jpeg|png|webp|heic)$/i.test(uploadedFile.name));
+    const isPdfFile = uploadedFile && uploadedFile.name.toLowerCase().endsWith(".pdf");
+
+    // Client-side pre-validation: Is this a legal document (skip for raw images/PDFs which backend Vision/PDF validates)?
+    if (!isImageFile && !isPdfFile && docText.trim()) {
+      const validation = validateLegalDocument(docText, uploadedFile?.name);
+      if (!validation.isValid) {
+        setInvalidDoc({
+          isInvalid: true,
+          reason: validation.reason,
+        });
+        return;
+      }
     }
 
     setBusy(true);
 
     try {
-      if (uploadedFile && (!docText.trim() || uploadedFile.name.toLowerCase().endsWith(".pdf"))) {
+      if (uploadedFile && (!docText.trim() || isPdfFile || isImageFile)) {
         const res = await analyzeDocumentFile(uploadedFile, lang);
         if (res.is_legal_document === false || res.error === "NON_LEGAL_DOCUMENT") {
           setInvalidDoc({
@@ -274,7 +303,7 @@ export default function DocAnalyzer() {
           });
         } else {
           setResult(res);
-          if (res.extracted_text && !docText.trim()) {
+          if (res.extracted_text) {
             setDocText(res.extracted_text);
           }
         }
@@ -482,21 +511,44 @@ Standard civil rights and contract law protections apply.
             <input
               ref={fileInputRef}
               type="file"
-              accept=".pdf,.docx,.doc,.txt,.md"
+              accept=".pdf,.docx,.doc,.txt,.md,.jpg,.jpeg,.png,.webp,.heic"
+              onChange={handleFileChange}
+              className="hidden"
+            />
+            <input
+              ref={cameraInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
               onChange={handleFileChange}
               className="hidden"
             />
 
             {uploadedFile ? (
               <div className="flex items-center justify-center gap-3 flex-wrap">
-                <div className="tone-icon-sm" style={{ background: "rgba(16,185,129,0.12)", color: "#10b981" }}>
-                  <File size={22} />
-                </div>
+                {previewUrl ? (
+                  <div className="relative shrink-0">
+                    <img
+                      src={previewUrl}
+                      alt="Captured legal notice"
+                      className="w-16 h-16 object-cover rounded-xl border-2 border-emerald-500 shadow-md"
+                    />
+                    <span className="absolute -bottom-1 -right-1 p-1 rounded-full bg-emerald-600 text-white shadow-xs">
+                      <Camera size={11} />
+                    </span>
+                  </div>
+                ) : (
+                  <div className="tone-icon-sm shrink-0" style={{ background: "rgba(16,185,129,0.12)", color: "#10b981" }}>
+                    <File size={22} />
+                  </div>
+                )}
                 <div className="text-left">
                   <div className="text-sm font-bold text-ink">{uploadedFile.name}</div>
                   <div className="text-xs text-muted">
                     {(uploadedFile.size / 1024).toFixed(1)} KB &bull;{" "}
-                    {extracting
+                    {previewUrl
+                      ? tr("Camera photo attached &bull; Ready for Vision OCR", "फोटो संलग्न &bull; विज़न ओसीआर हेतु तैयार", "ਫੋਟੋ ਨੱਥੀ &bull; ਵਿਜ਼ਨ ਓਸੀਆਰ ਲਈ ਤਿਆਰ")
+                      : extracting
                       ? tr("Extracting contents...", "सामग्री निकाली जा रही है...", "ਸਮੱਗਰੀ ਕੱਢੀ ਜਾ ਰਹੀ ਹੈ...")
                       : tr("Loaded into text box below", "नीचे टेक्स्ट बॉक्स में लोड किया गया", "ਹੇਠਾਂ ਟੈਕਸਟ ਬਾਕਸ ਵਿੱਚ ਲੋਡ ਕੀਤਾ ਗਿਆ")}
                   </div>
@@ -505,6 +557,8 @@ Standard civil rights and contract law protections apply.
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
+                    if (previewUrl) URL.revokeObjectURL(previewUrl);
+                    setPreviewUrl(null);
                     setUploadedFile(null);
                     setExtractionMsg("");
                   }}
@@ -515,20 +569,52 @@ Standard civil rights and contract law protections apply.
                 </button>
               </div>
             ) : (
-              <div className="space-y-1.5">
-                <div className="mx-auto w-11 h-11 rounded-full bg-accent/10 flex items-center justify-center text-accent">
-                  <UploadCloud size={22} />
+              <div className="space-y-3">
+                <div className="mx-auto w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center text-accent">
+                  <UploadCloud size={24} />
                 </div>
-                <div className="text-sm font-bold text-ink">
-                  {tr("Drag & Drop your legal file here, or click to browse", "कानूनी दस्तावेज़ यहाँ खींचकर छोड़ें या ब्राउज़ करें", "ਕਾਨੂੰਨੀ ਫਾਈਲ ਇੱਥੇ ਖਿੱਚ ਕੇ ਛੱਡੋ ਜਾਂ ਬ੍ਰਾਊਜ਼ ਕਰੋ")}
+                <div>
+                  <div className="text-sm font-bold text-ink">
+                    {tr(
+                      "Drag & drop your legal notice, summons, or contract here",
+                      "कानूनी नोटिस, समन या अनुबंध यहाँ खींचकर छोड़ें",
+                      "ਕਾਨੂੰਨੀ ਨੋਟਿਸ, ਸੰਮਨ ਜਾਂ ਇਕਰਾਰਨਾਮਾ ਇੱਥੇ ਖਿੱਚ ਕੇ ਛੱਡੋ"
+                    )}
+                  </div>
+                  <p className="text-xs text-muted max-w-md mx-auto mt-1">
+                    {tr(
+                      "Supports Camera Photo (.jpg, .png), Word (.docx), PDF (.pdf), and Plain Text (.txt).",
+                      "कैमरा फोटो (.jpg, .png), वर्ड (.docx), पीडीएफ (.pdf) और टेक्स्ट फाइलें समर्थित हैं।",
+                      "ਕੈਮਰਾ ਫੋਟੋ, ਵਰਡ, ਪੀਡੀਐਫ ਅਤੇ ਟੈਕਸਟ ਫਾਈਲਾਂ ਸਮਰਥਿਤ ਹਨ।"
+                    )}
+                  </p>
                 </div>
-                <p className="text-xs text-muted max-w-md mx-auto">
-                  {tr(
-                    "Supports Word (.docx), PDF (.pdf), and Plain Text (.txt). Document text will automatically populate the text area below.",
-                    "वर्ड (.docx), पीडीएफ (.pdf) और टेक्स्ट फाइलें समर्थित हैं। सामग्री स्वतः नीचे लोड हो जाएगी।",
-                    "ਵਰਡ, ਪੀਡੀਐਫ ਅਤੇ ਟੈਕਸਟ ਫਾਈਲਾਂ ਸਮਰਥਿਤ ਹਨ। ਸਮੱਗਰੀ ਹੇਠਾਂ ਟੈਕਸਟ ਬਾਕਸ ਵਿੱਚ ਆ ਜਾਵੇਗੀ।"
-                  )}
-                </p>
+
+                {/* Direct Action Buttons: Take Photo vs Browse */}
+                <div className="flex items-center justify-center gap-2 pt-1 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      cameraInputRef.current?.click();
+                    }}
+                    className="btn btn-sm btn-primary flex items-center gap-1.5 text-xs font-bold shadow-xs"
+                  >
+                    <Camera size={14} />
+                    <span>{tr("Take Photo of Notice", "नोटिस की फोटो खींचें", "ਨੋਟਿਸ ਦੀ ਫੋਟੋ ਲਓ")}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      fileInputRef.current?.click();
+                    }}
+                    className="btn btn-sm btn-ghost border border-line flex items-center gap-1.5 text-xs font-bold text-ink hover:bg-surface-2"
+                  >
+                    <ImageIcon size={14} />
+                    <span>{tr("Upload Image / Document", "दस्तावेज़ / फोटो अपलोड करें", "ਦਸਤਾਵੇਜ਼ / ਫੋਟੋ ਅਪਲੋਡ ਕਰੋ")}</span>
+                  </button>
+                </div>
               </div>
             )}
           </div>

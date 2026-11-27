@@ -1,0 +1,54 @@
+{
+  "name": "NyayaSahayak (न्याय सहायक) — Citizen Legal AI Assistant",
+  "short_name": "NyayaSahayak",
+  "description": "Citizen Legal Empowerment: Rights Handbooks, Bail Calculator, and Grounded Legal AI.",
+  "start_url": "/",
+  "id": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#fffdf5",
+  "theme_color": "#f59e0b",
+  "orientation": "portrait-primary",
+  "lang": "en",
+  "categories": ["legal", "government", "utilities", "education"],
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Emergency Helplines",
+      "short_name": "Helplines",
+      "url": "/helplines",
+      "description": "Immediate access to 112, 1930, 1091, 15100"
+    },
+    {
+      "name": "Citizen Legal Hub",
+      "short_name": "Rights Hub",
+      "url": "/hub",
+      "description": "Police, arrest, RTI, and civic rights handbooks"
+    },
+    {
+      "name": "Sec 479 Bail Calculator",
+      "short_name": "Bail Calc",
+      "url": "/bail-calculator",
+      "description": "Calculate undertrial mandatory bail thresholds"
+    },
+    {
+      "name": "Free Legal Aid Quiz",
+      "short_name": "Legal Aid",
+      "url": "/legal-aid",
+      "description": "Check free lawyer eligibility under Sec 12"
+    }
+  ]
+}
