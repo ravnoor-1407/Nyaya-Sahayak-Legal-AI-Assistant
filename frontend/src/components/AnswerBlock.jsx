@@ -12,10 +12,26 @@ const SHORT = {
   "Information Technology Act": "IT Act",
   "Consumer Protection Act": "Consumer Act",
   "Constitution of India": "Constitution",
+  "Negotiable Instruments Act": "NI Act",
+  "Indian Contract Act": "Contract Act",
+  "Code of Civil Procedure": "CPC",
+  "Transfer of Property Act": "TPA",
+  "Protection of Women from Domestic Violence Act": "DV Act",
+  "Hindu Marriage Act": "HMA",
+  "Right to Information Act": "RTI Act",
+  "Legal Services Authorities Act": "Legal Aid Act",
+  "Motor Vehicles Act": "MV Act",
+  "Sexual Harassment of Women at Workplace (Prevention, Prohibition and Redressal) Act": "POSH Act",
+  "Protection of Children from Sexual Offences Act": "POCSO Act",
+  "Consumer Protection (E-Commerce) Rules": "E-Commerce Rules",
+  "Information Technology (Intermediary Guidelines and Digital Media Ethics Code) Rules": "IT Rules",
+  "Protection of Women from Domestic Violence Rules": "DV Rules",
+  "Right to Information (Regulation of Fee and Cost) Rules": "RTI Fee Rules",
 };
 
 function chipLabel(s) {
   if (s.act === "IPC to BNS Mapping") return "IPC " + s.section;
+  if (s.act && s.act.startsWith("Supreme Court")) return "SC: " + (s.section || s.title.split("—")[0].trim());
   const name = s.act.split(",")[0];
   return (SHORT[name] || name) + " " + s.unit + " " + s.section;
 }
