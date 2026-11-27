@@ -37,6 +37,7 @@ Unlike generic conversational chatbots, NyayaSahayak operates on a strictly audi
   - [5. Bare Acts Explorer & Gazette Verification](#5-bare-acts-explorer--gazette-verification-acts-official)
   - [6. Citizen Support & Grievance Desk](#6-citizen-support--grievance-desk-contact)
   - [7. Privacy, Security & Passwordless Auth](#7-privacy-security--passwordless-auth-auth-dashboard)
+  - [8. Progressive Web App (PWA) & Offline Rights Handbook](#8-progressive-web-app-pwa--offline-rights-handbook)
 - [🧠 System Architecture & RAG Pipeline](#-system-architecture--rag-pipeline)
 - [🛠️ Tech Stack](#️-tech-stack)
 - [📂 Project Structure](#-project-structure)
@@ -51,9 +52,10 @@ Unlike generic conversational chatbots, NyayaSahayak operates on a strictly audi
 ## ✨ Core Capabilities & Platform Features
 
 ### 1. AI Legal Consultation & Statutory Audit (`/assistant`)
-- **Grounded Multilingual QA:** Context-aware legal consultation over the **Bharatiya Nyaya Sanhita, 2023 (BNS)**, **Bharatiya Nagarik Suraksha Sanhita, 2023 (BNSS)**, **Bharatiya Sakshya Adhiniyam, 2023 (BSA)**, Constitution of India, IT Act, and POCSO.
+- **Grounded Multilingual QA:** Context-aware legal consultation over the **Bharatiya Nyaya Sanhita, 2023 (BNS)**, **Bharatiya Nagarik Suraksha Sanhita, 2023 (BNSS)**, **Bharatiya Sakshya Adhiniyam, 2023 (BSA)**, Constitution of India, IT Act, POCSO, and civil/commercial laws.
 - **Automated Statutory Audit Score:** Every generated answer displays an automated verification pill (e.g. `Statutory Audit: 80% verified citations against official gazettes`) verifying that citations correspond directly to authenticated legal gazettes.
-- **Interactive Citation Pills:** Clicking any cited provision opens an official snippet card displaying the authentic section text and issuing authority.
+- **Landmark Supreme Court Guidelines (Article 141 Judicial Law):** Enriches statutory text with binding constitutional rulings (*Arnesh Kumar* on Sec 35 BNSS arrest notices, *Lalita Kumari* on mandatory FIR registration, *Satender Kumar Antil* on bail categories, *D.K. Basu* on arrestee rights, *K.S. Puttaswamy* on privacy, and *Dashrath Rupsingh Rathod* on cheque bounce jurisdiction).
+- **Interactive Citation Pills:** Clicking any cited provision opens an official snippet card displaying the authentic section text, enactment year, and issuing authority.
 - **Voice Readout (TTS):** Integrated speech synthesis reads out legal remedies in English, Hindi, or Punjabi for accessible public use.
 
 ### 2. Citizen Legal Action Hub (Citizen Empowerment Tools)
@@ -63,18 +65,21 @@ Unlike generic conversational chatbots, NyayaSahayak operates on a strictly audi
   - **First-time undertrials:** Mandatory entitlement to release on bail after serving **1/3rd** of the maximum statutory term.
   - **Repeat undertrials:** Mandatory release after serving **1/2** of the maximum statutory term.
   - **Capital & life imprisonment offences:** Automatic exclusion flag (discretionary bail only under Sec 480/483).
+- **Instructional Placeholders:** Clean, educational placeholders guide citizens on entering statutory maximum punishment without pre-filled assumptions.
 - **Automated Court Application Generator:** Pre-populates a ready-to-file Section 479 Bail Application addressed to the competent Chief Judicial Magistrate or Sessions Court.
 
 #### B. Legal Document Scanner & Risk Analyzer (`/scanner`)
-- **Unified Drag-and-Drop & Text Analysis:** Upload court summons, police notices, cheque bounce notices, or tenancy agreements in `.docx`, `.pdf`, `.txt`, or paste raw text.
+- **Camera Image OCR & Gemini Vision:** Direct camera snapshot capture (**"Take Photo of Notice"**) and multi-format upload (`.jpg`, `.jpeg`, `.png`, `.webp`, `.heic`, `.pdf`, `.docx`, `.txt`) powered by **Google Gemini 3.5 Flash Vision** with automatic multi-model fallback.
+- **Live Scanning Progress & Auto-Population:** Displays an animated status banner (*"Analyzing Document with AI Vision & Legal Intelligence..."*) while OCR extracts clauses, stamps, and citations, auto-populating transcribed text directly into the review workspace.
 - **Traffic-Light Risk Categorization:**
   - 🔴 **High Risk / Danger:** Urgent statutory deadlines, police appearance notices (BNSS Sec 35(3)), or cheque dishonour 15-day countdowns.
   - 🟡 **Medium Risk / Attention:** Complex commercial contracts, lease lock-in clauses, or deposit refund contingencies.
   - 🟢 **Safe / Low Risk:** Mutual settlements, discharge vouchers, and full No-Objection Certificates (NOC).
-- **Academic & Non-Legal Guardrail Banner:** Automatically recognizes and rejects university assignments, algorithms, or miscellaneous text with a clear notice, preventing false criminal risk flags.
+- **1-Click Demo Photos Gallery:** Built-in interactive drawer featuring 5 authentic demo legal documents with 1-click loading (`⚡ Test This Photo`) and high-resolution camera test links.
+- **Academic & Non-Legal Guardrail Banner:** Automatically recognizes and rejects university assignments, resumes, or code with an informative warning, preventing false criminal risk flags.
 
 #### C. AI Legal Drafting Studio (`/drafting`)
-- **Structured Legal Notice & Complaint Drafting:** Instant generation of formal legal instruments:
+- **Structured Legal Notice & Complaint Drafting:** Instant generation of formal legal instruments with step-by-step instructional placeholders:
   - **Zero-FIR Complaints** under Section 173 BNSS (irrespective of police station territorial jurisdiction).
   - **Cheque Dishonour Demand Notices** under Section 138 Negotiable Instruments Act.
   - **Consumer Deficiency Notices** under Consumer Protection Act 2019.
@@ -97,8 +102,9 @@ Unlike generic conversational chatbots, NyayaSahayak operates on a strictly audi
 - Evaluates general category citizens against official State Legal Services Authority (SLSA) annual income thresholds across Delhi, Punjab, Maharashtra, Uttar Pradesh, and other states.
 
 ### 5. Bare Acts Explorer & Gazette Verification (`/acts`, `/official`)
-- Complete chapter-by-chapter reader for BNS 2023, BNSS 2023, BSA 2023, the Constitution of India, and POCSO Act 2012.
-- Direct links to official extraordinary Gazette of India notifications and Ministry of Law and Justice repositories (`egazette.gov.in`, `indiacode.nic.in`).
+- **Category-Wise Thematic Classification:** 29+ Acts, Sanhitas, and Rules organized into 10 clean domain categories (Criminal Law & Evidence, Marriage & Family, Traffic & Motor Vehicles, Commercial & Cheque Bounce, Constitutional, Consumer, Labor, Cyber & Tech, Property, Environment).
+- **Modern Rounded-3xl UI & Year Badges:** Replaced rectangular tags with high-contrast rounded pill badges (`rounded-full`), category icons, and enactment year indicators.
+- **Gazette Verification:** Direct links to official extraordinary Gazette of India notifications and Ministry of Law and Justice repositories (`egazette.gov.in`, `indiacode.nic.in`).
 
 ### 6. Citizen Support & Grievance Desk (`/contact`)
 - **Live Ticket Generation:** Citizens submitting grievances or inquiries receive an official reference number (e.g. `#NYA-2026-F8A2`) recorded in the database.
@@ -111,44 +117,51 @@ Unlike generic conversational chatbots, NyayaSahayak operates on a strictly audi
 - **Client-Side De-Identification:** Scans and removes Aadhaar numbers, phone numbers, and payment details before server submission.
 - **Personal Dashboard:** Saves past research queries, statutory citations, and draft history locally to the user's secure account.
 
+### 8. Progressive Web App (PWA) & Offline Rights Handbook
+- **Zero-Network Emergency Access:** Fully installable PWA via Service Worker (`sw.js`) and Web App Manifest (`manifest.webmanifest`) on Android, iOS, and desktop browsers.
+- **Offline Legal Rights Handbook (`offline.html`):** Provides instant, uninterrupted access to essential citizen rights (Arrest rights under Art 21/22 and Sec 36 BNSS, First-time bail under Sec 479 BNSS, and one-tap emergency hotlines) even when completely disconnected from the internet.
+
 ---
 
 ## 🧠 System Architecture & RAG Pipeline
 
 ```mermaid
 flowchart TD
-    subgraph UI ["Frontend (React + Vite + Tailwind CSS v4)"]
-        A[User Input / Document Upload] --> B{Action Selector}
-        B -->|Question| C[AI Legal Assistant]
-        B -->|Legal Notice| D[Doc Risk Scanner]
-        B -->|Bail Input| E[Sec 479 Bail Calculator]
-        B -->|Draft Request| F[Legal Drafting Studio]
-        B -->|Search Query| G[Semantic Law Search]
+    subgraph Client ["Client Layer (React 19 + Vite 6 + Tailwind v4 + PWA)"]
+        A["User Input / Document Upload / Camera Photo"] --> B{"Action Selector"}
+        B -->|Question| C["AI Legal Assistant"]
+        B -->|Legal Notice / Photo| D["Doc Risk Scanner + 1-Click Demos"]
+        B -->|Bail Input| E["Sec 479 Bail Calculator"]
+        B -->|Draft Request| F["Legal Drafting Studio"]
+        B -->|Search Query| G["Semantic Law Search"]
+        B -->|Offline Emergency| SW["Service Worker & Offline Rights Handbook"]
     end
 
     subgraph Backend ["FastAPI Backend Architecture"]
-        C & G --> H[Safety Guard & Intent Classifier]
-        H -->|Passed| I[Hybrid Retrieval Engine]
-        H -->|Unlawful / Self-Harm| J[Safety Charter / Crisis Referral]
+        C & G --> H["Safety Guard & Intent Classifier"]
+        H -->|Passed| I["Hybrid Retrieval Engine"]
+        H -->|Unlawful / Self-Harm| J["Safety Charter / Crisis Referral"]
 
-        I --> K[(ChromaDB Vector Store<br/>multilingual-e5-base)]
-        I --> L[BM25 + TF-IDF Keyword Matcher]
-        I --> M[IPC-to-BNS Mapping Dictionary]
+        I --> K[("ChromaDB Vector Store<br/>multilingual-e5-base")]
+        I --> L["BM25 + TF-IDF Keyword Matcher"]
+        I --> M["IPC-to-BNS Mapping Dictionary"]
+        I --> SC["Article 141 Supreme Court Precedents"]
 
-        K & L & M --> N[Reciprocal Rank Fusion RRF]
-        N --> O[Context Assembler & Gazette Grounder]
+        K & L & M & SC --> N["Reciprocal Rank Fusion RRF"]
+        N --> O["Context Assembler & Gazette Grounder"]
 
-        O --> P[LLM Generation<br/>Google Gemini / Groq Llama-3]
-        P --> Q[Statutory Citation Audit Engine]
+        O --> P["LLM Generation<br/>Google Gemini 3.5 Flash / Groq Llama-3"]
+        P --> Q["Statutory Citation Audit Engine"]
 
-        D --> R[Document Parser & Regex Engine<br/>pdf / docx / text]
-        R --> S[Traffic-Light Risk Classifier]
+        D --> V["Gemini 3.5 Flash Vision OCR<br/>Camera Snapshots / Images / PDFs"]
+        V --> R["Document Parser & Regex Engine"]
+        R --> S["Traffic-Light Risk Classifier"]
 
-        E --> T[Sec 479 BNSS Rule Engine<br/>1/3rd & 1/2 Sentence Matrix]
+        E --> T["Sec 479 BNSS Rule Engine<br/>1/3rd & 1/2 Sentence Matrix"]
     end
 
     Q -->|Audited Response + Verified Pills| C
-    S -->|Risk Badge + 48h/15d Countdown| D
+    S -->|Risk Badge + Extracted Text + Countdown| D
     T -->|Mandatory Bail Verdict + Application Draft| E
 ```
 
@@ -158,15 +171,18 @@ flowchart TD
 
 | Layer | Technology | Purpose |
 | :--- | :--- | :--- |
-| **Frontend Framework** | React 18, Vite 6 | High-speed single-page application with hot module replacement |
-| **Styling & Design System** | Tailwind CSS v4 | Custom `@theme static` with high-contrast amber/gold styling |
+| **Frontend Framework** | React 19, Vite 6 | High-speed single-page application with hot module replacement |
+| **Styling & Design System** | Tailwind CSS v4 | Custom `@theme static` with high-contrast amber/gold styling and rounded geometry |
+| **PWA & Offline Engine** | Service Worker, Web App Manifest | Zero-network offline emergency legal rights handbook and mobile app installability |
 | **Icons & Visuals** | Lucide React | Clean, recognizable legal and procedural iconography |
 | **Backend API** | FastAPI, Uvicorn | High-throughput asynchronous Python web framework |
 | **Embeddings** | `intfloat/multilingual-e5-base` | Multilingual dense vector representations (768-dim) |
-| **Vector Database** | ChromaDB | Local persistent semantic passage indexing |
+| **Vector Database** | ChromaDB | Persistent semantic indexing of 29+ Acts and Supreme Court precedents |
 | **Text Retrieval** | Scikit-learn, TF-IDF, Regex | Lexical ranking, title matching, and statutory section extraction |
-| **Document Processing** | `python-docx`, `pypdf` | Server-side and client-side extraction of Word and PDF notices |
-| **Generative LLMs** | Google Gemini 1.5, Groq (Llama-3-70B) | High-speed grounded legal reasoning with fallback support |
+| **Vision & Image OCR** | Google Gemini 3.5 Flash Vision | Multimodal camera photo transcription and legal stamp extraction |
+| **Document Processing** | `python-docx`, `pypdf`, `python-multipart` | Server-side and client-side extraction of Word, PDF, and image notices |
+| **Image Synthesis** | Pillow 13.0 (PIL) | Procedural generation of authentic legal documents with stamps & seals |
+| **Generative LLMs** | Google Gemini 3.5 Flash, Groq (Llama-3-70B) | High-speed grounded legal reasoning with multi-model fallback |
 | **Database** | SQLite3 | Session management, OTP rate-limiting, and grievance ticketing |
 | **Authentication** | Google Identity Services (GIS), SMTP OTP | Secure, passwordless authentication |
 
@@ -178,12 +194,17 @@ flowchart TD
 NyayaSahayak/
 │
 ├── frontend/                                   # React + Vite Single-Page Application
+│   ├── public/                                 # Static PWA assets & offline handbook
+│   │   ├── manifest.webmanifest                # Web App Manifest for mobile installation
+│   │   ├── sw.js                               # Service Worker for offline asset caching
+│   │   ├── offline.html                        # Zero-network Emergency Citizen Rights Handbook
+│   │   └── favicon.svg & icons.svg             # Application icons
 │   ├── src/
 │   │   ├── components/
 │   │   │   ├── AnswerBlock.jsx                 # AI responses with high-contrast Statutory Audit pill
-│   │   │   ├── BailCalculator.jsx              # Section 479 BNSS Bail Calculator & application generator
+│   │   │   ├── BailCalculator.jsx              # Section 479 BNSS Bail Calculator with instructional placeholders
 │   │   │   ├── DecisionTrees.jsx               # Interactive procedural decision flows
-│   │   │   ├── DocAnalyzer.jsx                 # Legal notice scanner with traffic-light risk alerts
+│   │   │   ├── DocAnalyzer.jsx                 # Camera photo OCR scanner with 1-click demo photo gallery
 │   │   │   ├── FirDraftStudio.jsx              # Zero-FIR & notice drafting with isolated clean print
 │   │   │   ├── Navbar.jsx                      # Navigation, language switcher & light/dark theme toggle
 │   │   │   └── Footer.jsx                      # Disclaimers and compliance footer
@@ -193,7 +214,7 @@ NyayaSahayak/
 │   │   │   ├── Contact.jsx                     # Grievance desk with ticket generation & Gmail composer
 │   │   │   ├── LawSearch.jsx                   # Semantic and section-based law search
 │   │   │   ├── LegalAid.jsx                    # NALSA Section 12 free legal aid eligibility calculator
-│   │   │   ├── Acts.jsx & OfficialActs.jsx     # Bare acts reader & Gazette verification
+│   │   │   ├── Acts.jsx & OfficialActs.jsx     # Category-wise bare acts reader & Gazette audit
 │   │   │   ├── Auth.jsx & Dashboard.jsx        # Google GIS, Email OTP & personal research dashboard
 │   │   │   └── SafetyCharter.jsx               # Constitutional compliance & evaluation benchmarks
 │   │   ├── api.js                              # Centralized API client with offline fallback handling
@@ -202,18 +223,20 @@ NyayaSahayak/
 │
 ├── backend/                                    # FastAPI Python Backend
 │   ├── app/
-│   │   ├── main.py                             # API routes: chat, draft, analyze-doc, contact, search
+│   │   ├── main.py                             # API routes: chat, draft, analyze-doc-file (Vision OCR), search
 │   │   ├── rag.py                              # Hybrid retrieval: ChromaDB dense search + TF-IDF BM25
-│   │   ├── llm.py                              # Gemini / Groq client orchestration with statutory audit
+│   │   ├── llm.py                              # Gemini 3.5 Flash / Groq client orchestration with statutory audit
 │   │   ├── auth.py                             # SQLite user sessions, OTP engine & grievance tickets
 │   │   └── safety.py                           # Safety guard: crime block, PII scrub & self-harm help
 │   ├── data/
-│   │   ├── processed/chunks.jsonl              # Indexed statutory chunks (BNS, BNSS, BSA, Constitution)
+│   │   ├── raw/sc_precedents.csv               # Article 141 Supreme Court Landmark Guidelines
+│   │   ├── processed/chunks.jsonl              # Indexed statutory chunks (29+ Acts & Sanhitas)
 │   │   ├── chroma/                             # ChromaDB vector store
 │   │   └── eval.csv                            # Labelled multilingual evaluation dataset
-│   └── requirements.txt
+│   ├── Dockerfile                              # Production container deployment definition
+│   └── requirements.txt                        # Python dependencies (python-multipart, pypdf, docx, etc.)
 │
-├── demo_test_cases/                            # Official Test & Presentation Suite
+├── demo_test_cases/                            # Unified Master Test & Presentation Suite
 │   ├── README_DEMO_AND_TEST_CASES.txt          # Master 5-minute presentation & viva guide
 │   ├── 01_AI_Legal_Assistant_Test_Cases.txt    # Prompts for RAG, arrest, WhatsApp evidence, audit
 │   ├── 02_Semantic_Law_Search_Test_Cases.txt   # Exact section queries & IPC->BNS mappings
@@ -223,14 +246,23 @@ NyayaSahayak/
 │   ├── 06_Interactive_Problem_Solver_Decision_Trees.txt # Step-by-step citizen procedural paths
 │   ├── 07_NALSA_Sec12_Free_Legal_Aid_Test_Cases.txt # Category exemptions & state income thresholds
 │   ├── 08_Contact_and_Inquiries_Test_Cases.txt # Ticket generation, form validation, helpline checks
-│   ├── 09_Bare_Acts_and_Official_Gazettes_Test_Cases.txt # Act browsing & gazette verification
+│   ├── 09_Bare_Acts_and_Official_Gazettes_Test_Cases.txt # Category browsing & gazette verification
 │   ├── 10_Auth_and_Security_Guardrails_Test_Cases.txt # GIS, OTP, crime refusal & Tele-MANAS crisis
-│   └── Sample Legal Documents (.docx & .txt companions):
-│       ├── 1_Police_Summons_Notice_Sec35_BNSS.docx / .txt      (High Risk - 48h Countdown)
-│       ├── 2_Cheque_Bounce_Notice_Sec138_NI_Act.docx / .txt    (High Risk - 15d Countdown)
-│       ├── 3_Residential_Tenancy_Lease_Agreement.docx / .txt   (Medium Risk - 11m Lease)
-│       ├── 4_Non_Legal_University_Assignment.docx / .txt       (Rejection Guardrail Test)
-│       └── 5_Mutual_Settlement_and_NOC_Receipt.docx / .txt     (Safe - Green Shield)
+│   ├── Sample Word Documents (.docx):
+│   │   ├── 1_Police_Summons_Notice_Sec35_BNSS.docx      (High Risk - 48h Countdown)
+│   │   ├── 2_Cheque_Bounce_Notice_Sec138_NI_Act.docx    (High Risk - 15d Countdown)
+│   │   ├── 3_Residential_Tenancy_Lease_Agreement.docx   (Medium Risk - Unfair Lock-in)
+│   │   ├── 4_Non_Legal_University_Assignment.docx       (Rejection Guardrail Test)
+│   │   └── 5_Mutual_Settlement_and_NOC_Receipt.docx     (Safe - Green Shield)
+│   └── Realistic Legal Document Photos (.jpg) for Camera & Vision OCR:
+│       ├── 1_police_summons_bnss35.jpg         (Police Station seal, FIR ref, Sec 35(5) arrest warning)
+│       ├── 2_cheque_bounce_notice_sec138.jpg   (Advocate letterhead, Speed Post barcode, 15-day deadline)
+│       ├── 3_unfair_tenancy_agreement.jpg      (e-Stamp certificate, Clause 8 deposit forfeiture)
+│       ├── 4_safe_settlement_noc.jpg           (Green full settlement seal, NEFT UTR refund receipt)
+│       └── 5_non_legal_assignment.jpg          (University coursework paper for guardrail rejection test)
+│
+├── scripts/
+│   └── make_demo_images.py                     # Python Pillow generator for realistic legal demo photos
 │
 └── README.md
 ```
@@ -239,18 +271,24 @@ NyayaSahayak/
 
 ## 🧪 Demo & Test Cases Suite (`demo_test_cases/`)
 
-The repository includes a dedicated [`demo_test_cases/`](demo_test_cases/) folder containing test cases in plain `.txt` and `.docx` format, designed for demonstrations, vivas, and automated testing:
+The repository includes a unified [`demo_test_cases/`](demo_test_cases/) folder containing test cases, Word `.docx` documents, and realistic `.jpg` camera photos designed for presentations, live vivas, and automated testing:
 
 | File Name | Target Feature | Core Verification Point |
 | :--- | :--- | :--- |
+| `1_police_summons_bnss35.jpg` | `/scanner` (Camera OCR) | Sec 35(3) BNSS Police Notice with official seal & Sec 35(5) arrest warning &rarr; 🔴 High Danger. |
+| `2_cheque_bounce_notice_sec138.jpg` | `/scanner` (Camera OCR) | Sec 138 NI Act Demand with Speed Post barcode & 15-day cure clock &rarr; 🔴 Critical Danger. |
+| `3_unfair_tenancy_agreement.jpg` | `/scanner` (Camera OCR) | Clause 8 with unconditional lock-in forfeiture & power disconnection &rarr; 🟠 Medium Danger. |
+| `4_safe_settlement_noc.jpg` | `/scanner` (Camera OCR) | Mutual discharge receipt with NEFT UTR deposit refund confirmation &rarr; 🟢 Safe / Low Risk. |
+| `5_non_legal_assignment.jpg` | `/scanner` (Camera OCR) | Academic Deep Learning paper &rarr; Triggers **NON-LEGAL DOCUMENT DETECTED** guardrail alert. |
 | `01_AI_Legal_Assistant_Test_Cases.txt` | `/assistant` | Senior citizen arrest safeguard (BNSS 35(7)), WhatsApp chat admissibility (BSA 63), Grounding score. |
 | `02_Semantic_Law_Search_Test_Cases.txt` | `/search` | Exact provision lookups ("Section 105 BNSS"), community service penalties (BNS 4(f)). |
 | `03_Bail_Calculator_Test_Cases.txt` | `/bail-calculator` | First-time offender 1/3rd sentence calculation (Theft: 12 months) vs repeat offender 1/2 rule. |
-| `04_Legal_Document_Scanner_Test_Cases.txt`| `/scanner` | Testing Red Danger (Summons), Amber (Lease), Green (NOC), and Non-Legal Document rejection. |
+| `04_Legal_Document_Scanner_Test_Cases.txt`| `/scanner` | Upload scenarios: urgent summons, cheque bounce, tenancy lease, and rejection test. |
 | `05_AI_Legal_Drafting_Studio_Test_Cases.txt` | `/drafting` | Zero-FIR complaint generation and isolated Word-like PDF print without website borders. |
 | `06_Interactive_Problem_Solver_Decision_Trees.txt` | `/flowcharts` | Procedural step-by-step decision flows for arrest rights, FIR refusal, and cheque recovery. |
 | `07_NALSA_Sec12_Free_Legal_Aid_Test_Cases.txt` | `/legal-aid` | Category exemptions (Women, SC/ST, Custody) and State income thresholds. |
 | `08_Contact_and_Inquiries_Test_Cases.txt` | `/contact` | Live ticket generation (`#NYA-2026-XXXX`), input validation, and click-to-dial helplines. |
+| `09_Bare_Acts_and_Official_Gazettes_Test_Cases.txt` | `/acts` | Category-wise Act browsing across 10 domains and gazette verification. |
 | `10_Auth_and_Security_Guardrails_Test_Cases.txt` | `/auth`, `/charter`| Refusal of crime assistance and compassionate Tele-MANAS (`14416`) referral for self-harm queries. |
 
 ---
