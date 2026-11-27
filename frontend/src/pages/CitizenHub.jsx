@@ -189,12 +189,13 @@ export default function CitizenHub({ defaultTab = "handbooks" }) {
                 onClick={() => setActiveTab(t.id)}
                 className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs whitespace-nowrap transition-all border ${
                   isSel
-                    ? "bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 text-slate-950 border-amber-600 font-black shadow-md ring-2 ring-amber-400/40"
+                    ? "tab-active bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 text-slate-950 border-amber-600 font-black shadow-md ring-2 ring-amber-400/40"
                     : "bg-surface text-ink hover:text-ink hover:bg-surface-2 border-line font-bold"
                 }`}
+                style={isSel ? { color: "#0f172a", backgroundColor: "#f59e0b" } : undefined}
               >
-                <Icon size={15} className={`shrink-0 ${isSel ? "text-slate-950" : "text-ink/70"}`} />
-                <span className={isSel ? "text-slate-950 font-black tracking-tight" : "text-ink font-bold"}>{t.label}</span>
+                <Icon size={15} className={`shrink-0 ${isSel ? "text-slate-950" : "text-ink/70"}`} style={isSel ? { color: "#0f172a" } : undefined} />
+                <span className={isSel ? "font-black tracking-tight" : "text-ink font-bold"} style={isSel ? { color: "#0f172a" } : undefined}>{t.label}</span>
               </button>
             );
           })}
